@@ -9,13 +9,24 @@ addon: no more turns. You command your Pokémon with keys, its moves charge up a
 📦 **Download:** [Modrinth](https://modrinth.com/mod/cobblemon-combat-za) · 🐞 **Bugs and ideas:** [Issues](../../issues) (please
 attach your `latest.log`)
 
-## Requirements
+## Installation
 
-- Minecraft **1.21.1**, **Fabric** Loader 0.18.4+, Java 21
-- **Cobblemon 1.7.3** (1.8 is not supported yet), **Fabric API**, **Fabric Language Kotlin**
-- Installed on **both the client and the server**
-- Optional: Cobblemon: Mega Showdown, Xaero's Minimap, Open Parties and Claims
-- Not compatible with Cobblemon Fight or Flight Reborn
+Put the mod in the `mods` folder of **both the game and the server**, together with the **required** mods:
+
+| Required | Download |
+|---|---|
+| Minecraft **1.21.1** + **Fabric Loader** 0.18.4+ | [Fabric installer](https://fabricmc.net/use/installer/) |
+| **Fabric API** | [Modrinth](https://modrinth.com/mod/fabric-api) (a 1.21.1 version) |
+| **Fabric Language Kotlin** | [Modrinth](https://modrinth.com/mod/fabric-language-kotlin) |
+| **Cobblemon 1.7.3** (Fabric) | [Cobblemon 1.7.3](https://modrinth.com/mod/cobblemon/version/kF7CvxTo) ⚠️ not 1.8 (not supported yet) |
+| **Cobblemon Combat ZA** | [Releases](../../releases) or [Modrinth](https://modrinth.com/mod/cobblemon-combat-za) |
+
+Optional: [Cobblemon: Mega Showdown](https://modrinth.com/mod/cobblemon-mega-showdown) (Mega Evolution),
+[Xaero's Minimap](https://modrinth.com/mod/xaeros-minimap) (party on the map), [Open Parties and Claims](https://modrinth.com/mod/open-parties-and-claims)
+(its party is used). ❌ Not compatible with **Cobblemon Fight or Flight Reborn**.
+
+Full guide, in English and Portuguese: the [Wiki](../../wiki) ([Installation](../../wiki/Installation) ·
+[Instalação](../../wiki/Instalação)). Made and tested with the **Cobbleverse** modpack (1.7.42).
 
 ## Building
 
