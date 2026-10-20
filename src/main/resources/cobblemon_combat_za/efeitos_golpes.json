@@ -1,0 +1,4257 @@
+{
+  "absorb": {
+    "drain": [
+      1,
+      2
+    ],
+    "target": "normal"
+  },
+  "accelerock": {
+    "contact": true,
+    "target": "normal"
+  },
+  "acid": {
+    "secondaries": [
+      {
+        "chance": 10,
+        "boosts": {
+          "spd": -1
+        }
+      }
+    ],
+    "target": "allAdjacentFoes"
+  },
+  "acidarmor": {
+    "boosts": {
+      "def": 2
+    },
+    "target": "self"
+  },
+  "acidspray": {
+    "secondaries": [
+      {
+        "chance": 100,
+        "boosts": {
+          "spd": -2
+        }
+      }
+    ],
+    "target": "normal"
+  },
+  "acrobatics": {
+    "contact": true,
+    "target": "any"
+  },
+  "aerialace": {
+    "contact": true,
+    "target": "any"
+  },
+  "agility": {
+    "boosts": {
+      "spe": 2
+    },
+    "target": "self"
+  },
+  "airslash": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "volatileStatus": "flinch"
+      }
+    ],
+    "target": "any"
+  },
+  "alluringvoice": {
+    "secondaries": [
+      {
+        "chance": 100
+      }
+    ],
+    "target": "normal"
+  },
+  "amnesia": {
+    "boosts": {
+      "spd": 2
+    },
+    "target": "self"
+  },
+  "anchorshot": {
+    "secondaries": [
+      {
+        "chance": 100
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "ancientpower": {
+    "secondaries": [
+      {
+        "chance": 10,
+        "self": {
+          "boosts": {
+            "atk": 1,
+            "def": 1,
+            "spa": 1,
+            "spd": 1,
+            "spe": 1
+          }
+        }
+      }
+    ],
+    "target": "normal"
+  },
+  "appleacid": {
+    "secondaries": [
+      {
+        "chance": 100,
+        "boosts": {
+          "spd": -1
+        }
+      }
+    ],
+    "target": "normal"
+  },
+  "aquajet": {
+    "contact": true,
+    "target": "normal"
+  },
+  "aquaring": {
+    "volatileStatus": "aquaring",
+    "target": "self"
+  },
+  "aquastep": {
+    "secondaries": [
+      {
+        "chance": 100,
+        "self": {
+          "boosts": {
+            "spe": 1
+          }
+        }
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "aquatail": {
+    "contact": true,
+    "target": "normal"
+  },
+  "armorcannon": {
+    "self": {
+      "boosts": {
+        "def": -1,
+        "spd": -1
+      }
+    },
+    "target": "normal"
+  },
+  "armthrust": {
+    "contact": true,
+    "multihit": [
+      2,
+      5
+    ],
+    "target": "normal"
+  },
+  "aromaticmist": {
+    "boosts": {
+      "spd": 1
+    },
+    "target": "adjacentAlly"
+  },
+  "assurance": {
+    "contact": true,
+    "target": "normal"
+  },
+  "astonish": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "volatileStatus": "flinch"
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "attract": {
+    "volatileStatus": "attract",
+    "target": "normal"
+  },
+  "aurawheel": {
+    "secondaries": [
+      {
+        "chance": 100,
+        "self": {
+          "boosts": {
+            "spe": 1
+          }
+        }
+      }
+    ],
+    "target": "normal"
+  },
+  "aurorabeam": {
+    "secondaries": [
+      {
+        "chance": 10,
+        "boosts": {
+          "atk": -1
+        }
+      }
+    ],
+    "target": "normal"
+  },
+  "autotomize": {
+    "boosts": {
+      "spe": 2
+    },
+    "target": "self"
+  },
+  "avalanche": {
+    "contact": true,
+    "target": "normal"
+  },
+  "axekick": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "volatileStatus": "confusion"
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "babydolleyes": {
+    "boosts": {
+      "atk": -1
+    },
+    "target": "normal"
+  },
+  "banefulbunker": {
+    "volatileStatus": "banefulbunker",
+    "target": "self"
+  },
+  "barbbarrage": {
+    "secondaries": [
+      {
+        "chance": 50,
+        "status": "psn"
+      }
+    ],
+    "target": "normal"
+  },
+  "barrage": {
+    "multihit": [
+      2,
+      5
+    ],
+    "target": "normal"
+  },
+  "barrier": {
+    "boosts": {
+      "def": 2
+    },
+    "target": "self"
+  },
+  "behemothbash": {
+    "contact": true,
+    "target": "normal"
+  },
+  "behemothblade": {
+    "contact": true,
+    "target": "normal"
+  },
+  "bide": {
+    "volatileStatus": "bide",
+    "contact": true,
+    "target": "self"
+  },
+  "bind": {
+    "volatileStatus": "partiallytrapped",
+    "contact": true,
+    "target": "normal"
+  },
+  "bite": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "volatileStatus": "flinch"
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "bitterblade": {
+    "drain": [
+      1,
+      2
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "bittermalice": {
+    "secondaries": [
+      {
+        "chance": 100,
+        "boosts": {
+          "atk": -1
+        }
+      }
+    ],
+    "target": "normal"
+  },
+  "blazekick": {
+    "secondaries": [
+      {
+        "chance": 10,
+        "status": "brn"
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "blazingtorque": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "status": "brn"
+      }
+    ],
+    "target": "normal"
+  },
+  "bleakwindstorm": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "boosts": {
+          "spe": -1
+        }
+      }
+    ],
+    "target": "allAdjacentFoes"
+  },
+  "blizzard": {
+    "secondaries": [
+      {
+        "chance": 10,
+        "status": "frz"
+      }
+    ],
+    "target": "allAdjacentFoes"
+  },
+  "blueflare": {
+    "secondaries": [
+      {
+        "chance": 20,
+        "status": "brn"
+      }
+    ],
+    "target": "normal"
+  },
+  "bodypress": {
+    "contact": true,
+    "target": "normal"
+  },
+  "bodyslam": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "status": "par"
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "boltbeak": {
+    "contact": true,
+    "target": "normal"
+  },
+  "boltstrike": {
+    "secondaries": [
+      {
+        "chance": 20,
+        "status": "par"
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "boneclub": {
+    "secondaries": [
+      {
+        "chance": 10,
+        "volatileStatus": "flinch"
+      }
+    ],
+    "target": "normal"
+  },
+  "bonemerang": {
+    "multihit": [
+      2,
+      2
+    ],
+    "target": "normal"
+  },
+  "bonerush": {
+    "multihit": [
+      2,
+      5
+    ],
+    "target": "normal"
+  },
+  "bounce": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "status": "par"
+      }
+    ],
+    "contact": true,
+    "target": "any"
+  },
+  "bouncybubble": {
+    "drain": [
+      1,
+      2
+    ],
+    "target": "normal"
+  },
+  "branchpoke": {
+    "contact": true,
+    "target": "normal"
+  },
+  "bravebird": {
+    "recoil": [
+      33,
+      100
+    ],
+    "contact": true,
+    "target": "any"
+  },
+  "breakingswipe": {
+    "secondaries": [
+      {
+        "chance": 100,
+        "boosts": {
+          "atk": -1
+        }
+      }
+    ],
+    "contact": true,
+    "target": "allAdjacentFoes"
+  },
+  "brickbreak": {
+    "contact": true,
+    "target": "normal"
+  },
+  "brutalswing": {
+    "contact": true,
+    "target": "allAdjacent"
+  },
+  "bubble": {
+    "secondaries": [
+      {
+        "chance": 10,
+        "boosts": {
+          "spe": -1
+        }
+      }
+    ],
+    "target": "allAdjacentFoes"
+  },
+  "bubblebeam": {
+    "secondaries": [
+      {
+        "chance": 10,
+        "boosts": {
+          "spe": -1
+        }
+      }
+    ],
+    "target": "normal"
+  },
+  "bugbite": {
+    "contact": true,
+    "target": "normal"
+  },
+  "bugbuzz": {
+    "secondaries": [
+      {
+        "chance": 10,
+        "boosts": {
+          "spd": -1
+        }
+      }
+    ],
+    "target": "normal"
+  },
+  "bulkup": {
+    "boosts": {
+      "atk": 1,
+      "def": 1
+    },
+    "target": "self"
+  },
+  "bulldoze": {
+    "secondaries": [
+      {
+        "chance": 100,
+        "boosts": {
+          "spe": -1
+        }
+      }
+    ],
+    "target": "allAdjacent"
+  },
+  "bulletpunch": {
+    "contact": true,
+    "target": "normal"
+  },
+  "bulletseed": {
+    "multihit": [
+      2,
+      5
+    ],
+    "target": "normal"
+  },
+  "burningbulwark": {
+    "volatileStatus": "burningbulwark",
+    "target": "self"
+  },
+  "burningjealousy": {
+    "secondaries": [
+      {
+        "chance": 100
+      }
+    ],
+    "target": "allAdjacentFoes"
+  },
+  "buzzybuzz": {
+    "secondaries": [
+      {
+        "chance": 100,
+        "status": "par"
+      }
+    ],
+    "target": "normal"
+  },
+  "calmmind": {
+    "boosts": {
+      "spa": 1,
+      "spd": 1
+    },
+    "target": "self"
+  },
+  "captivate": {
+    "boosts": {
+      "spa": -2
+    },
+    "target": "allAdjacentFoes"
+  },
+  "catastropika": {
+    "contact": true,
+    "target": "normal"
+  },
+  "ceaselessedge": {
+    "contact": true,
+    "target": "normal"
+  },
+  "charge": {
+    "boosts": {
+      "spd": 1
+    },
+    "volatileStatus": "charge",
+    "target": "self"
+  },
+  "chargebeam": {
+    "secondaries": [
+      {
+        "chance": 70,
+        "self": {
+          "boosts": {
+            "spa": 1
+          }
+        }
+      }
+    ],
+    "target": "normal"
+  },
+  "charm": {
+    "boosts": {
+      "atk": -2
+    },
+    "target": "normal"
+  },
+  "chatter": {
+    "secondaries": [
+      {
+        "chance": 100,
+        "volatileStatus": "confusion"
+      }
+    ],
+    "target": "any"
+  },
+  "chillingwater": {
+    "secondaries": [
+      {
+        "chance": 100,
+        "boosts": {
+          "atk": -1
+        }
+      }
+    ],
+    "target": "normal"
+  },
+  "chipaway": {
+    "contact": true,
+    "target": "normal"
+  },
+  "circlethrow": {
+    "contact": true,
+    "target": "normal"
+  },
+  "clamp": {
+    "volatileStatus": "partiallytrapped",
+    "contact": true,
+    "target": "normal"
+  },
+  "clangingscales": {
+    "self": {
+      "boosts": {
+        "def": -1
+      }
+    },
+    "target": "allAdjacentFoes"
+  },
+  "clangoroussoul": {
+    "boosts": {
+      "atk": 1,
+      "def": 1,
+      "spa": 1,
+      "spd": 1,
+      "spe": 1
+    },
+    "target": "self"
+  },
+  "clangoroussoulblaze": {
+    "self": {
+      "boosts": {
+        "atk": 1,
+        "def": 1,
+        "spa": 1,
+        "spd": 1,
+        "spe": 1
+      }
+    },
+    "target": "allAdjacentFoes"
+  },
+  "closecombat": {
+    "self": {
+      "boosts": {
+        "def": -1,
+        "spd": -1
+      }
+    },
+    "contact": true,
+    "target": "normal"
+  },
+  "coaching": {
+    "boosts": {
+      "atk": 1,
+      "def": 1
+    },
+    "target": "adjacentAlly"
+  },
+  "coil": {
+    "boosts": {
+      "atk": 1,
+      "def": 1,
+      "accuracy": 1
+    },
+    "target": "self"
+  },
+  "collisioncourse": {
+    "contact": true,
+    "target": "normal"
+  },
+  "combattorque": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "status": "par"
+      }
+    ],
+    "target": "normal"
+  },
+  "cometpunch": {
+    "contact": true,
+    "multihit": [
+      2,
+      5
+    ],
+    "target": "normal"
+  },
+  "comeuppance": {
+    "contact": true,
+    "target": "scripted"
+  },
+  "confide": {
+    "boosts": {
+      "spa": -1
+    },
+    "target": "normal"
+  },
+  "confuseray": {
+    "volatileStatus": "confusion",
+    "target": "normal"
+  },
+  "confusion": {
+    "secondaries": [
+      {
+        "chance": 10,
+        "volatileStatus": "confusion"
+      }
+    ],
+    "target": "normal"
+  },
+  "constrict": {
+    "secondaries": [
+      {
+        "chance": 10,
+        "boosts": {
+          "spe": -1
+        }
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "cosmicpower": {
+    "boosts": {
+      "def": 1,
+      "spd": 1
+    },
+    "target": "self"
+  },
+  "cottonguard": {
+    "boosts": {
+      "def": 3
+    },
+    "target": "self"
+  },
+  "cottonspore": {
+    "boosts": {
+      "spe": -2
+    },
+    "target": "allAdjacentFoes",
+    "powder": true
+  },
+  "counter": {
+    "contact": true,
+    "target": "scripted"
+  },
+  "covet": {
+    "contact": true,
+    "target": "normal"
+  },
+  "crabhammer": {
+    "contact": true,
+    "target": "normal"
+  },
+  "crosschop": {
+    "contact": true,
+    "target": "normal"
+  },
+  "crosspoison": {
+    "secondaries": [
+      {
+        "chance": 10,
+        "status": "psn"
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "crunch": {
+    "secondaries": [
+      {
+        "chance": 20,
+        "boosts": {
+          "def": -1
+        }
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "crushclaw": {
+    "secondaries": [
+      {
+        "chance": 50,
+        "boosts": {
+          "def": -1
+        }
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "crushgrip": {
+    "contact": true,
+    "target": "normal"
+  },
+  "curse": {
+    "volatileStatus": "curse",
+    "target": "normal"
+  },
+  "cut": {
+    "contact": true,
+    "target": "normal"
+  },
+  "darkestlariat": {
+    "contact": true,
+    "target": "normal"
+  },
+  "darkpulse": {
+    "secondaries": [
+      {
+        "chance": 20,
+        "volatileStatus": "flinch"
+      }
+    ],
+    "target": "any"
+  },
+  "darkvoid": {
+    "status": "slp",
+    "target": "allAdjacentFoes"
+  },
+  "decorate": {
+    "boosts": {
+      "atk": 2,
+      "spa": 2
+    },
+    "target": "normal"
+  },
+  "defendorder": {
+    "boosts": {
+      "def": 1,
+      "spd": 1
+    },
+    "target": "self"
+  },
+  "defensecurl": {
+    "boosts": {
+      "def": 1
+    },
+    "volatileStatus": "defensecurl",
+    "target": "self"
+  },
+  "destinybond": {
+    "volatileStatus": "destinybond",
+    "target": "self"
+  },
+  "detect": {
+    "volatileStatus": "protect",
+    "target": "self"
+  },
+  "diamondstorm": {
+    "self": {
+      "boosts": {
+        "def": 2
+      }
+    },
+    "target": "allAdjacentFoes"
+  },
+  "dig": {
+    "contact": true,
+    "target": "normal"
+  },
+  "direclaw": {
+    "secondaries": [
+      {
+        "chance": 50
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "disable": {
+    "volatileStatus": "disable",
+    "target": "normal"
+  },
+  "discharge": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "status": "par"
+      }
+    ],
+    "target": "allAdjacent"
+  },
+  "dive": {
+    "contact": true,
+    "target": "normal"
+  },
+  "dizzypunch": {
+    "secondaries": [
+      {
+        "chance": 20,
+        "volatileStatus": "confusion"
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "doubleedge": {
+    "recoil": [
+      33,
+      100
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "doublehit": {
+    "contact": true,
+    "multihit": [
+      2,
+      2
+    ],
+    "target": "normal"
+  },
+  "doubleironbash": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "volatileStatus": "flinch"
+      }
+    ],
+    "contact": true,
+    "multihit": [
+      2,
+      2
+    ],
+    "target": "normal"
+  },
+  "doublekick": {
+    "contact": true,
+    "multihit": [
+      2,
+      2
+    ],
+    "target": "normal"
+  },
+  "doubleshock": {
+    "contact": true,
+    "target": "normal"
+  },
+  "doubleslap": {
+    "contact": true,
+    "multihit": [
+      2,
+      5
+    ],
+    "target": "normal"
+  },
+  "doubleteam": {
+    "boosts": {
+      "evasion": 1
+    },
+    "target": "self"
+  },
+  "dracometeor": {
+    "self": {
+      "boosts": {
+        "spa": -2
+      }
+    },
+    "target": "normal"
+  },
+  "dragonascent": {
+    "self": {
+      "boosts": {
+        "def": -1,
+        "spd": -1
+      }
+    },
+    "contact": true,
+    "target": "any"
+  },
+  "dragonbreath": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "status": "par"
+      }
+    ],
+    "target": "normal"
+  },
+  "dragoncheer": {
+    "volatileStatus": "dragoncheer",
+    "target": "adjacentAlly"
+  },
+  "dragonclaw": {
+    "contact": true,
+    "target": "normal"
+  },
+  "dragondance": {
+    "boosts": {
+      "atk": 1,
+      "spe": 1
+    },
+    "target": "self"
+  },
+  "dragondarts": {
+    "multihit": [
+      2,
+      2
+    ],
+    "target": "normal"
+  },
+  "dragonhammer": {
+    "contact": true,
+    "target": "normal"
+  },
+  "dragonrage": {
+    "damage": 40,
+    "target": "normal"
+  },
+  "dragonrush": {
+    "secondaries": [
+      {
+        "chance": 20,
+        "volatileStatus": "flinch"
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "dragontail": {
+    "contact": true,
+    "target": "normal"
+  },
+  "drainingkiss": {
+    "drain": [
+      3,
+      4
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "drainpunch": {
+    "drain": [
+      1,
+      2
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "dreameater": {
+    "drain": [
+      1,
+      2
+    ],
+    "target": "normal"
+  },
+  "drillpeck": {
+    "contact": true,
+    "target": "any"
+  },
+  "drillrun": {
+    "contact": true,
+    "target": "normal"
+  },
+  "drumbeating": {
+    "secondaries": [
+      {
+        "chance": 100,
+        "boosts": {
+          "spe": -1
+        }
+      }
+    ],
+    "target": "normal"
+  },
+  "dualchop": {
+    "contact": true,
+    "multihit": [
+      2,
+      2
+    ],
+    "target": "normal"
+  },
+  "dualwingbeat": {
+    "contact": true,
+    "multihit": [
+      2,
+      2
+    ],
+    "target": "normal"
+  },
+  "dynamicpunch": {
+    "secondaries": [
+      {
+        "chance": 100,
+        "volatileStatus": "confusion"
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "earthpower": {
+    "secondaries": [
+      {
+        "chance": 10,
+        "boosts": {
+          "spd": -1
+        }
+      }
+    ],
+    "target": "normal"
+  },
+  "eerieimpulse": {
+    "boosts": {
+      "spa": -2
+    },
+    "target": "normal"
+  },
+  "eeriespell": {
+    "secondaries": [
+      {
+        "chance": 100
+      }
+    ],
+    "target": "normal"
+  },
+  "electrify": {
+    "volatileStatus": "electrify",
+    "target": "normal"
+  },
+  "electrodrift": {
+    "contact": true,
+    "target": "normal"
+  },
+  "electroweb": {
+    "secondaries": [
+      {
+        "chance": 100,
+        "boosts": {
+          "spe": -1
+        }
+      }
+    ],
+    "target": "allAdjacentFoes"
+  },
+  "embargo": {
+    "volatileStatus": "embargo",
+    "target": "normal"
+  },
+  "ember": {
+    "secondaries": [
+      {
+        "chance": 10,
+        "status": "brn"
+      }
+    ],
+    "target": "normal"
+  },
+  "encore": {
+    "volatileStatus": "encore",
+    "target": "normal"
+  },
+  "endeavor": {
+    "contact": true,
+    "target": "normal"
+  },
+  "endure": {
+    "volatileStatus": "endure",
+    "target": "self"
+  },
+  "energyball": {
+    "secondaries": [
+      {
+        "chance": 10,
+        "boosts": {
+          "spd": -1
+        }
+      }
+    ],
+    "target": "normal"
+  },
+  "esperwing": {
+    "secondaries": [
+      {
+        "chance": 100,
+        "self": {
+          "boosts": {
+            "spe": 1
+          }
+        }
+      }
+    ],
+    "target": "normal"
+  },
+  "extrasensory": {
+    "secondaries": [
+      {
+        "chance": 10,
+        "volatileStatus": "flinch"
+      }
+    ],
+    "target": "normal"
+  },
+  "extremeevoboost": {
+    "boosts": {
+      "atk": 2,
+      "def": 2,
+      "spa": 2,
+      "spd": 2,
+      "spe": 2
+    },
+    "target": "self"
+  },
+  "extremespeed": {
+    "contact": true,
+    "target": "normal"
+  },
+  "facade": {
+    "contact": true,
+    "target": "normal"
+  },
+  "fakeout": {
+    "secondaries": [
+      {
+        "chance": 100,
+        "volatileStatus": "flinch"
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "faketears": {
+    "boosts": {
+      "spd": -2
+    },
+    "target": "normal"
+  },
+  "falsesurrender": {
+    "contact": true,
+    "target": "normal"
+  },
+  "falseswipe": {
+    "contact": true,
+    "target": "normal"
+  },
+  "featherdance": {
+    "boosts": {
+      "atk": -2
+    },
+    "target": "normal"
+  },
+  "feintattack": {
+    "contact": true,
+    "target": "normal"
+  },
+  "fellstinger": {
+    "contact": true,
+    "target": "normal"
+  },
+  "fierydance": {
+    "secondaries": [
+      {
+        "chance": 50,
+        "self": {
+          "boosts": {
+            "spa": 1
+          }
+        }
+      }
+    ],
+    "target": "normal"
+  },
+  "fierywrath": {
+    "secondaries": [
+      {
+        "chance": 20,
+        "volatileStatus": "flinch"
+      }
+    ],
+    "target": "allAdjacentFoes"
+  },
+  "filletaway": {
+    "boosts": {
+      "atk": 2,
+      "spa": 2,
+      "spe": 2
+    },
+    "target": "self"
+  },
+  "fireblast": {
+    "secondaries": [
+      {
+        "chance": 10,
+        "status": "brn"
+      }
+    ],
+    "target": "normal"
+  },
+  "firefang": {
+    "secondaries": [
+      {
+        "chance": 10,
+        "status": "brn"
+      },
+      {
+        "chance": 10,
+        "volatileStatus": "flinch"
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "firelash": {
+    "secondaries": [
+      {
+        "chance": 100,
+        "boosts": {
+          "def": -1
+        }
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "firepunch": {
+    "secondaries": [
+      {
+        "chance": 10,
+        "status": "brn"
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "firespin": {
+    "volatileStatus": "partiallytrapped",
+    "target": "normal"
+  },
+  "firstimpression": {
+    "contact": true,
+    "target": "normal"
+  },
+  "fishiousrend": {
+    "contact": true,
+    "target": "normal"
+  },
+  "flail": {
+    "contact": true,
+    "target": "normal"
+  },
+  "flamecharge": {
+    "secondaries": [
+      {
+        "chance": 100,
+        "self": {
+          "boosts": {
+            "spe": 1
+          }
+        }
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "flamethrower": {
+    "secondaries": [
+      {
+        "chance": 10,
+        "status": "brn"
+      }
+    ],
+    "target": "normal"
+  },
+  "flamewheel": {
+    "secondaries": [
+      {
+        "chance": 10,
+        "status": "brn"
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "flareblitz": {
+    "secondaries": [
+      {
+        "chance": 10,
+        "status": "brn"
+      }
+    ],
+    "recoil": [
+      33,
+      100
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "flash": {
+    "boosts": {
+      "accuracy": -1
+    },
+    "target": "normal"
+  },
+  "flashcannon": {
+    "secondaries": [
+      {
+        "chance": 10,
+        "boosts": {
+          "spd": -1
+        }
+      }
+    ],
+    "target": "normal"
+  },
+  "flatter": {
+    "boosts": {
+      "spa": 1
+    },
+    "volatileStatus": "confusion",
+    "target": "normal"
+  },
+  "fleurcannon": {
+    "self": {
+      "boosts": {
+        "spa": -2
+      }
+    },
+    "target": "normal"
+  },
+  "flipturn": {
+    "contact": true,
+    "target": "normal"
+  },
+  "floatyfall": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "volatileStatus": "flinch"
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "fly": {
+    "contact": true,
+    "target": "any"
+  },
+  "flyingpress": {
+    "contact": true,
+    "target": "any"
+  },
+  "focusblast": {
+    "secondaries": [
+      {
+        "chance": 10,
+        "boosts": {
+          "spd": -1
+        }
+      }
+    ],
+    "target": "normal"
+  },
+  "focusenergy": {
+    "volatileStatus": "focusenergy",
+    "target": "self"
+  },
+  "focuspunch": {
+    "contact": true,
+    "target": "normal"
+  },
+  "followme": {
+    "volatileStatus": "followme",
+    "target": "self"
+  },
+  "forcepalm": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "status": "par"
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "foresight": {
+    "volatileStatus": "foresight",
+    "target": "normal"
+  },
+  "foulplay": {
+    "contact": true,
+    "target": "normal"
+  },
+  "freezedry": {
+    "secondaries": [
+      {
+        "chance": 10,
+        "status": "frz"
+      }
+    ],
+    "target": "normal"
+  },
+  "freezeshock": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "status": "par"
+      }
+    ],
+    "target": "normal"
+  },
+  "freezingglare": {
+    "secondaries": [
+      {
+        "chance": 10,
+        "status": "frz"
+      }
+    ],
+    "target": "normal"
+  },
+  "frustration": {
+    "contact": true,
+    "target": "normal"
+  },
+  "furyattack": {
+    "contact": true,
+    "multihit": [
+      2,
+      5
+    ],
+    "target": "normal"
+  },
+  "furycutter": {
+    "contact": true,
+    "target": "normal"
+  },
+  "furyswipes": {
+    "contact": true,
+    "multihit": [
+      2,
+      5
+    ],
+    "target": "normal"
+  },
+  "gastroacid": {
+    "volatileStatus": "gastroacid",
+    "target": "normal"
+  },
+  "geargrind": {
+    "contact": true,
+    "multihit": [
+      2,
+      2
+    ],
+    "target": "normal"
+  },
+  "genesissupernova": {
+    "secondaries": [
+      {
+        "chance": 100
+      }
+    ],
+    "target": "normal"
+  },
+  "geomancy": {
+    "boosts": {
+      "spa": 2,
+      "spd": 2,
+      "spe": 2
+    },
+    "target": "self"
+  },
+  "gigadrain": {
+    "drain": [
+      1,
+      2
+    ],
+    "target": "normal"
+  },
+  "gigaimpact": {
+    "contact": true,
+    "target": "normal"
+  },
+  "glaciate": {
+    "secondaries": [
+      {
+        "chance": 100,
+        "boosts": {
+          "spe": -1
+        }
+      }
+    ],
+    "target": "allAdjacentFoes"
+  },
+  "glaiverush": {
+    "contact": true,
+    "target": "normal"
+  },
+  "glare": {
+    "status": "par",
+    "target": "normal"
+  },
+  "grassknot": {
+    "contact": true,
+    "target": "normal"
+  },
+  "grasswhistle": {
+    "status": "slp",
+    "target": "normal"
+  },
+  "grassyglide": {
+    "contact": true,
+    "target": "normal"
+  },
+  "gravapple": {
+    "secondaries": [
+      {
+        "chance": 100,
+        "boosts": {
+          "def": -1
+        }
+      }
+    ],
+    "target": "normal"
+  },
+  "growl": {
+    "boosts": {
+      "atk": -1
+    },
+    "target": "allAdjacentFoes"
+  },
+  "growth": {
+    "boosts": {
+      "atk": 1,
+      "spa": 1
+    },
+    "target": "self"
+  },
+  "grudge": {
+    "volatileStatus": "grudge",
+    "target": "self"
+  },
+  "guillotine": {
+    "contact": true,
+    "target": "normal"
+  },
+  "gunkshot": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "status": "psn"
+      }
+    ],
+    "target": "normal"
+  },
+  "gyroball": {
+    "contact": true,
+    "target": "normal"
+  },
+  "hammerarm": {
+    "self": {
+      "boosts": {
+        "spe": -1
+      }
+    },
+    "contact": true,
+    "target": "normal"
+  },
+  "harden": {
+    "boosts": {
+      "def": 1
+    },
+    "target": "self"
+  },
+  "hardpress": {
+    "contact": true,
+    "target": "normal"
+  },
+  "headbutt": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "volatileStatus": "flinch"
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "headcharge": {
+    "recoil": [
+      1,
+      4
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "headlongrush": {
+    "self": {
+      "boosts": {
+        "def": -1,
+        "spd": -1
+      }
+    },
+    "contact": true,
+    "target": "normal"
+  },
+  "headsmash": {
+    "recoil": [
+      1,
+      2
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "healblock": {
+    "volatileStatus": "healblock",
+    "target": "allAdjacentFoes"
+  },
+  "healorder": {
+    "heal": [
+      1,
+      2
+    ],
+    "target": "self"
+  },
+  "heartstamp": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "volatileStatus": "flinch"
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "heatcrash": {
+    "contact": true,
+    "target": "normal"
+  },
+  "heatwave": {
+    "secondaries": [
+      {
+        "chance": 10,
+        "status": "brn"
+      }
+    ],
+    "target": "allAdjacentFoes"
+  },
+  "heavyslam": {
+    "contact": true,
+    "target": "normal"
+  },
+  "helpinghand": {
+    "volatileStatus": "helpinghand",
+    "target": "adjacentAlly"
+  },
+  "highhorsepower": {
+    "contact": true,
+    "target": "normal"
+  },
+  "highjumpkick": {
+    "contact": true,
+    "target": "normal"
+  },
+  "holdback": {
+    "contact": true,
+    "target": "normal"
+  },
+  "honeclaws": {
+    "boosts": {
+      "atk": 1,
+      "accuracy": 1
+    },
+    "target": "self"
+  },
+  "hornattack": {
+    "contact": true,
+    "target": "normal"
+  },
+  "horndrill": {
+    "contact": true,
+    "target": "normal"
+  },
+  "hornleech": {
+    "drain": [
+      1,
+      2
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "howl": {
+    "boosts": {
+      "atk": 1
+    },
+    "target": "allies"
+  },
+  "hurricane": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "volatileStatus": "confusion"
+      }
+    ],
+    "target": "any"
+  },
+  "hyperdrill": {
+    "contact": true,
+    "target": "normal"
+  },
+  "hyperfang": {
+    "secondaries": [
+      {
+        "chance": 10,
+        "volatileStatus": "flinch"
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "hyperspacefury": {
+    "self": {
+      "boosts": {
+        "def": -1
+      }
+    },
+    "target": "normal"
+  },
+  "hypnosis": {
+    "status": "slp",
+    "target": "normal"
+  },
+  "iceball": {
+    "contact": true,
+    "target": "normal"
+  },
+  "icebeam": {
+    "secondaries": [
+      {
+        "chance": 10,
+        "status": "frz"
+      }
+    ],
+    "target": "normal"
+  },
+  "iceburn": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "status": "brn"
+      }
+    ],
+    "target": "normal"
+  },
+  "icefang": {
+    "secondaries": [
+      {
+        "chance": 10,
+        "status": "frz"
+      },
+      {
+        "chance": 10,
+        "volatileStatus": "flinch"
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "icehammer": {
+    "self": {
+      "boosts": {
+        "spe": -1
+      }
+    },
+    "contact": true,
+    "target": "normal"
+  },
+  "icepunch": {
+    "secondaries": [
+      {
+        "chance": 10,
+        "status": "frz"
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "icespinner": {
+    "contact": true,
+    "target": "normal"
+  },
+  "iciclecrash": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "volatileStatus": "flinch"
+      }
+    ],
+    "target": "normal"
+  },
+  "iciclespear": {
+    "multihit": [
+      2,
+      5
+    ],
+    "target": "normal"
+  },
+  "icywind": {
+    "secondaries": [
+      {
+        "chance": 100,
+        "boosts": {
+          "spe": -1
+        }
+      }
+    ],
+    "target": "allAdjacentFoes"
+  },
+  "imprison": {
+    "volatileStatus": "imprison",
+    "target": "self"
+  },
+  "infernalparade": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "status": "brn"
+      }
+    ],
+    "target": "normal"
+  },
+  "inferno": {
+    "secondaries": [
+      {
+        "chance": 100,
+        "status": "brn"
+      }
+    ],
+    "target": "normal"
+  },
+  "infestation": {
+    "volatileStatus": "partiallytrapped",
+    "contact": true,
+    "target": "normal"
+  },
+  "ingrain": {
+    "volatileStatus": "ingrain",
+    "target": "self"
+  },
+  "irondefense": {
+    "boosts": {
+      "def": 2
+    },
+    "target": "self"
+  },
+  "ironhead": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "volatileStatus": "flinch"
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "irontail": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "boosts": {
+          "def": -1
+        }
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "jawlock": {
+    "contact": true,
+    "target": "normal"
+  },
+  "jetpunch": {
+    "contact": true,
+    "target": "normal"
+  },
+  "jumpkick": {
+    "contact": true,
+    "target": "normal"
+  },
+  "karatechop": {
+    "contact": true,
+    "target": "normal"
+  },
+  "kinesis": {
+    "boosts": {
+      "accuracy": -1
+    },
+    "target": "normal"
+  },
+  "kingsshield": {
+    "volatileStatus": "kingsshield",
+    "target": "self"
+  },
+  "knockoff": {
+    "contact": true,
+    "target": "normal"
+  },
+  "kowtowcleave": {
+    "contact": true,
+    "target": "normal"
+  },
+  "laserfocus": {
+    "volatileStatus": "laserfocus",
+    "target": "self"
+  },
+  "lashout": {
+    "contact": true,
+    "target": "normal"
+  },
+  "lastresort": {
+    "contact": true,
+    "target": "normal"
+  },
+  "lavaplume": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "status": "brn"
+      }
+    ],
+    "target": "allAdjacent"
+  },
+  "leafblade": {
+    "contact": true,
+    "target": "normal"
+  },
+  "leafstorm": {
+    "self": {
+      "boosts": {
+        "spa": -2
+      }
+    },
+    "target": "normal"
+  },
+  "leaftornado": {
+    "secondaries": [
+      {
+        "chance": 50,
+        "boosts": {
+          "accuracy": -1
+        }
+      }
+    ],
+    "target": "normal"
+  },
+  "leechlife": {
+    "drain": [
+      1,
+      2
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "leechseed": {
+    "volatileStatus": "leechseed",
+    "target": "normal"
+  },
+  "leer": {
+    "boosts": {
+      "def": -1
+    },
+    "target": "allAdjacentFoes"
+  },
+  "letssnuggleforever": {
+    "contact": true,
+    "target": "normal"
+  },
+  "lick": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "status": "par"
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "lifedew": {
+    "heal": [
+      1,
+      4
+    ],
+    "target": "allies"
+  },
+  "lightofruin": {
+    "recoil": [
+      1,
+      2
+    ],
+    "target": "normal"
+  },
+  "liquidation": {
+    "secondaries": [
+      {
+        "chance": 20,
+        "boosts": {
+          "def": -1
+        }
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "lovelykiss": {
+    "status": "slp",
+    "target": "normal"
+  },
+  "lowkick": {
+    "contact": true,
+    "target": "normal"
+  },
+  "lowsweep": {
+    "secondaries": [
+      {
+        "chance": 100,
+        "boosts": {
+          "spe": -1
+        }
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "luminacrash": {
+    "secondaries": [
+      {
+        "chance": 100,
+        "boosts": {
+          "spd": -2
+        }
+      }
+    ],
+    "target": "normal"
+  },
+  "lunge": {
+    "secondaries": [
+      {
+        "chance": 100,
+        "boosts": {
+          "atk": -1
+        }
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "lusterpurge": {
+    "secondaries": [
+      {
+        "chance": 50,
+        "boosts": {
+          "spd": -1
+        }
+      }
+    ],
+    "target": "normal"
+  },
+  "machpunch": {
+    "contact": true,
+    "target": "normal"
+  },
+  "magicaltorque": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "volatileStatus": "confusion"
+      }
+    ],
+    "target": "normal"
+  },
+  "magiccoat": {
+    "volatileStatus": "magiccoat",
+    "target": "self"
+  },
+  "magmastorm": {
+    "volatileStatus": "partiallytrapped",
+    "target": "normal"
+  },
+  "magnetrise": {
+    "volatileStatus": "magnetrise",
+    "target": "self"
+  },
+  "makeitrain": {
+    "self": {
+      "boosts": {
+        "spa": -1
+      }
+    },
+    "target": "allAdjacentFoes"
+  },
+  "maliciousmoonsault": {
+    "contact": true,
+    "target": "normal"
+  },
+  "malignantchain": {
+    "secondaries": [
+      {
+        "chance": 50,
+        "status": "tox"
+      }
+    ],
+    "target": "normal"
+  },
+  "matchagotcha": {
+    "secondaries": [
+      {
+        "chance": 20,
+        "status": "brn"
+      }
+    ],
+    "drain": [
+      1,
+      2
+    ],
+    "target": "allAdjacentFoes"
+  },
+  "maxguard": {
+    "volatileStatus": "maxguard",
+    "target": "self"
+  },
+  "meditate": {
+    "boosts": {
+      "atk": 1
+    },
+    "target": "self"
+  },
+  "megadrain": {
+    "drain": [
+      1,
+      2
+    ],
+    "target": "normal"
+  },
+  "megahorn": {
+    "contact": true,
+    "target": "normal"
+  },
+  "megakick": {
+    "contact": true,
+    "target": "normal"
+  },
+  "megapunch": {
+    "contact": true,
+    "target": "normal"
+  },
+  "memento": {
+    "boosts": {
+      "atk": -2,
+      "spa": -2
+    },
+    "target": "normal"
+  },
+  "metalclaw": {
+    "secondaries": [
+      {
+        "chance": 10,
+        "self": {
+          "boosts": {
+            "atk": 1
+          }
+        }
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "metalsound": {
+    "boosts": {
+      "spd": -2
+    },
+    "target": "normal"
+  },
+  "meteormash": {
+    "secondaries": [
+      {
+        "chance": 20,
+        "self": {
+          "boosts": {
+            "atk": 1
+          }
+        }
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "mightycleave": {
+    "contact": true,
+    "target": "normal"
+  },
+  "milkdrink": {
+    "heal": [
+      1,
+      2
+    ],
+    "target": "self"
+  },
+  "mindblown": {
+    "mindBlownRecoil": true,
+    "target": "allAdjacent"
+  },
+  "minimize": {
+    "boosts": {
+      "evasion": 2
+    },
+    "volatileStatus": "minimize",
+    "target": "self"
+  },
+  "miracleeye": {
+    "volatileStatus": "miracleeye",
+    "target": "normal"
+  },
+  "mirrorshot": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "boosts": {
+          "accuracy": -1
+        }
+      }
+    ],
+    "target": "normal"
+  },
+  "mistball": {
+    "secondaries": [
+      {
+        "chance": 50,
+        "boosts": {
+          "spa": -1
+        }
+      }
+    ],
+    "target": "normal"
+  },
+  "moonblast": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "boosts": {
+          "spa": -1
+        }
+      }
+    ],
+    "target": "normal"
+  },
+  "mortalspin": {
+    "secondaries": [
+      {
+        "chance": 100,
+        "status": "psn"
+      }
+    ],
+    "contact": true,
+    "target": "allAdjacentFoes"
+  },
+  "mountaingale": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "volatileStatus": "flinch"
+      }
+    ],
+    "target": "normal"
+  },
+  "mudbomb": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "boosts": {
+          "accuracy": -1
+        }
+      }
+    ],
+    "target": "normal"
+  },
+  "muddywater": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "boosts": {
+          "accuracy": -1
+        }
+      }
+    ],
+    "target": "allAdjacentFoes"
+  },
+  "mudshot": {
+    "secondaries": [
+      {
+        "chance": 100,
+        "boosts": {
+          "spe": -1
+        }
+      }
+    ],
+    "target": "normal"
+  },
+  "mudslap": {
+    "secondaries": [
+      {
+        "chance": 100,
+        "boosts": {
+          "accuracy": -1
+        }
+      }
+    ],
+    "target": "normal"
+  },
+  "multiattack": {
+    "contact": true,
+    "target": "normal"
+  },
+  "mysticalfire": {
+    "secondaries": [
+      {
+        "chance": 100,
+        "boosts": {
+          "spa": -1
+        }
+      }
+    ],
+    "target": "normal"
+  },
+  "mysticalpower": {
+    "secondaries": [
+      {
+        "chance": 100,
+        "self": {
+          "boosts": {
+            "spa": 1
+          }
+        }
+      }
+    ],
+    "target": "normal"
+  },
+  "nastyplot": {
+    "boosts": {
+      "spa": 2
+    },
+    "target": "self"
+  },
+  "needlearm": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "volatileStatus": "flinch"
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "nightdaze": {
+    "secondaries": [
+      {
+        "chance": 40,
+        "boosts": {
+          "accuracy": -1
+        }
+      }
+    ],
+    "target": "normal"
+  },
+  "nightmare": {
+    "volatileStatus": "nightmare",
+    "target": "normal"
+  },
+  "nightshade": {
+    "damage": "level",
+    "target": "normal"
+  },
+  "nightslash": {
+    "contact": true,
+    "target": "normal"
+  },
+  "nobleroar": {
+    "boosts": {
+      "atk": -1,
+      "spa": -1
+    },
+    "target": "normal"
+  },
+  "noretreat": {
+    "boosts": {
+      "atk": 1,
+      "def": 1,
+      "spa": 1,
+      "spd": 1,
+      "spe": 1
+    },
+    "volatileStatus": "noretreat",
+    "target": "self"
+  },
+  "noxioustorque": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "status": "psn"
+      }
+    ],
+    "target": "normal"
+  },
+  "nuzzle": {
+    "secondaries": [
+      {
+        "chance": 100,
+        "status": "par"
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "oblivionwing": {
+    "drain": [
+      3,
+      4
+    ],
+    "target": "any"
+  },
+  "obstruct": {
+    "volatileStatus": "obstruct",
+    "target": "self"
+  },
+  "octazooka": {
+    "secondaries": [
+      {
+        "chance": 50,
+        "boosts": {
+          "accuracy": -1
+        }
+      }
+    ],
+    "target": "normal"
+  },
+  "octolock": {
+    "volatileStatus": "octolock",
+    "target": "normal"
+  },
+  "odorsleuth": {
+    "volatileStatus": "foresight",
+    "target": "normal"
+  },
+  "ominouswind": {
+    "secondaries": [
+      {
+        "chance": 10,
+        "self": {
+          "boosts": {
+            "atk": 1,
+            "def": 1,
+            "spa": 1,
+            "spd": 1,
+            "spe": 1
+          }
+        }
+      }
+    ],
+    "target": "normal"
+  },
+  "outrage": {
+    "contact": true,
+    "lockedmove": true,
+    "target": "randomNormal"
+  },
+  "overheat": {
+    "self": {
+      "boosts": {
+        "spa": -2
+      }
+    },
+    "target": "normal"
+  },
+  "paleowave": {
+    "secondaries": [
+      {
+        "chance": 20,
+        "boosts": {
+          "atk": -1
+        }
+      }
+    ],
+    "target": "normal"
+  },
+  "paraboliccharge": {
+    "drain": [
+      1,
+      2
+    ],
+    "target": "allAdjacent"
+  },
+  "payback": {
+    "contact": true,
+    "target": "normal"
+  },
+  "peck": {
+    "contact": true,
+    "target": "any"
+  },
+  "petaldance": {
+    "contact": true,
+    "lockedmove": true,
+    "target": "randomNormal"
+  },
+  "phantomforce": {
+    "contact": true,
+    "target": "normal"
+  },
+  "pinmissile": {
+    "multihit": [
+      2,
+      5
+    ],
+    "target": "normal"
+  },
+  "plasmafists": {
+    "contact": true,
+    "target": "normal"
+  },
+  "playnice": {
+    "boosts": {
+      "atk": -1
+    },
+    "target": "normal"
+  },
+  "playrough": {
+    "secondaries": [
+      {
+        "chance": 10,
+        "boosts": {
+          "atk": -1
+        }
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "pluck": {
+    "contact": true,
+    "target": "any"
+  },
+  "poisonfang": {
+    "secondaries": [
+      {
+        "chance": 50,
+        "status": "tox"
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "poisongas": {
+    "status": "psn",
+    "target": "allAdjacentFoes"
+  },
+  "poisonjab": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "status": "psn"
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "poisonpowder": {
+    "status": "psn",
+    "target": "normal",
+    "powder": true
+  },
+  "poisonsting": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "status": "psn"
+      }
+    ],
+    "target": "normal"
+  },
+  "poisontail": {
+    "secondaries": [
+      {
+        "chance": 10,
+        "status": "psn"
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "populationbomb": {
+    "contact": true,
+    "multihit": [
+      10,
+      10
+    ],
+    "target": "normal"
+  },
+  "pounce": {
+    "secondaries": [
+      {
+        "chance": 100,
+        "boosts": {
+          "spe": -1
+        }
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "pound": {
+    "contact": true,
+    "target": "normal"
+  },
+  "powder": {
+    "volatileStatus": "powder",
+    "target": "normal",
+    "powder": true
+  },
+  "powdersnow": {
+    "secondaries": [
+      {
+        "chance": 10,
+        "status": "frz"
+      }
+    ],
+    "target": "allAdjacentFoes"
+  },
+  "powershift": {
+    "volatileStatus": "powershift",
+    "target": "self"
+  },
+  "powertrick": {
+    "volatileStatus": "powertrick",
+    "target": "self"
+  },
+  "powertrip": {
+    "contact": true,
+    "target": "normal"
+  },
+  "poweruppunch": {
+    "secondaries": [
+      {
+        "chance": 100,
+        "self": {
+          "boosts": {
+            "atk": 1
+          }
+        }
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "powerwhip": {
+    "contact": true,
+    "target": "normal"
+  },
+  "protect": {
+    "volatileStatus": "protect",
+    "target": "self"
+  },
+  "psybeam": {
+    "secondaries": [
+      {
+        "chance": 10,
+        "volatileStatus": "confusion"
+      }
+    ],
+    "target": "normal"
+  },
+  "psyblade": {
+    "contact": true,
+    "target": "normal"
+  },
+  "psychic": {
+    "secondaries": [
+      {
+        "chance": 10,
+        "boosts": {
+          "spd": -1
+        }
+      }
+    ],
+    "target": "normal"
+  },
+  "psychicfangs": {
+    "contact": true,
+    "target": "normal"
+  },
+  "psychicnoise": {
+    "secondaries": [
+      {
+        "chance": 100,
+        "volatileStatus": "healblock"
+      }
+    ],
+    "target": "normal"
+  },
+  "psychoboost": {
+    "self": {
+      "boosts": {
+        "spa": -2
+      }
+    },
+    "target": "normal"
+  },
+  "psyshieldbash": {
+    "secondaries": [
+      {
+        "chance": 100,
+        "self": {
+          "boosts": {
+            "def": 1
+          }
+        }
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "pulverizingpancake": {
+    "contact": true,
+    "target": "normal"
+  },
+  "punishment": {
+    "contact": true,
+    "target": "normal"
+  },
+  "pursuit": {
+    "contact": true,
+    "target": "normal"
+  },
+  "pyroball": {
+    "secondaries": [
+      {
+        "chance": 10,
+        "status": "brn"
+      }
+    ],
+    "target": "normal"
+  },
+  "quickattack": {
+    "contact": true,
+    "target": "normal"
+  },
+  "quiverdance": {
+    "boosts": {
+      "spa": 1,
+      "spd": 1,
+      "spe": 1
+    },
+    "target": "self"
+  },
+  "rage": {
+    "contact": true,
+    "target": "normal"
+  },
+  "ragefist": {
+    "contact": true,
+    "target": "normal"
+  },
+  "ragepowder": {
+    "volatileStatus": "ragepowder",
+    "target": "self",
+    "powder": true
+  },
+  "ragingbull": {
+    "contact": true,
+    "target": "normal"
+  },
+  "ragingfury": {
+    "lockedmove": true,
+    "target": "randomNormal"
+  },
+  "rapidspin": {
+    "secondaries": [
+      {
+        "chance": 100,
+        "self": {
+          "boosts": {
+            "spe": 1
+          }
+        }
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "razorshell": {
+    "secondaries": [
+      {
+        "chance": 50,
+        "boosts": {
+          "def": -1
+        }
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "recover": {
+    "heal": [
+      1,
+      2
+    ],
+    "target": "self"
+  },
+  "relicsong": {
+    "secondaries": [
+      {
+        "chance": 10,
+        "status": "slp"
+      }
+    ],
+    "target": "allAdjacentFoes"
+  },
+  "retaliate": {
+    "contact": true,
+    "target": "normal"
+  },
+  "return": {
+    "contact": true,
+    "target": "normal"
+  },
+  "revenge": {
+    "contact": true,
+    "target": "normal"
+  },
+  "reversal": {
+    "contact": true,
+    "target": "normal"
+  },
+  "rockblast": {
+    "multihit": [
+      2,
+      5
+    ],
+    "target": "normal"
+  },
+  "rockclimb": {
+    "secondaries": [
+      {
+        "chance": 20,
+        "volatileStatus": "confusion"
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "rockpolish": {
+    "boosts": {
+      "spe": 2
+    },
+    "target": "self"
+  },
+  "rockslide": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "volatileStatus": "flinch"
+      }
+    ],
+    "target": "allAdjacentFoes"
+  },
+  "rocksmash": {
+    "secondaries": [
+      {
+        "chance": 50,
+        "boosts": {
+          "def": -1
+        }
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "rocktomb": {
+    "secondaries": [
+      {
+        "chance": 100,
+        "boosts": {
+          "spe": -1
+        }
+      }
+    ],
+    "target": "normal"
+  },
+  "rollingkick": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "volatileStatus": "flinch"
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "rollout": {
+    "contact": true,
+    "target": "normal"
+  },
+  "roost": {
+    "heal": [
+      1,
+      2
+    ],
+    "target": "self"
+  },
+  "sacredfire": {
+    "secondaries": [
+      {
+        "chance": 50,
+        "status": "brn"
+      }
+    ],
+    "target": "normal"
+  },
+  "sacredsword": {
+    "contact": true,
+    "target": "normal"
+  },
+  "saltcure": {
+    "secondaries": [
+      {
+        "chance": 100,
+        "volatileStatus": "saltcure"
+      }
+    ],
+    "target": "normal"
+  },
+  "sandattack": {
+    "boosts": {
+      "accuracy": -1
+    },
+    "target": "normal"
+  },
+  "sandsearstorm": {
+    "secondaries": [
+      {
+        "chance": 20,
+        "status": "brn"
+      }
+    ],
+    "target": "allAdjacentFoes"
+  },
+  "sandtomb": {
+    "volatileStatus": "partiallytrapped",
+    "target": "normal"
+  },
+  "scald": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "status": "brn"
+      }
+    ],
+    "target": "normal"
+  },
+  "scaleshot": {
+    "self": {
+      "boosts": {
+        "def": -1,
+        "spe": 1
+      }
+    },
+    "multihit": [
+      2,
+      5
+    ],
+    "target": "normal"
+  },
+  "scaryface": {
+    "boosts": {
+      "spe": -2
+    },
+    "target": "normal"
+  },
+  "scorchingsands": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "status": "brn"
+      }
+    ],
+    "target": "normal"
+  },
+  "scratch": {
+    "contact": true,
+    "target": "normal"
+  },
+  "screech": {
+    "boosts": {
+      "def": -2
+    },
+    "target": "normal"
+  },
+  "searingshot": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "status": "brn"
+      }
+    ],
+    "target": "allAdjacent"
+  },
+  "searingsunrazesmash": {
+    "contact": true,
+    "target": "normal"
+  },
+  "secretpower": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "status": "par"
+      }
+    ],
+    "target": "normal"
+  },
+  "seedflare": {
+    "secondaries": [
+      {
+        "chance": 40,
+        "boosts": {
+          "spd": -2
+        }
+      }
+    ],
+    "target": "normal"
+  },
+  "seismictoss": {
+    "damage": "level",
+    "contact": true,
+    "target": "normal"
+  },
+  "shadowball": {
+    "secondaries": [
+      {
+        "chance": 20,
+        "boosts": {
+          "spd": -1
+        }
+      }
+    ],
+    "target": "normal"
+  },
+  "shadowbone": {
+    "secondaries": [
+      {
+        "chance": 20,
+        "boosts": {
+          "def": -1
+        }
+      }
+    ],
+    "target": "normal"
+  },
+  "shadowclaw": {
+    "contact": true,
+    "target": "normal"
+  },
+  "shadowforce": {
+    "contact": true,
+    "target": "normal"
+  },
+  "shadowpunch": {
+    "contact": true,
+    "target": "normal"
+  },
+  "shadowsneak": {
+    "contact": true,
+    "target": "normal"
+  },
+  "shadowstrike": {
+    "secondaries": [
+      {
+        "chance": 50,
+        "boosts": {
+          "def": -1
+        }
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "sharpen": {
+    "boosts": {
+      "atk": 1
+    },
+    "target": "self"
+  },
+  "shedtail": {
+    "volatileStatus": "substitute",
+    "target": "self"
+  },
+  "shellsidearm": {
+    "secondaries": [
+      {
+        "chance": 20,
+        "status": "psn"
+      }
+    ],
+    "target": "normal"
+  },
+  "shellsmash": {
+    "boosts": {
+      "def": -1,
+      "spd": -1,
+      "atk": 2,
+      "spa": 2,
+      "spe": 2
+    },
+    "target": "self"
+  },
+  "shelter": {
+    "boosts": {
+      "def": 2
+    },
+    "target": "self"
+  },
+  "shiftgear": {
+    "boosts": {
+      "spe": 2,
+      "atk": 1
+    },
+    "target": "self"
+  },
+  "signalbeam": {
+    "secondaries": [
+      {
+        "chance": 10,
+        "volatileStatus": "confusion"
+      }
+    ],
+    "target": "normal"
+  },
+  "silktrap": {
+    "volatileStatus": "silktrap",
+    "target": "self"
+  },
+  "silverwind": {
+    "secondaries": [
+      {
+        "chance": 10,
+        "self": {
+          "boosts": {
+            "atk": 1,
+            "def": 1,
+            "spa": 1,
+            "spd": 1,
+            "spe": 1
+          }
+        }
+      }
+    ],
+    "target": "normal"
+  },
+  "sing": {
+    "status": "slp",
+    "target": "normal"
+  },
+  "sizzlyslide": {
+    "secondaries": [
+      {
+        "chance": 100,
+        "status": "brn"
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "skittersmack": {
+    "secondaries": [
+      {
+        "chance": 100,
+        "boosts": {
+          "spa": -1
+        }
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "skullbash": {
+    "contact": true,
+    "target": "normal"
+  },
+  "skyattack": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "volatileStatus": "flinch"
+      }
+    ],
+    "target": "any"
+  },
+  "skydrop": {
+    "contact": true,
+    "target": "any"
+  },
+  "skyuppercut": {
+    "contact": true,
+    "target": "normal"
+  },
+  "slackoff": {
+    "heal": [
+      1,
+      2
+    ],
+    "target": "self"
+  },
+  "slam": {
+    "contact": true,
+    "target": "normal"
+  },
+  "slash": {
+    "contact": true,
+    "target": "normal"
+  },
+  "sleeppowder": {
+    "status": "slp",
+    "target": "normal",
+    "powder": true
+  },
+  "sludge": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "status": "psn"
+      }
+    ],
+    "target": "normal"
+  },
+  "sludgebomb": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "status": "psn"
+      }
+    ],
+    "target": "normal"
+  },
+  "sludgewave": {
+    "secondaries": [
+      {
+        "chance": 10,
+        "status": "psn"
+      }
+    ],
+    "target": "allAdjacent"
+  },
+  "smackdown": {
+    "volatileStatus": "smackdown",
+    "target": "normal"
+  },
+  "smartstrike": {
+    "contact": true,
+    "target": "normal"
+  },
+  "smellingsalts": {
+    "contact": true,
+    "target": "normal"
+  },
+  "smog": {
+    "secondaries": [
+      {
+        "chance": 40,
+        "status": "psn"
+      }
+    ],
+    "target": "normal"
+  },
+  "smokescreen": {
+    "boosts": {
+      "accuracy": -1
+    },
+    "target": "normal"
+  },
+  "snaptrap": {
+    "volatileStatus": "partiallytrapped",
+    "contact": true,
+    "target": "normal"
+  },
+  "snarl": {
+    "secondaries": [
+      {
+        "chance": 100,
+        "boosts": {
+          "spa": -1
+        }
+      }
+    ],
+    "target": "allAdjacentFoes"
+  },
+  "snatch": {
+    "volatileStatus": "snatch",
+    "target": "self"
+  },
+  "snore": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "volatileStatus": "flinch"
+      }
+    ],
+    "target": "normal"
+  },
+  "softboiled": {
+    "heal": [
+      1,
+      2
+    ],
+    "target": "self"
+  },
+  "solarblade": {
+    "contact": true,
+    "target": "normal"
+  },
+  "sonicboom": {
+    "damage": 20,
+    "target": "normal"
+  },
+  "soulstealing7starstrike": {
+    "contact": true,
+    "target": "normal"
+  },
+  "spark": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "status": "par"
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "sparklingaria": {
+    "secondaries": [
+      {
+        "chance": 100,
+        "volatileStatus": "sparklingaria"
+      }
+    ],
+    "target": "allAdjacent"
+  },
+  "spectralthief": {
+    "contact": true,
+    "target": "normal"
+  },
+  "spicyextract": {
+    "boosts": {
+      "atk": 2,
+      "def": -2
+    },
+    "target": "normal"
+  },
+  "spikecannon": {
+    "multihit": [
+      2,
+      5
+    ],
+    "target": "normal"
+  },
+  "spikyshield": {
+    "volatileStatus": "spikyshield",
+    "target": "self"
+  },
+  "spinout": {
+    "self": {
+      "boosts": {
+        "spe": -2
+      }
+    },
+    "contact": true,
+    "target": "normal"
+  },
+  "spiritbreak": {
+    "secondaries": [
+      {
+        "chance": 100,
+        "boosts": {
+          "spa": -1
+        }
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "spiritshackle": {
+    "secondaries": [
+      {
+        "chance": 100
+      }
+    ],
+    "target": "normal"
+  },
+  "splishysplash": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "status": "par"
+      }
+    ],
+    "target": "allAdjacentFoes"
+  },
+  "spore": {
+    "status": "slp",
+    "target": "normal",
+    "powder": true
+  },
+  "spotlight": {
+    "volatileStatus": "spotlight",
+    "target": "normal"
+  },
+  "springtidestorm": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "boosts": {
+          "atk": -1
+        }
+      }
+    ],
+    "target": "allAdjacentFoes"
+  },
+  "steameruption": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "status": "brn"
+      }
+    ],
+    "target": "normal"
+  },
+  "steamroller": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "volatileStatus": "flinch"
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "steelbeam": {
+    "mindBlownRecoil": true,
+    "target": "normal"
+  },
+  "steelroller": {
+    "contact": true,
+    "target": "normal"
+  },
+  "steelwing": {
+    "secondaries": [
+      {
+        "chance": 10,
+        "self": {
+          "boosts": {
+            "def": 1
+          }
+        }
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "stockpile": {
+    "volatileStatus": "stockpile",
+    "target": "self"
+  },
+  "stokedsparksurfer": {
+    "secondaries": [
+      {
+        "chance": 100,
+        "status": "par"
+      }
+    ],
+    "target": "normal"
+  },
+  "stomp": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "volatileStatus": "flinch"
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "stompingtantrum": {
+    "contact": true,
+    "target": "normal"
+  },
+  "stoneaxe": {
+    "contact": true,
+    "target": "normal"
+  },
+  "stormthrow": {
+    "contact": true,
+    "target": "normal"
+  },
+  "strangesteam": {
+    "secondaries": [
+      {
+        "chance": 20,
+        "volatileStatus": "confusion"
+      }
+    ],
+    "target": "normal"
+  },
+  "strength": {
+    "contact": true,
+    "target": "normal"
+  },
+  "stringshot": {
+    "boosts": {
+      "spe": -2
+    },
+    "target": "allAdjacentFoes"
+  },
+  "struggle": {
+    "contact": true,
+    "target": "randomNormal"
+  },
+  "strugglebug": {
+    "secondaries": [
+      {
+        "chance": 100,
+        "boosts": {
+          "spa": -1
+        }
+      }
+    ],
+    "target": "allAdjacentFoes"
+  },
+  "stunspore": {
+    "status": "par",
+    "target": "normal",
+    "powder": true
+  },
+  "submission": {
+    "recoil": [
+      1,
+      4
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "substitute": {
+    "volatileStatus": "substitute",
+    "target": "self"
+  },
+  "suckerpunch": {
+    "contact": true,
+    "target": "normal"
+  },
+  "sunsteelstrike": {
+    "contact": true,
+    "target": "normal"
+  },
+  "supercellslam": {
+    "contact": true,
+    "target": "normal"
+  },
+  "superfang": {
+    "contact": true,
+    "target": "normal"
+  },
+  "superpower": {
+    "self": {
+      "boosts": {
+        "atk": -1,
+        "def": -1
+      }
+    },
+    "contact": true,
+    "target": "normal"
+  },
+  "supersonic": {
+    "volatileStatus": "confusion",
+    "target": "normal"
+  },
+  "surgingstrikes": {
+    "contact": true,
+    "multihit": [
+      3,
+      3
+    ],
+    "target": "normal"
+  },
+  "swagger": {
+    "boosts": {
+      "atk": 2
+    },
+    "volatileStatus": "confusion",
+    "target": "normal"
+  },
+  "sweetkiss": {
+    "volatileStatus": "confusion",
+    "target": "normal"
+  },
+  "sweetscent": {
+    "boosts": {
+      "evasion": -2
+    },
+    "target": "allAdjacentFoes"
+  },
+  "swordsdance": {
+    "boosts": {
+      "atk": 2
+    },
+    "target": "self"
+  },
+  "syrupbomb": {
+    "secondaries": [
+      {
+        "chance": 100,
+        "volatileStatus": "syrupbomb"
+      }
+    ],
+    "target": "normal"
+  },
+  "tachyoncutter": {
+    "multihit": [
+      2,
+      2
+    ],
+    "target": "normal"
+  },
+  "tackle": {
+    "contact": true,
+    "target": "normal"
+  },
+  "tailglow": {
+    "boosts": {
+      "spa": 3
+    },
+    "target": "self"
+  },
+  "tailslap": {
+    "contact": true,
+    "multihit": [
+      2,
+      5
+    ],
+    "target": "normal"
+  },
+  "tailwhip": {
+    "boosts": {
+      "def": -1
+    },
+    "target": "allAdjacentFoes"
+  },
+  "takedown": {
+    "recoil": [
+      1,
+      4
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "tarshot": {
+    "boosts": {
+      "spe": -1
+    },
+    "volatileStatus": "tarshot",
+    "target": "normal"
+  },
+  "taunt": {
+    "volatileStatus": "taunt",
+    "target": "normal"
+  },
+  "tearfullook": {
+    "boosts": {
+      "atk": -1,
+      "spa": -1
+    },
+    "target": "normal"
+  },
+  "teeterdance": {
+    "volatileStatus": "confusion",
+    "target": "allAdjacent"
+  },
+  "telekinesis": {
+    "volatileStatus": "telekinesis",
+    "target": "normal"
+  },
+  "temperflare": {
+    "contact": true,
+    "target": "normal"
+  },
+  "thief": {
+    "contact": true,
+    "target": "normal"
+  },
+  "thousandarrows": {
+    "volatileStatus": "smackdown",
+    "target": "allAdjacentFoes"
+  },
+  "thrash": {
+    "contact": true,
+    "lockedmove": true,
+    "target": "randomNormal"
+  },
+  "throatchop": {
+    "secondaries": [
+      {
+        "chance": 100
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "thunder": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "status": "par"
+      }
+    ],
+    "target": "normal"
+  },
+  "thunderbolt": {
+    "secondaries": [
+      {
+        "chance": 10,
+        "status": "par"
+      }
+    ],
+    "target": "normal"
+  },
+  "thundercage": {
+    "volatileStatus": "partiallytrapped",
+    "target": "normal"
+  },
+  "thunderfang": {
+    "secondaries": [
+      {
+        "chance": 10,
+        "status": "par"
+      },
+      {
+        "chance": 10,
+        "volatileStatus": "flinch"
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "thunderouskick": {
+    "secondaries": [
+      {
+        "chance": 100,
+        "boosts": {
+          "def": -1
+        }
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "thunderpunch": {
+    "secondaries": [
+      {
+        "chance": 10,
+        "status": "par"
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "thundershock": {
+    "secondaries": [
+      {
+        "chance": 10,
+        "status": "par"
+      }
+    ],
+    "target": "normal"
+  },
+  "thunderwave": {
+    "status": "par",
+    "target": "normal"
+  },
+  "tickle": {
+    "boosts": {
+      "atk": -1,
+      "def": -1
+    },
+    "target": "normal"
+  },
+  "torchsong": {
+    "secondaries": [
+      {
+        "chance": 100,
+        "self": {
+          "boosts": {
+            "spa": 1
+          }
+        }
+      }
+    ],
+    "target": "normal"
+  },
+  "torment": {
+    "volatileStatus": "torment",
+    "target": "normal"
+  },
+  "toxic": {
+    "status": "tox",
+    "target": "normal"
+  },
+  "toxicthread": {
+    "boosts": {
+      "spe": -1
+    },
+    "status": "psn",
+    "target": "normal"
+  },
+  "trailblaze": {
+    "secondaries": [
+      {
+        "chance": 100,
+        "self": {
+          "boosts": {
+            "spe": 1
+          }
+        }
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "triattack": {
+    "secondaries": [
+      {
+        "chance": 20
+      }
+    ],
+    "target": "normal"
+  },
+  "triplearrows": {
+    "secondaries": [
+      {
+        "chance": 50,
+        "boosts": {
+          "def": -1
+        }
+      },
+      {
+        "chance": 30,
+        "volatileStatus": "flinch"
+      }
+    ],
+    "target": "normal"
+  },
+  "tripleaxel": {
+    "contact": true,
+    "multihit": [
+      3,
+      3
+    ],
+    "target": "normal"
+  },
+  "tripledive": {
+    "contact": true,
+    "multihit": [
+      3,
+      3
+    ],
+    "target": "normal"
+  },
+  "triplekick": {
+    "contact": true,
+    "multihit": [
+      3,
+      3
+    ],
+    "target": "normal"
+  },
+  "tropkick": {
+    "secondaries": [
+      {
+        "chance": 100,
+        "boosts": {
+          "atk": -1
+        }
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "trumpcard": {
+    "contact": true,
+    "target": "normal"
+  },
+  "twinbeam": {
+    "multihit": [
+      2,
+      2
+    ],
+    "target": "normal"
+  },
+  "twineedle": {
+    "secondaries": [
+      {
+        "chance": 20,
+        "status": "psn"
+      }
+    ],
+    "multihit": [
+      2,
+      2
+    ],
+    "target": "normal"
+  },
+  "twister": {
+    "secondaries": [
+      {
+        "chance": 20,
+        "volatileStatus": "flinch"
+      }
+    ],
+    "target": "allAdjacentFoes"
+  },
+  "upperhand": {
+    "secondaries": [
+      {
+        "chance": 100,
+        "volatileStatus": "flinch"
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "uturn": {
+    "contact": true,
+    "target": "normal"
+  },
+  "vcreate": {
+    "self": {
+      "boosts": {
+        "spe": -1,
+        "def": -1,
+        "spd": -1
+      }
+    },
+    "contact": true,
+    "target": "normal"
+  },
+  "veeveevolley": {
+    "contact": true,
+    "target": "normal"
+  },
+  "victorydance": {
+    "boosts": {
+      "atk": 1,
+      "def": 1,
+      "spe": 1
+    },
+    "target": "self"
+  },
+  "vinewhip": {
+    "contact": true,
+    "target": "normal"
+  },
+  "visegrip": {
+    "contact": true,
+    "target": "normal"
+  },
+  "vitalthrow": {
+    "contact": true,
+    "target": "normal"
+  },
+  "volttackle": {
+    "secondaries": [
+      {
+        "chance": 10,
+        "status": "par"
+      }
+    ],
+    "recoil": [
+      33,
+      100
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "wakeupslap": {
+    "contact": true,
+    "target": "normal"
+  },
+  "waterfall": {
+    "secondaries": [
+      {
+        "chance": 20,
+        "volatileStatus": "flinch"
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "waterpulse": {
+    "secondaries": [
+      {
+        "chance": 20,
+        "volatileStatus": "confusion"
+      }
+    ],
+    "target": "any"
+  },
+  "watershuriken": {
+    "multihit": [
+      2,
+      5
+    ],
+    "target": "normal"
+  },
+  "wavecrash": {
+    "recoil": [
+      33,
+      100
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "whirlpool": {
+    "volatileStatus": "partiallytrapped",
+    "target": "normal"
+  },
+  "wickedblow": {
+    "contact": true,
+    "target": "normal"
+  },
+  "wickedtorque": {
+    "secondaries": [
+      {
+        "chance": 10,
+        "status": "slp"
+      }
+    ],
+    "target": "normal"
+  },
+  "wildboltstorm": {
+    "secondaries": [
+      {
+        "chance": 20,
+        "status": "par"
+      }
+    ],
+    "target": "allAdjacentFoes"
+  },
+  "wildcharge": {
+    "recoil": [
+      1,
+      4
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "willowisp": {
+    "status": "brn",
+    "target": "normal"
+  },
+  "wingattack": {
+    "contact": true,
+    "target": "any"
+  },
+  "withdraw": {
+    "boosts": {
+      "def": 1
+    },
+    "target": "self"
+  },
+  "woodhammer": {
+    "recoil": [
+      33,
+      100
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "workup": {
+    "boosts": {
+      "atk": 1,
+      "spa": 1
+    },
+    "target": "self"
+  },
+  "wrap": {
+    "volatileStatus": "partiallytrapped",
+    "contact": true,
+    "target": "normal"
+  },
+  "wringout": {
+    "contact": true,
+    "target": "normal"
+  },
+  "xscissor": {
+    "contact": true,
+    "target": "normal"
+  },
+  "yawn": {
+    "volatileStatus": "yawn",
+    "target": "normal"
+  },
+  "zapcannon": {
+    "secondaries": [
+      {
+        "chance": 100,
+        "status": "par"
+      }
+    ],
+    "target": "normal"
+  },
+  "zenheadbutt": {
+    "secondaries": [
+      {
+        "chance": 20,
+        "volatileStatus": "flinch"
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "zingzap": {
+    "secondaries": [
+      {
+        "chance": 30,
+        "volatileStatus": "flinch"
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  },
+  "zippyzap": {
+    "secondaries": [
+      {
+        "chance": 100,
+        "self": {
+          "boosts": {
+            "evasion": 1
+          }
+        }
+      }
+    ],
+    "contact": true,
+    "target": "normal"
+  }
+}

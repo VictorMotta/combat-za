@@ -1,0 +1,115 @@
+package dev.victor.combatza.itens;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
+import com.cobblemon.mod.common.Cobblemon;
+import com.cobblemon.mod.common.CobblemonItemComponents;
+import com.cobblemon.mod.common.api.tags.CobblemonItemTags;
+import com.cobblemon.mod.common.pokemon.Pokemon;
+import com.cobblemon.mod.common.item.components.HeldItemEffectComponent;
+import com.cobblemon.mod.common.pokemon.helditem.CobblemonHeldItemManager;
+
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
+
+// 9.1 (parte 4 da sequência de 20/10: "os itens segurados, em lotes"; decidido por ele em 19/10: "etapa própria, em lotes,
+// começando pelos mais usados"). No Cobblemon, o efeito de um item segurado roda DENTRO da batalha por turnos (o Showdown); a
+// nossa luta não passa por lá, então nenhum funcionava. Aqui, como as habilidades da 4H: cada item pelo id do Showdown ("lifeorb",
+// "leftovers"...), que o próprio Cobblemon traduz do item (CobblemonHeldItemManager.showdownId, javap: também respeita os itens
+// de outros mods). O lote 1 está em ItensDeDano (os números), ItensDeVida (frutas, Sobras, Lodo, Orbe), ItensDeContato (Elmo)
+// e TravaDaEscolha. Vale para o seu Pokémon e para o selvagem (o Cobblemon faz o selvagem nascer com item)
+public class ItensSegurados {
+  public static final String SOBRAS = "leftovers";
+  public static final String LODO_ESCURO = "blacksludge";
+  public static final String ORAN = "oranberry";
+  public static final String SITRUS = "sitrusberry";
+  public static final String SUCO_DE_BAGA = "berryjuice";
+  public static final String LUM = "lumberry";
+  public static final String CHERI = "cheriberry";
+  public static final String CHESTO = "chestoberry";
+  public static final String PECHA = "pechaberry";
+  public static final String RAWST = "rawstberry";
+  public static final String ASPEAR = "aspearberry";
+  public static final String PERSIM = "persimberry";
+  public static final String ORBE_DA_VIDA = "lifeorb";
+  public static final String FAIXA_DA_ESCOLHA = "choiceband";
+  public static final String LENTES_DA_ESCOLHA = "choicespecs";
+  public static final String LENCO_DA_ESCOLHA = "choicescarf";
+  public static final String FAIXA_MUSCULOSA = "muscleband";
+  public static final String OCULOS_DE_SABEDORIA = "wiseglasses";
+  public static final String FAIXA_PROFISSIONAL = "expertbelt";
+  public static final String CINTA_DE_FOCO = "focussash";
+  public static final String COLETE_DE_ATAQUE = "assaultvest";
+  public static final String EVIOLITA = "eviolite";
+  public static final String ELMO_ROCHOSO = "rockyhelmet";
+  private static final String NENHUM = "";
+
+  // Os itens que valem uma vez por batalha e ficam com o Pokémon (a Cinta de Foco), por Pokémon
+  private static final Map<UUID, Set<String>> USADOS = new HashMap<>();
+
+  private ItensSegurados() {
+  }
+
+  // O id do Showdown do item que ele segura ("" sem item, ou com um item sem efeito de batalha)
+  public static String id(Pokemon pokemon) {
+    String id = CobblemonHeldItemManager.INSTANCE.showdownId(pokemon.heldItem());
+    return id == null ? NENHUM : id;
+  }
+
+  // O mesmo id sem a lista do Showdown, que só existe no servidor (no seu jogo conectado a um servidor ela vem vazia): o efeito
+  // marcado no item, senão o nome dele sem o "_" (javap no BaseCobblemonHeldItemManager.load: o Cobblemon faz assim)
+  public static String idNoCliente(ItemStack item) {
+    HeldItemEffectComponent efeito = item.get(CobblemonItemComponents.HELD_ITEM_EFFECT);
+    if (efeito != null) {
+      return efeito.getShowdownId();
+    }
+    return item.isEmpty() ? NENHUM : BuiltInRegistries.ITEM.getKey(item.getItem()).getPath().replace("_", "");
+  }
+
+  public static boolean tem(Pokemon pokemon, String id) {
+    return id.equals(id(pokemon));
+  }
+
+  // O nome do item, como aparece no jogo (já traduzido)
+  public static Component nome(Pokemon pokemon) {
+    return pokemon.heldItem().getHoverName();
+  }
+
+  // Usou o item. Como o Cobblemon faz numa batalha contra selvagem (javap no shouldConsumeItem): as frutas e as ervas (a etiqueta
+  // "consumed_in_wild_battle") somem; os outros (a Cinta de Foco) ficam com ele e só valem de novo na próxima batalha
+  public static void gastar(Pokemon pokemon, String id) {
+    if (pokemon.heldItem().is(CobblemonItemTags.CONSUMED_IN_WILD_BATTLE)) {
+      pokemon.removeHeldItem();
+    } else {
+      USADOS.computeIfAbsent(pokemon.getUuid(), uuid -> new HashSet<>()).add(id);
+    }
+  }
+
+  public static boolean usadoNestaBatalha(Pokemon pokemon, String id) {
+    Set<String> usados = USADOS.get(pokemon.getUuid());
+    return usados != null && usados.contains(id);
+  }
+
+  // A batalha acabou para ele: os itens de uma vez voltam a valer, e a Escolha destrava
+  public static void fimDaBatalha(ServerPlayer jogador) {
+    for (Pokemon pokemon : Cobblemon.INSTANCE.getStorage().getParty(jogador)) {
+      esquecer(pokemon);
+    }
+  }
+
+  public static void esquecer(Pokemon pokemon) {
+    USADOS.remove(pokemon.getUuid());
+    TravaDaEscolha.esquecer(pokemon);
+  }
+
+  public static void limpar() {
+    USADOS.clear();
+    TravaDaEscolha.limpar();
+  }
+}

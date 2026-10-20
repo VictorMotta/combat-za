@@ -1,0 +1,935 @@
+{
+  "abomasnow": [
+    "physical",
+    "special"
+  ],
+  "accelgor": [
+    "status"
+  ],
+  "aegislash": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "annihilape": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "archaludon": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "armarouge": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "axew": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "barbaracle": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "beautifly": [
+    "physical"
+  ],
+  "beldum": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "bellibolt": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "binacle": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "bisharp": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "blastoise": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "blaziken": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "bouffalant": [
+    "physical",
+    "status"
+  ],
+  "bronzong": [
+    "physical",
+    "status"
+  ],
+  "buzzwole": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "capsakid": [
+    "status"
+  ],
+  "cascoon": [
+    "physical"
+  ],
+  "castform": [
+    "physical",
+    "special"
+  ],
+  "ceruledge": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "charizard": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "charmander": [
+    "special"
+  ],
+  "chesnaught": [
+    "status"
+  ],
+  "chewtle": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "chienpao": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "chikorita": [
+    "physical",
+    "special"
+  ],
+  "cinderace": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "clefable": [
+    "physical",
+    "special"
+  ],
+  "clefairy": [
+    "special"
+  ],
+  "clobbopus": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "clodsire": [
+    "physical",
+    "status"
+  ],
+  "cobalion": [
+    "status"
+  ],
+  "combusken": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "crustle": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "cursola": [
+    "special"
+  ],
+  "cyndaquil": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "darkrai": [
+    "physical"
+  ],
+  "decidueye": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "deoxys": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "dewott": [
+    "status"
+  ],
+  "doublade": [
+    "status"
+  ],
+  "dragapult": [
+    "physical",
+    "special"
+  ],
+  "drilbur": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "ducklett": [
+    "physical"
+  ],
+  "dunsparce": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "duraludon": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "dusclops": [
+    "status"
+  ],
+  "dusknoir": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "duskull": [
+    "status"
+  ],
+  "dustox": [
+    "physical"
+  ],
+  "dwebble": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "enamorus": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "escavalier": [
+    "physical",
+    "status"
+  ],
+  "espurr": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "excadrill": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "exploud": [
+    "special",
+    "status"
+  ],
+  "falinks": [
+    "physical"
+  ],
+  "galvantula": [
+    "status"
+  ],
+  "garchomp": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "gastrodon": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "gengar": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "geodude": [
+    "status"
+  ],
+  "golem": [
+    "status"
+  ],
+  "golurk": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "grapploct": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "graveler": [
+    "status"
+  ],
+  "greedent": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "greninja": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "grimmsnarl": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "groudon": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "gulpin": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "honedge": [
+    "status"
+  ],
+  "hoopa": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "incineroar": [
+    "physical",
+    "status"
+  ],
+  "indeedee": [
+    "physical"
+  ],
+  "inkay": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "ironbundle": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "ironcrown": [
+    "status"
+  ],
+  "ironthorns": [
+    "physical",
+    "special"
+  ],
+  "irontreads": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "jirachi": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "kartana": [
+    "physical",
+    "status"
+  ],
+  "keldeo": [
+    "physical",
+    "special"
+  ],
+  "kilowattrel": [
+    "physical",
+    "special"
+  ],
+  "klang": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "kleavor": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "klink": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "klinklang": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "koffing": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "kommoo": [
+    "status"
+  ],
+  "kricketune": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "krokorok": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "krookodile": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "kubfu": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "kyurem": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "landorus": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "larvesta": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "litleo": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "lunatone": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "luxray": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "lycanroc": [
+    "status"
+  ],
+  "magmortar": [
+    "physical",
+    "special"
+  ],
+  "malamar": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "mamoswine": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "manaphy": [
+    "special",
+    "status"
+  ],
+  "marshadow": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "meganium": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "melmetal": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "meowstic": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "metagross": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "metang": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "mew": [
+    "special"
+  ],
+  "mewtwo": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "mienfoo": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "mienshao": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "mimikyu": [
+    "physical"
+  ],
+  "minior": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "minun": [
+    "special",
+    "status"
+  ],
+  "mrrime": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "naganadel": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "nincada": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "ninjask": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "nosepass": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "orthworm": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "overqwil": [
+    "special"
+  ],
+  "panpour": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "pansage": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "pansear": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "perrserker": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "pheromosa": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "phione": [
+    "special",
+    "status"
+  ],
+  "pichu": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "pikachu": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "piloswine": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "plusle": [
+    "special",
+    "status"
+  ],
+  "politoed": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "poliwrath": [
+    "physical"
+  ],
+  "porygon": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "porygon2": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "porygonz": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "primeape": [
+    "physical"
+  ],
+  "probopass": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "pyroar": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "quaquaval": [
+    "status"
+  ],
+  "rayquaza": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "regigigas": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "reshiram": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "rhydon": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "rhyhorn": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "rhyperior": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "roaringmoon": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "rockruff": [
+    "status"
+  ],
+  "rookidee": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "rowlet": [
+    "status"
+  ],
+  "samurott": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "sandile": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "sawk": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "sceptile": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "scizor": [
+    "status"
+  ],
+  "screamtail": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "seismitoad": [
+    "status"
+  ],
+  "serperior": [
+    "physical",
+    "special"
+  ],
+  "silcoon": [
+    "physical"
+  ],
+  "silvally": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "simipour": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "simisage": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "simisear": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "sirfetchd": [
+    "status"
+  ],
+  "skarmory": [
+    "physical"
+  ],
+  "skiddo": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "skwovet": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "slaking": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "slitherwing": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "snover": [
+    "physical",
+    "special"
+  ],
+  "solrock": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "spidops": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "spinda": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "spritzee": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "steenee": [
+    "status"
+  ],
+  "sudowoodo": [
+    "physical"
+  ],
+  "swinub": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "tadbulb": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "tarountula": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "terrakion": [
+    "status"
+  ],
+  "thundurus": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "tinkaton": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "togekiss": [
+    "special",
+    "status"
+  ],
+  "tornadus": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "totodile": [
+    "physical",
+    "status"
+  ],
+  "toxtricity": [
+    "status"
+  ],
+  "tsareena": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "tympole": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "typhlosion": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "tyranitar": [
+    "physical",
+    "special"
+  ],
+  "tyrantrum": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "tyrogue": [
+    "physical"
+  ],
+  "urshifu": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "veluza": [
+    "status"
+  ],
+  "victini": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "virizion": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "volcarona": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "weezing": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "wobbuffet": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "wochien": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "wurmple": [
+    "physical"
+  ],
+  "xurkitree": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "zebstrika": [
+    "physical",
+    "special",
+    "status"
+  ],
+  "zekrom": [
+    "physical",
+    "special",
+    "status"
+  ]
+}

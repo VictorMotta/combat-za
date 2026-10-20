@@ -1,0 +1,2508 @@
+{
+	"absorb": {
+		"animacao": [
+			"absorb",
+			"grass",
+			"special"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:absorb_actorhit",
+				"em": [
+					"target"
+				]
+			}
+		],
+		"voando": [
+			{
+				"de": [
+					"special",
+					"target"
+				],
+				"efeito": "cobblemon:absorb_actor",
+				"para": [
+					"target"
+				]
+			}
+		]
+	},
+	"acid": {
+		"animacao": [
+			"acid",
+			"spray",
+			"special"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:acid_target",
+				"em": [
+					"target"
+				]
+			}
+		],
+		"som_de_quem_ataca": "cobblemon:move.acid.actor",
+		"som_no_alvo": "cobblemon:move.acid.target",
+		"tempo_ate_o_alvo": 0.58,
+		"voando": [
+			{
+				"de": [
+					"special",
+					"target"
+				],
+				"efeito": "cobblemon:acid_actorfling",
+				"para": [
+					"target"
+				]
+			},
+			{
+				"de": [
+					"special",
+					"target"
+				],
+				"efeito": "cobblemon:acid_actor",
+				"para": [
+					"target"
+				]
+			}
+		]
+	},
+	"acidspray": {
+		"animacao": [
+			"acidspray",
+			"spray",
+			"special"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:acidspray_target",
+				"em": [
+					"target"
+				]
+			}
+		],
+		"tempo_ate_o_alvo": 0.9,
+		"voando": [
+			{
+				"de": [
+					"special",
+					"target"
+				],
+				"efeito": "cobblemon:acidspray_actorfling",
+				"para": [
+					"target"
+				]
+			},
+			{
+				"de": [
+					"special",
+					"target"
+				],
+				"efeito": "cobblemon:acidspray_actor",
+				"para": [
+					"target"
+				]
+			}
+		]
+	},
+	"aerialace": {
+		"animacao": [
+			"aerialace",
+			"cut",
+			"physical"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:aerialace_target",
+				"em": [
+					"target"
+				]
+			}
+		],
+		"som_de_quem_ataca": "cobblemon:move.aerialace.actor_1",
+		"som_no_alvo": "cobblemon:move.aerialace.target"
+	},
+	"aurorabeam": {
+		"animacao": [
+			"aurorabeam",
+			"beam",
+			"special"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:aurorabeam_target",
+				"em": [
+					"target"
+				]
+			},
+			{
+				"efeito": "cobblemon:aurorabeam_targetburst",
+				"em": [
+					"target"
+				]
+			}
+		],
+		"tempo_ate_o_alvo": 0.1,
+		"voando": [
+			{
+				"de": [
+					"special",
+					"target"
+				],
+				"efeito": "cobblemon:aurorabeam_actorpilot",
+				"para": [
+					"target"
+				]
+			}
+		]
+	},
+	"bite": {
+		"animacao": [
+			"bite",
+			"fang",
+			"physical"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:bite_target",
+				"em": [
+					"target"
+				]
+			},
+			{
+				"efeito": "cobblemon:bite_targetspark",
+				"em": [
+					"target"
+				]
+			}
+		]
+	},
+	"bodyslam": {
+		"animacao": [
+			"bodyslam",
+			"blunt",
+			"physical"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:bodyslam_impactfloor",
+				"em": [
+					"root"
+				]
+			}
+		],
+		"som_de_quem_ataca": "cobblemon:move.bodyslam.actor_1",
+		"som_no_alvo": "cobblemon:move.bodyslam.target"
+	},
+	"bubble": {
+		"animacao": [
+			"bubble",
+			"water",
+			"spray",
+			"special"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:bubble_target",
+				"em": [
+					"target"
+				]
+			}
+		],
+		"som_de_quem_ataca": "cobblemon:move.bubble.actor",
+		"som_no_alvo": "cobblemon:move.bubble.target",
+		"tempo_ate_o_alvo": 0.425,
+		"voando": [
+			{
+				"de": [
+					"special",
+					"target"
+				],
+				"efeito": "cobblemon:bubble_actor",
+				"para": [
+					"target"
+				],
+				"pesado_de_longe": true
+			}
+		]
+	},
+	"bubblebeam": {
+		"animacao": [
+			"bubblebeam",
+			"water",
+			"spray",
+			"special"
+		],
+		"som_de_quem_ataca": "cobblemon:move.bubblebeam.actor",
+		"som_no_alvo": "cobblemon:move.bubblebeam.target",
+		"voando": [
+			{
+				"de": [
+					"special",
+					"target"
+				],
+				"efeito": "cobblemon:bubblebeam_actor",
+				"para": [
+					"target"
+				]
+			}
+		]
+	},
+	"bulldoze": {
+		"animacao": [
+			"bulldoze"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:bulldoze_targetfloor",
+				"em": [
+					"root"
+				]
+			}
+		],
+		"som_de_quem_ataca": "cobblemon:move.bulldoze.actor",
+		"som_no_alvo": "cobblemon:move.bulldoze.target"
+	},
+	"bulletpunch": {
+		"animacao": [
+			"bulletpunch",
+			"punch",
+			"physical"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:bulletpunch_target",
+				"em": [
+					"target"
+				]
+			}
+		],
+		"som_no_alvo": "cobblemon:move.bulletpunch.target"
+	},
+	"closecombat": {
+		"animacao": [
+			"closecombat",
+			"physical"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:closecombat_target",
+				"em": [
+					"target"
+				]
+			},
+			{
+				"efeito": "cobblemon:closecombat_target2",
+				"em": [
+					"target"
+				]
+			}
+		],
+		"som_de_quem_ataca": "cobblemon:move.closecombat.actor_1",
+		"som_no_alvo": "cobblemon:move.closecombat.target"
+	},
+	"confusion": {
+		"animacao": [
+			"confusion",
+			"psychic",
+			"special"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:confusion_target",
+				"em": [
+					"target"
+				]
+			},
+			{
+				"efeito": "cobblemon:confusion_impact",
+				"em": [
+					"target"
+				]
+			},
+			{
+				"efeito": "cobblemon:confusion_impactdots",
+				"em": [
+					"target"
+				]
+			}
+		]
+	},
+	"cottonguard": {
+		"animacao": [
+			"cottonguard",
+			"status"
+		]
+	},
+	"crunch": {
+		"animacao": [
+			"crunch",
+			"bite",
+			"fang",
+			"physical"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:crunch_target",
+				"em": [
+					"target"
+				]
+			},
+			{
+				"efeito": "cobblemon:crunch_targetrocks",
+				"em": [
+					"target"
+				]
+			},
+			{
+				"efeito": "cobblemon:crunch_targetspark",
+				"em": [
+					"target"
+				]
+			}
+		]
+	},
+	"doubleteam": {
+		"animacao": [
+			"doubleteam"
+		]
+	},
+	"dragonclaw": {
+		"animacao": [
+			"dragonclaw",
+			"scratch",
+			"physical"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:dragonclaw_target",
+				"em": [
+					"target"
+				]
+			}
+		]
+	},
+	"eggbomb": {
+		"animacao": [
+			"eggbomb",
+			"special"
+		],
+		"voando": [
+			{
+				"de": [
+					"special",
+					"target"
+				],
+				"efeito": "cobblemon:eggbomb_actoregg",
+				"para": [
+					"target"
+				]
+			},
+			{
+				"de": [
+					"special",
+					"target"
+				],
+				"efeito": "cobblemon:eggbomb_actoreggmiss",
+				"para": [
+					"target"
+				]
+			}
+		]
+	},
+	"ember": {
+		"animacao": [
+			"ember",
+			"fire",
+			"spray",
+			"special"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:ember_target",
+				"em": [
+					"target"
+				]
+			}
+		],
+		"som_de_quem_ataca": "cobblemon:move.ember.actor",
+		"som_no_alvo": "cobblemon:move.ember.target",
+		"tempo_ate_o_alvo": 0.5,
+		"voando": [
+			{
+				"de": [
+					"special",
+					"target"
+				],
+				"efeito": "cobblemon:ember_actor",
+				"para": [
+					"target"
+				]
+			}
+		]
+	},
+	"eruption": {
+		"animacao": [
+			"eruption",
+			"lava",
+			"fire",
+			"special"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:eruption_target",
+				"em": [
+					"root"
+				]
+			}
+		],
+		"som_de_quem_ataca": "cobblemon:move.eruption.actor",
+		"som_no_alvo": "cobblemon:move.eruption.target",
+		"tempo_ate_o_alvo": 0.85,
+		"voando": [
+			{
+				"de": [
+					"middle"
+				],
+				"efeito": "cobblemon:eruption_actor",
+				"para": [
+					"root"
+				]
+			}
+		]
+	},
+	"explosion": {
+		"animacao": [
+			"explosion",
+			"status",
+			"physical"
+		]
+	},
+	"fireblast": {
+		"animacao": [
+			"fireblast",
+			"fire",
+			"special"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:fireblast_target",
+				"em": [
+					"target"
+				]
+			},
+			{
+				"efeito": "cobblemon:daimonji1",
+				"em": [
+					"target"
+				]
+			},
+			{
+				"efeito": "cobblemon:daimonji2",
+				"em": [
+					"target"
+				]
+			},
+			{
+				"efeito": "cobblemon:daimonji3",
+				"em": [
+					"target"
+				]
+			},
+			{
+				"efeito": "cobblemon:daimonji4",
+				"em": [
+					"target"
+				]
+			}
+		],
+		"tempo_ate_o_alvo": 0.95,
+		"voando": [
+			{
+				"de": [
+					"special",
+					"target"
+				],
+				"efeito": "cobblemon:fireblast_actor1",
+				"para": [
+					"target"
+				]
+			},
+			{
+				"de": [
+					"special",
+					"target"
+				],
+				"efeito": "cobblemon:fireblast_actor2",
+				"para": [
+					"target"
+				]
+			}
+		]
+	},
+	"firepunch": {
+		"animacao": [
+			"firepunch",
+			"punch",
+			"physical"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:firepunch_target",
+				"em": [
+					"target"
+				]
+			}
+		]
+	},
+	"firespin": {
+		"animacao": [
+			"firespin",
+			"special"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:firespin_targetburst",
+				"em": [
+					"root"
+				]
+			},
+			{
+				"efeito": "cobblemon:firespin_target",
+				"em": [
+					"root"
+				]
+			}
+		],
+		"tempo_ate_o_alvo": 0.36,
+		"voando": [
+			{
+				"de": [
+					"special",
+					"target"
+				],
+				"efeito": "cobblemon:firespin_actorburst",
+				"para": [
+					"root"
+				]
+			},
+			{
+				"de": [
+					"special",
+					"target"
+				],
+				"efeito": "cobblemon:firespin_actor",
+				"para": [
+					"root"
+				]
+			}
+		]
+	},
+	"flameburst": {
+		"animacao": [
+			"flameburst",
+			"special"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:flameburst_target",
+				"em": [
+					"target"
+				]
+			}
+		],
+		"tempo_ate_o_alvo": 0.89,
+		"voando": [
+			{
+				"de": [
+					"special",
+					"target"
+				],
+				"efeito": "cobblemon:flameburst_actorfling",
+				"para": [
+					"target"
+				]
+			},
+			{
+				"de": [
+					"special",
+					"target"
+				],
+				"efeito": "cobblemon:flameburst_actor",
+				"para": [
+					"target"
+				]
+			}
+		]
+	},
+	"flamecharge": {
+		"animacao": [
+			"flamecharge",
+			"tackle",
+			"blunt",
+			"physical"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:flamecharge_target",
+				"em": [
+					"target"
+				]
+			}
+		]
+	},
+	"flamethrower": {
+		"animacao": [
+			"flamethrower",
+			"fire",
+			"spray",
+			"special"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:flamethrower_target",
+				"em": [
+					"target"
+				]
+			},
+			{
+				"efeito": "cobblemon:flamethrower_targetburst",
+				"em": [
+					"target"
+				]
+			}
+		],
+		"som_de_quem_ataca": "cobblemon:move.flamethrower.actor",
+		"som_no_alvo": "cobblemon:move.flamethrower.target",
+		"tempo_ate_o_alvo": 0.25,
+		"voando": [
+			{
+				"de": [
+					"special",
+					"target"
+				],
+				"efeito": "cobblemon:flamethrower_actor",
+				"para": [
+					"middle"
+				],
+				"pesado_de_longe": true
+			}
+		]
+	},
+	"flamewheel": {
+		"animacao": [
+			"flamewheel",
+			"tackle",
+			"blunt",
+			"physical"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:flamewheel_target",
+				"em": [
+					"target"
+				]
+			},
+			{
+				"efeito": "cobblemon:ember_targetlinger",
+				"em": [
+					"target"
+				]
+			}
+		]
+	},
+	"frostbreath": {
+		"animacao": [
+			"frostbreath",
+			"ice",
+			"spray",
+			"special"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:frostbreath_target",
+				"em": [
+					"target"
+				]
+			}
+		],
+		"tempo_ate_o_alvo": 0.25,
+		"voando": [
+			{
+				"de": [
+					"special",
+					"target"
+				],
+				"efeito": "cobblemon:frostbreath_actor",
+				"para": [
+					"middle"
+				],
+				"pesado_de_longe": true
+			},
+			{
+				"de": [
+					"special",
+					"target"
+				],
+				"efeito": "cobblemon:frostbreath_actorsparkle",
+				"para": [
+					"middle"
+				]
+			}
+		]
+	},
+	"frustration": {
+		"animacao": [
+			"frustration2",
+			"frustration",
+			"blunt",
+			"normal",
+			"physical"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:frustration_target_1",
+				"em": [
+					"target"
+				]
+			},
+			{
+				"efeito": "cobblemon:frustration_target_2",
+				"em": [
+					"target"
+				]
+			}
+		]
+	},
+	"generic_move": {
+		"animacao": [
+			"q.move.name",
+			"q.move.damage_category"
+		],
+		"no_alvo": [
+			{
+				"efeito": "'cobblemon:impact_' + q.move.type",
+				"em": [
+					"target"
+				]
+			}
+		]
+	},
+	"gigadrain": {
+		"animacao": [
+			"gigadrain",
+			"grass",
+			"special"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:gigadrain_actorhit",
+				"em": [
+					"target"
+				]
+			}
+		],
+		"voando": [
+			{
+				"de": [
+					"special",
+					"target"
+				],
+				"efeito": "cobblemon:gigadrain_actor",
+				"para": [
+					"target"
+				]
+			},
+			{
+				"de": [
+					"special",
+					"target"
+				],
+				"efeito": "cobblemon:gigadrain_actorouter",
+				"para": [
+					"target"
+				]
+			},
+			{
+				"de": [
+					"special",
+					"target"
+				],
+				"efeito": "cobblemon:gigadrain_actordrainaccent",
+				"para": [
+					"target"
+				]
+			}
+		]
+	},
+	"growl": {
+		"animacao": [
+			"growl",
+			"cry"
+		]
+	},
+	"haze": {
+		"animacao": [
+			"haze",
+			"ice",
+			"status"
+		]
+	},
+	"hiddenpower": {
+		"animacao": [
+			"q.move.name",
+			"q.move.damage_category"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:impact_normal",
+				"em": [
+					"target"
+				]
+			}
+		]
+	},
+	"hornattack": {
+		"animacao": [
+			"hornattack",
+			"tackle",
+			"blunt",
+			"physical"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:pound_target",
+				"em": [
+					"target"
+				]
+			},
+			{
+				"efeito": "cobblemon:pound_targetsparks",
+				"em": [
+					"target"
+				]
+			}
+		],
+		"tempo_ate_o_alvo": 0.24,
+		"voando": [
+			{
+				"de": [
+					"target"
+				],
+				"efeito": "cobblemon:hornattack_actor",
+				"para": [
+					"target"
+				]
+			}
+		]
+	},
+	"hyperfang": {
+		"animacao": [
+			"hyperfang",
+			"bite",
+			"fang",
+			"physical"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:hyperfang_target",
+				"em": [
+					"target"
+				]
+			},
+			{
+				"efeito": "cobblemon:hyperfang_targetspark",
+				"em": [
+					"target"
+				]
+			},
+			{
+				"efeito": "cobblemon:hyperfang_targetdot",
+				"em": [
+					"target"
+				]
+			}
+		]
+	},
+	"hypnosis": {
+		"animacao": [
+			"hypnosis",
+			"psychic",
+			"status"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:hypnosis_targetimpact",
+				"em": [
+					"target"
+				]
+			},
+			{
+				"efeito": "cobblemon:hypnosis_target",
+				"em": [
+					"target"
+				]
+			}
+		],
+		"tempo_ate_o_alvo": 1.0,
+		"voando": [
+			{
+				"de": [
+					"target"
+				],
+				"efeito": "cobblemon:hypnosis_actor",
+				"para": [
+					"target"
+				]
+			}
+		]
+	},
+	"icebeam": {
+		"animacao": [
+			"icebeam",
+			"beam",
+			"special"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:icebeam_target",
+				"em": [
+					"target"
+				]
+			},
+			{
+				"efeito": "cobblemon:icebeam_targetbuild",
+				"em": [
+					"middle"
+				]
+			},
+			{
+				"efeito": "cobblemon:icebeam_targetburst",
+				"em": [
+					"target"
+				]
+			},
+			{
+				"efeito": "cobblemon:icebeam_targetfrost",
+				"em": [
+					"target"
+				]
+			}
+		],
+		"som_de_quem_ataca": "cobblemon:move.icebeam.actor",
+		"som_no_alvo": "cobblemon:move.icebeam.target_1",
+		"tempo_ate_o_alvo": 0.1,
+		"voando": [
+			{
+				"de": [
+					"special",
+					"target"
+				],
+				"efeito": "cobblemon:icebeam_actorpilot",
+				"para": [
+					"target"
+				]
+			}
+		]
+	},
+	"icepunch": {
+		"animacao": [
+			"icepunch",
+			"punch",
+			"physical"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:icepunch_target",
+				"em": [
+					"target"
+				]
+			}
+		]
+	},
+	"iceshard": {
+		"animacao": [
+			"iceshard",
+			"ice",
+			"special"
+		],
+		"voando": [
+			{
+				"de": [
+					"special",
+					"middle"
+				],
+				"efeito": "cobblemon:iceshard_actor",
+				"para": [
+					"target"
+				]
+			}
+		]
+	},
+	"icywind": {
+		"animacao": [
+			"icywind",
+			"spray",
+			"special"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:icywind_targetfrost",
+				"em": [
+					"middle"
+				]
+			},
+			{
+				"efeito": "cobblemon:icywind_target",
+				"em": [
+					"middle"
+				]
+			}
+		],
+		"tempo_ate_o_alvo": 0.5,
+		"voando": [
+			{
+				"de": [
+					"special",
+					"target"
+				],
+				"efeito": "cobblemon:icywind_actorpilot",
+				"para": [
+					"target"
+				]
+			}
+		]
+	},
+	"infestation": {
+		"animacao": [
+			"infestation",
+			"special"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:infestation_targetground",
+				"em": [
+					"root"
+				]
+			},
+			{
+				"efeito": "cobblemon:infestation_targetflyengulf",
+				"em": [
+					"middle"
+				]
+			},
+			{
+				"efeito": "cobblemon:infestation_targetswarm",
+				"em": [
+					"middle"
+				]
+			},
+			{
+				"efeito": "cobblemon:infestation_targetsmallhits",
+				"em": [
+					"middle"
+				]
+			}
+		],
+		"som_de_quem_ataca": "cobblemon:move.infestation.actor",
+		"som_no_alvo": "cobblemon:move.infestation.target"
+	},
+	"kinesis": {
+		"animacao": [
+			"kinesis",
+			"status"
+		]
+	},
+	"lavaplume": {
+		"animacao": [
+			"lavaplume",
+			"lava",
+			"fire",
+			"special"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:lavaplume_target",
+				"em": [
+					"root"
+				]
+			}
+		],
+		"som_de_quem_ataca": "cobblemon:move.lavaplume.actor",
+		"som_no_alvo": "cobblemon:move.lavaplume.target",
+		"tempo_ate_o_alvo": 0.85,
+		"voando": [
+			{
+				"de": [
+					"middle"
+				],
+				"efeito": "cobblemon:lavaplume_actor",
+				"para": [
+					"root"
+				]
+			}
+		]
+	},
+	"leechlife": {
+		"animacao": [
+			"leechlife",
+			"bite",
+			"fang",
+			"physical"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:leechlife_target",
+				"em": [
+					"target"
+				]
+			},
+			{
+				"efeito": "cobblemon:leechlife_targetdrain",
+				"em": [
+					"target"
+				]
+			}
+		],
+		"voando": [
+			{
+				"de": [
+					"target"
+				],
+				"efeito": "cobblemon:leechlife_actor",
+				"para": [
+					"target"
+				]
+			}
+		]
+	},
+	"leechseed": {
+		"animacao": [
+			"leechseed",
+			"grass",
+			"status"
+		],
+		"voando": [
+			{
+				"de": [
+					"special",
+					"target"
+				],
+				"efeito": "cobblemon:leechseed_actor",
+				"para": [
+					"target"
+				]
+			}
+		]
+	},
+	"leer": {
+		"animacao": [
+			"scaryface",
+			"status"
+		]
+	},
+	"lick": {
+		"animacao": [
+			"lick",
+			"ghost",
+			"physical"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:lick_target",
+				"em": [
+					"target"
+				]
+			},
+			{
+				"efeito": "cobblemon:lick_targetsplash",
+				"em": [
+					"target"
+				]
+			},
+			{
+				"efeito": "cobblemon:lick_targetdrip",
+				"em": [
+					"target"
+				]
+			}
+		]
+	},
+	"magicalleaf": {
+		"animacao": [
+			"magicalleaf",
+			"grass",
+			"special"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:magicalleaf_target",
+				"em": [
+					"target"
+				]
+			}
+		],
+		"som_de_quem_ataca": "cobblemon:move.magicalleaf.actor_1",
+		"som_no_alvo": "cobblemon:move.magicalleaf.target",
+		"tempo_ate_o_alvo": 1.12,
+		"voando": [
+			{
+				"de": [
+					"root"
+				],
+				"efeito": "cobblemon:magicalleaf_actor",
+				"para": [
+					"middle"
+				]
+			}
+		]
+	},
+	"megadrain": {
+		"animacao": [
+			"megadrain",
+			"grass",
+			"special"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:megadrain_actorhit",
+				"em": [
+					"target"
+				]
+			}
+		],
+		"voando": [
+			{
+				"de": [
+					"special",
+					"target"
+				],
+				"efeito": "cobblemon:megadrain_actor",
+				"para": [
+					"target"
+				]
+			},
+			{
+				"de": [
+					"special",
+					"target"
+				],
+				"efeito": "cobblemon:megadrain_actordrainaccent",
+				"para": [
+					"target"
+				]
+			}
+		]
+	},
+	"minimize": {
+		"animacao": [
+			"minimize",
+			"status"
+		]
+	},
+	"mist": {
+		"animacao": [
+			"mist",
+			"ice",
+			"status"
+		],
+		"som_de_quem_ataca": "cobblemon:move.mist.actor"
+	},
+	"mudbomb": {
+		"animacao": [
+			"mudbomb",
+			"special"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:mudbomb_target",
+				"em": [
+					"target"
+				]
+			}
+		],
+		"som_de_quem_ataca": "cobblemon:move.mudbomb.actor",
+		"som_no_alvo": "cobblemon:move.mudbomb.target",
+		"tempo_ate_o_alvo": 0.9,
+		"voando": [
+			{
+				"de": [
+					"special",
+					"target"
+				],
+				"efeito": "cobblemon:mudbomb_actorfling",
+				"para": [
+					"target"
+				]
+			},
+			{
+				"de": [
+					"special",
+					"target"
+				],
+				"efeito": "cobblemon:mudbomb_actor",
+				"para": [
+					"target"
+				]
+			}
+		]
+	},
+	"mudsport": {
+		"animacao": [
+			"mudsport",
+			"ground",
+			"status"
+		]
+	},
+	"mysticalfire": {
+		"animacao": [
+			"mysticalfire",
+			"fire",
+			"special"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:mysticalfire_target",
+				"em": [
+					"target"
+				]
+			}
+		],
+		"tempo_ate_o_alvo": 1.8,
+		"voando": [
+			{
+				"de": [
+					"special",
+					"target"
+				],
+				"efeito": "cobblemon:mysticalfire_actor",
+				"para": [
+					"target"
+				]
+			}
+		]
+	},
+	"nastyplot": {
+		"animacao": [
+			"nastyplot",
+			"status"
+		]
+	},
+	"oldscratch": {
+		"animacao": [
+			"scratch",
+			"physical"
+		]
+	},
+	"poisonfang": {
+		"animacao": [
+			"poisonfang",
+			"bite",
+			"fang",
+			"physical"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:poisonfang_target",
+				"em": [
+					"target"
+				]
+			},
+			{
+				"efeito": "cobblemon:poisonfang_targetspark",
+				"em": [
+					"target"
+				]
+			},
+			{
+				"efeito": "cobblemon:poisonfang_targetimpact",
+				"em": [
+					"target"
+				]
+			},
+			{
+				"efeito": "cobblemon:poisonfang_targetbubble",
+				"em": [
+					"target"
+				]
+			}
+		]
+	},
+	"poisongas": {
+		"animacao": [
+			"poisongas",
+			"spray",
+			"special"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:poisongas_target",
+				"em": [
+					"target"
+				]
+			}
+		],
+		"tempo_ate_o_alvo": 0.6,
+		"voando": [
+			{
+				"de": [
+					"special",
+					"target"
+				],
+				"efeito": "cobblemon:poisongas_actor",
+				"para": [
+					"target"
+				]
+			}
+		]
+	},
+	"poisonpowder": {
+		"animacao": [
+			"poisonpowder",
+			"powder",
+			"status",
+			"cry"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:poisonpowder_land",
+				"em": [
+					"root"
+				]
+			}
+		]
+	},
+	"pound": {
+		"animacao": [
+			"pound",
+			"punch",
+			"tail",
+			"physical"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:pound_target",
+				"em": [
+					"target"
+				]
+			},
+			{
+				"efeito": "cobblemon:pound_targetsparks",
+				"em": [
+					"target"
+				]
+			}
+		]
+	},
+	"powder": {
+		"animacao": [
+			"powder",
+			"status"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:powder_particles",
+				"em": [
+					"root"
+				]
+			}
+		]
+	},
+	"powdersnow": {
+		"animacao": [
+			"powdersnow",
+			"spray",
+			"special"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:powdersnow_target",
+				"em": [
+					"target"
+				]
+			}
+		],
+		"som_de_quem_ataca": "cobblemon:move.powdersnow.actor",
+		"som_no_alvo": "cobblemon:move.powdersnow.target",
+		"tempo_ate_o_alvo": 0.55,
+		"voando": [
+			{
+				"de": [
+					"special",
+					"target"
+				],
+				"efeito": "cobblemon:powdersnow_actor",
+				"para": [
+					"target"
+				]
+			},
+			{
+				"de": [
+					"special",
+					"target"
+				],
+				"efeito": "cobblemon:powdersnow_actormist",
+				"para": [
+					"target"
+				]
+			}
+		]
+	},
+	"present": {
+		"animacao": [
+			"present",
+			"special"
+		],
+		"voando": [
+			{
+				"de": [
+					"target"
+				],
+				"efeito": "cobblemon:present_actor",
+				"para": [
+					"target"
+				]
+			}
+		]
+	},
+	"protect": {
+		"animacao": [
+			"protect",
+			"status"
+		]
+	},
+	"psybeam": {
+		"animacao": [
+			"psybeam",
+			"beam",
+			"special"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:psybeam_target",
+				"em": [
+					"target"
+				]
+			},
+			{
+				"efeito": "cobblemon:psybeam_targetburst",
+				"em": [
+					"target"
+				]
+			}
+		],
+		"tempo_ate_o_alvo": 0.1,
+		"voando": [
+			{
+				"de": [
+					"special",
+					"target"
+				],
+				"efeito": "cobblemon:psybeam_actorpilot",
+				"para": [
+					"target"
+				]
+			}
+		]
+	},
+	"psychic": {
+		"animacao": [
+			"psychic",
+			"special"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:psychic_target",
+				"em": [
+					"root"
+				]
+			},
+			{
+				"efeito": "cobblemon:psychic_impact",
+				"em": [
+					"target"
+				]
+			},
+			{
+				"efeito": "cobblemon:psychic_impactdots",
+				"em": [
+					"target"
+				]
+			}
+		]
+	},
+	"pursuit": {
+		"animacao": [
+			"pursuit",
+			"dark",
+			"physical"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:pursuit_target",
+				"em": [
+					"target"
+				]
+			},
+			{
+				"efeito": "cobblemon:pursuit_targethit",
+				"em": [
+					"target"
+				]
+			},
+			{
+				"efeito": "cobblemon:pursuit_targetdots",
+				"em": [
+					"target"
+				]
+			}
+		]
+	},
+	"quickattack": {
+		"animacao": [
+			"quickattack",
+			"tackle",
+			"physical"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:tackle_target",
+				"em": [
+					"target"
+				]
+			},
+			{
+				"efeito": "cobblemon:quickattack_targetsparks",
+				"em": [
+					"target"
+				]
+			}
+		]
+	},
+	"ragepowder": {
+		"animacao": [
+			"ragepowder",
+			"status"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:ragepowder_land",
+				"em": [
+					"root"
+				]
+			}
+		]
+	},
+	"razorleaf": {
+		"animacao": [
+			"razorleaf",
+			"grass",
+			"special"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:razorleaf_target",
+				"em": [
+					"target"
+				]
+			}
+		],
+		"som_de_quem_ataca": "cobblemon:move.razorleaf.actor_1",
+		"som_no_alvo": "cobblemon:move.razorleaf.target",
+		"tempo_ate_o_alvo": 1.12,
+		"voando": [
+			{
+				"de": [
+					"root"
+				],
+				"efeito": "cobblemon:razorleaf_actor",
+				"para": [
+					"middle"
+				]
+			}
+		]
+	},
+	"return": {
+		"animacao": [
+			"return",
+			"blunt",
+			"normal",
+			"physical"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:return_target_1",
+				"em": [
+					"target"
+				]
+			},
+			{
+				"efeito": "cobblemon:return_target_2",
+				"em": [
+					"target"
+				]
+			}
+		]
+	},
+	"rockthrow": {
+		"animacao": [
+			"rockthrow",
+			"rock",
+			"physical"
+		],
+		"voando": [
+			{
+				"de": [
+					"target"
+				],
+				"efeito": "cobblemon:rockthrow_actor",
+				"para": [
+					"target"
+				]
+			}
+		]
+	},
+	"sandattack": {
+		"animacao": [
+			"sandattack",
+			"ground",
+			"status"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:sandattack_impact",
+				"em": [
+					"target"
+				]
+			},
+			{
+				"efeito": "cobblemon:sandattack_impactresidual",
+				"em": [
+					"target"
+				]
+			}
+		]
+	},
+	"scaryface": {
+		"animacao": [
+			"scaryface",
+			"special"
+		]
+	},
+	"scratch": {
+		"animacao": [
+			"scratch",
+			"physical"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:scratch_target",
+				"em": [
+					"target"
+				]
+			}
+		]
+	},
+	"seedbomb": {
+		"animacao": [
+			"seedbomb",
+			"grass",
+			"special"
+		],
+		"voando": [
+			{
+				"de": [
+					"special",
+					"target"
+				],
+				"efeito": "cobblemon:seedbomb_actor",
+				"para": [
+					"target"
+				]
+			}
+		]
+	},
+	"seismictoss": {
+		"animacao": [
+			"seismictoss",
+			"fighting",
+			"physical"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:seismictoss_actorgrab",
+				"em": [
+					"target"
+				]
+			},
+			{
+				"efeito": "cobblemon:seismictoss_actorin",
+				"em": [
+					"target"
+				]
+			}
+		],
+		"som_no_alvo": "cobblemon:move.seismictoss.target"
+	},
+	"selfdestruct": {
+		"animacao": [
+			"explosion",
+			"status",
+			"physical"
+		]
+	},
+	"shadowball": {
+		"animacao": [
+			"shadowball",
+			"special"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:shadowball_targetimpact",
+				"em": [
+					"target"
+				]
+			},
+			{
+				"efeito": "cobblemon:impact_ghost",
+				"em": [
+					"target"
+				]
+			}
+		],
+		"som_de_quem_ataca": "cobblemon:move.shadowball.actor",
+		"som_no_alvo": "cobblemon:move.shadowball.target",
+		"tempo_ate_o_alvo": 0.34,
+		"voando": [
+			{
+				"de": [
+					"target"
+				],
+				"efeito": "cobblemon:shadowball_targetflaring",
+				"para": [
+					"target"
+				]
+			},
+			{
+				"de": [
+					"target"
+				],
+				"efeito": "cobblemon:shadowball_targetblob",
+				"para": [
+					"target"
+				]
+			},
+			{
+				"de": [
+					"target"
+				],
+				"efeito": "cobblemon:shadowball_targetsplotching",
+				"para": [
+					"target"
+				]
+			}
+		]
+	},
+	"shadowclaw": {
+		"animacao": [
+			"shadowclaw",
+			"scratch",
+			"physical"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:shadowclaw_target",
+				"em": [
+					"target"
+				]
+			}
+		]
+	},
+	"sing": {
+		"animacao": [
+			"sing",
+			"status"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:sing_target",
+				"em": [
+					"target"
+				]
+			}
+		]
+	},
+	"sleeppowder": {
+		"animacao": [
+			"sleeppowder",
+			"powder",
+			"status",
+			"cry"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:sleeppowder_land",
+				"em": [
+					"root"
+				]
+			}
+		]
+	},
+	"sludge": {
+		"animacao": [
+			"sludge",
+			"spray",
+			"special"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:sludge_target",
+				"em": [
+					"target"
+				]
+			}
+		],
+		"tempo_ate_o_alvo": 0.58,
+		"voando": [
+			{
+				"de": [
+					"special",
+					"target"
+				],
+				"efeito": "cobblemon:sludge_actorfling",
+				"para": [
+					"target"
+				]
+			},
+			{
+				"de": [
+					"special",
+					"target"
+				],
+				"efeito": "cobblemon:sludge_actor",
+				"para": [
+					"target"
+				]
+			}
+		]
+	},
+	"sludgebomb": {
+		"animacao": [
+			"sludgebomb",
+			"special"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:sludgebomb_target",
+				"em": [
+					"target"
+				]
+			}
+		],
+		"som_de_quem_ataca": "cobblemon:move.sludgebomb.actor",
+		"som_no_alvo": "cobblemon:move.sludgebomb.target",
+		"tempo_ate_o_alvo": 0.9,
+		"voando": [
+			{
+				"de": [
+					"special",
+					"target"
+				],
+				"efeito": "cobblemon:sludgebomb_actorfling",
+				"para": [
+					"target"
+				]
+			},
+			{
+				"de": [
+					"special",
+					"target"
+				],
+				"efeito": "cobblemon:sludgebomb_actor",
+				"para": [
+					"target"
+				]
+			}
+		]
+	},
+	"smokescreen": {
+		"animacao": [
+			"smokescreen",
+			"spray",
+			"special"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:smokescreen_target",
+				"em": [
+					"root"
+				]
+			}
+		],
+		"tempo_ate_o_alvo": 0.6,
+		"voando": [
+			{
+				"de": [
+					"special",
+					"target"
+				],
+				"efeito": "cobblemon:smokescreen_actor",
+				"para": [
+					"target"
+				]
+			}
+		]
+	},
+	"spore": {
+		"animacao": [
+			"spore",
+			"powder",
+			"status",
+			"cry"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:spore_land",
+				"em": [
+					"root"
+				]
+			}
+		]
+	},
+	"stomp": {
+		"animacao": [
+			"stomp",
+			"physical"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:stomp_target_impact1",
+				"em": [
+					"root"
+				]
+			},
+			{
+				"efeito": "cobblemon:stomp_target_impact2",
+				"em": [
+					"root"
+				]
+			}
+		]
+	},
+	"stringshot": {
+		"animacao": [
+			"stringshot",
+			"bug",
+			"special"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:stringshot_target1",
+				"em": [
+					"middle"
+				]
+			},
+			{
+				"efeito": "cobblemon:stringshot_target2",
+				"em": [
+					"middle"
+				]
+			}
+		],
+		"tempo_ate_o_alvo": 0.3,
+		"voando": [
+			{
+				"de": [
+					"special",
+					"target"
+				],
+				"efeito": "cobblemon:stringshot_actorspray",
+				"para": [
+					"middle"
+				]
+			},
+			{
+				"de": [
+					"special",
+					"target"
+				],
+				"efeito": "cobblemon:stringshot_actor",
+				"para": [
+					"middle"
+				]
+			}
+		]
+	},
+	"stunspore": {
+		"animacao": [
+			"stunspore",
+			"powder",
+			"status",
+			"cry"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:stunspore_land",
+				"em": [
+					"root"
+				]
+			}
+		]
+	},
+	"superfang": {
+		"animacao": [
+			"superfang",
+			"bite",
+			"fang",
+			"physical"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:superfang_target",
+				"em": [
+					"target"
+				]
+			},
+			{
+				"efeito": "cobblemon:superfang_targetspark",
+				"em": [
+					"target"
+				]
+			}
+		]
+	},
+	"swordsdance": {
+		"animacao": [
+			"swordsdance",
+			"dancer",
+			"status"
+		]
+	},
+	"tackle": {
+		"animacao": [
+			"tackle",
+			"charge",
+			"blunt",
+			"physical"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:tackle_targetsparks",
+				"em": [
+					"target"
+				]
+			},
+			{
+				"efeito": "cobblemon:tackle_target",
+				"em": [
+					"target"
+				]
+			}
+		]
+	},
+	"tailwhip": {
+		"animacao": [
+			"tailwhip",
+			"status"
+		]
+	},
+	"thunder": {
+		"animacao": [
+			"thunder",
+			"electric",
+			"special"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:thunder_targetcloud",
+				"em": [
+					"root"
+				]
+			},
+			{
+				"efeito": "cobblemon:thunder_target",
+				"em": [
+					"root"
+				]
+			},
+			{
+				"efeito": "cobblemon:thunder_actorfloorscorch",
+				"em": [
+					"middle"
+				]
+			},
+			{
+				"efeito": "cobblemon:thunder_actorsmoke",
+				"em": [
+					"root"
+				]
+			}
+		],
+		"som_de_quem_ataca": "cobblemon:move.thunder.actor",
+		"som_no_alvo": "cobblemon:move.thunder.target"
+	},
+	"thunderbolt": {
+		"animacao": [
+			"thunderbolt",
+			"electric",
+			"special"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:thunderbolt_target",
+				"em": [
+					"target"
+				]
+			}
+		],
+		"som_de_quem_ataca": "cobblemon:move.thunderbolt.actor",
+		"som_no_alvo": "cobblemon:move.thunderbolt.target",
+		"tempo_ate_o_alvo": 0.12,
+		"voando": [
+			{
+				"de": [
+					"target"
+				],
+				"efeito": "cobblemon:thunderbolt_actor",
+				"para": [
+					"target"
+				]
+			}
+		]
+	},
+	"thunderpunch": {
+		"animacao": [
+			"thunderpunch",
+			"punch",
+			"physical"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:thunderpunch_target",
+				"em": [
+					"target"
+				]
+			}
+		]
+	},
+	"thundershock": {
+		"animacao": [
+			"thundershock",
+			"electric",
+			"special"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:thundershock_target",
+				"em": [
+					"target"
+				]
+			},
+			{
+				"efeito": "cobblemon:thundershock_targetbolts",
+				"em": [
+					"target"
+				]
+			},
+			{
+				"efeito": "cobblemon:thundershock_targetimpact",
+				"em": [
+					"target"
+				]
+			}
+		],
+		"som_de_quem_ataca": "cobblemon:move.thundershock.actor",
+		"som_no_alvo": "cobblemon:move.thundershock.target",
+		"tempo_ate_o_alvo": 0.02,
+		"voando": [
+			{
+				"de": [
+					"target"
+				],
+				"efeito": "cobblemon:thundershock_actor",
+				"para": [
+					"target"
+				]
+			}
+		]
+	},
+	"thunderwave": {
+		"animacao": [
+			"thunderwave",
+			"electric",
+			"status"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:thunderwave_impact1",
+				"em": [
+					"target"
+				]
+			},
+			{
+				"efeito": "cobblemon:thunderwave_impact2",
+				"em": [
+					"target"
+				]
+			},
+			{
+				"efeito": "cobblemon:thunderwave_sparking",
+				"em": [
+					"target"
+				]
+			},
+			{
+				"efeito": "cobblemon:thunderwave_impact3",
+				"em": [
+					"target"
+				]
+			}
+		]
+	},
+	"toxic": {
+		"animacao": [
+			"toxic",
+			"status"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:toxpoison_actor",
+				"em": [
+					"target"
+				]
+			}
+		]
+	},
+	"watergun": {
+		"animacao": [
+			"watergun",
+			"spray",
+			"beam",
+			"special"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:watergun_target",
+				"em": [
+					"target"
+				]
+			},
+			{
+				"efeito": "cobblemon:watergun_targetfoam",
+				"em": [
+					"target"
+				]
+			}
+		],
+		"som_de_quem_ataca": "cobblemon:move.watergun.actor",
+		"som_no_alvo": "cobblemon:move.watergun.target",
+		"tempo_ate_o_alvo": 0.31,
+		"voando": [
+			{
+				"de": [
+					"special",
+					"target"
+				],
+				"efeito": "cobblemon:watergun_spray",
+				"para": [
+					"target"
+				]
+			},
+			{
+				"de": [
+					"special",
+					"target"
+				],
+				"efeito": "cobblemon:watergun_actor",
+				"para": [
+					"target"
+				]
+			}
+		]
+	},
+	"waterpulse": {
+		"animacao": [
+			"waterpulse",
+			"spray",
+			"special"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:waterpulse_target",
+				"em": [
+					"target"
+				]
+			},
+			{
+				"efeito": "cobblemon:waterpulse_targetsplash",
+				"em": [
+					"target"
+				]
+			},
+			{
+				"efeito": "cobblemon:waterpulse_actorsuds",
+				"em": [
+					"root"
+				]
+			}
+		],
+		"som_de_quem_ataca": "cobblemon:move.waterpulse.actor",
+		"som_no_alvo": "cobblemon:move.waterpulse.target",
+		"tempo_ate_o_alvo": 0.85,
+		"voando": [
+			{
+				"de": [
+					"special",
+					"target"
+				],
+				"efeito": "cobblemon:waterpulse_actor",
+				"para": [
+					"target"
+				]
+			}
+		]
+	},
+	"watersport": {
+		"animacao": [
+			"watersport",
+			"water",
+			"status"
+		]
+	},
+	"willowisp": {
+		"animacao": [
+			"willowisp",
+			"fire",
+			"special"
+		],
+		"no_alvo": [
+			{
+				"efeito": "cobblemon:willowisp_target",
+				"em": [
+					"target"
+				]
+			}
+		],
+		"som_de_quem_ataca": "cobblemon:move.willowisp.actor_1",
+		"som_no_alvo": "cobblemon:move.willowisp.target",
+		"tempo_ate_o_alvo": 2.65,
+		"voando": [
+			{
+				"de": [
+					"special",
+					"target"
+				],
+				"efeito": "cobblemon:willowisp_actor",
+				"para": [
+					"target"
+				]
+			}
+		]
+	},
+	"withdraw": {
+		"animacao": [
+			"withdraw",
+			"protect",
+			"status"
+		]
+	}
+}

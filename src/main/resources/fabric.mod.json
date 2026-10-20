@@ -1,0 +1,36 @@
+{
+	"schemaVersion": 1,
+	"id": "cobblemon_combat_za",
+	"version": "${version}",
+	"name": "Cobblemon Combat ZA",
+	"description": "Real-time battles against wild Pokémon for Cobblemon, inspired by Pokémon Legends: Z-A. Beta: wild battles only for now.",
+	"authors": ["Victor"],
+	"contact": {
+		"homepage": "https://modrinth.com/mod/cobblemon-combat-za",
+		"sources": "https://github.com/VictorMotta/combat-za",
+		"issues": "https://github.com/VictorMotta/combat-za/issues"
+	},
+	"license": "MIT",
+	"environment": "*",
+	"entrypoints": {
+		"main": ["dev.victor.combatza.CobblemonCombatZA"],
+		"client": ["dev.victor.combatza.client.CobblemonCombatZAClient"]
+	},
+	"depends": {
+		"fabricloader": ">=0.18.4",
+		"minecraft": "~1.21.1",
+		"java": ">=21",
+		"fabric-api": "*",
+		"cobblemon": "~1.7.3"
+	},
+	"mixins": [
+		"cobblemon_combat_za.mixins.json",
+		{
+			"config": "cobblemon_combat_za.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"breaks": {
+		"fightorflight": "*"
+	}
+}

@@ -1,0 +1,262 @@
+{
+	"acid": {
+		"impacto": "cobblemon:acid_target"
+	},
+	"acidspray": {
+		"impacto": "cobblemon:acidspray_target"
+	},
+	"aerialace": {
+		"impacto": "cobblemon:aerialace_targetburst"
+	},
+	"aurorabeam": {
+		"impacto": "cobblemon:aurorabeam_targetburst"
+	},
+	"bite": {
+		"impacto": "cobblemon:bite_target"
+	},
+	"bubblebeam": {
+		"impacto": "cobblemon:bubblebeam_pop",
+		"rastro": "cobblemon:bubblebeam_bubbles"
+	},
+	"bulletpunch": {
+		"impacto": "cobblemon:bulletpunch_target"
+	},
+	"closecombat": {
+		"impacto": "cobblemon:closecombat_targetimpact",
+		"rastro": "cobblemon:closecombat_dashlines"
+	},
+	"confusion": {
+		"impacto": "cobblemon:confusion_impact"
+	},
+	"cottonguard": {
+		"rastro": "cobblemon:cottonguard"
+	},
+	"crunch": {
+		"impacto": "cobblemon:crunch_target"
+	},
+	"doubleteam": {
+		"rastro": "cobblemon:doubleteam_dashlines"
+	},
+	"dragonclaw": {
+		"impacto": "cobblemon:dragonclaw_target",
+		"rastro": "cobblemon:dragonclaw_hand"
+	},
+	"elemental_punches": {
+		"rastro": "cobblemon:firepunch"
+	},
+	"ember": {
+		"impacto": "cobblemon:ember_impact",
+		"rastro": "cobblemon:ember_fire"
+	},
+	"eruption": {
+		"impacto": "cobblemon:eruption_targetburst"
+	},
+	"explosion": {
+		"impacto": "cobblemon:explosion_target",
+		"rastro": "cobblemon:explosion_debris_smoke"
+	},
+	"fireblast": {
+		"impacto": "cobblemon:fireblast_target",
+		"rastro": "cobblemon:daimonji1"
+	},
+	"firepunch": {
+		"impacto": "cobblemon:firepunch_targetburst",
+		"rastro": "cobblemon:firepunch_hand"
+	},
+	"firespin": {
+		"impacto": "cobblemon:firespin_targetburst"
+	},
+	"flameburst": {
+		"impacto": "cobblemon:flameburst_target"
+	},
+	"flamecharge": {
+		"impacto": "cobblemon:flamecharge_target"
+	},
+	"flamethrower": {
+		"impacto": "cobblemon:flamethrower_targetburst"
+	},
+	"flamewheel": {
+		"impacto": "cobblemon:flamewheel_target"
+	},
+	"frostbreath": {
+		"impacto": "cobblemon:frostbreath_target"
+	},
+	"hyperfang": {
+		"impacto": "cobblemon:hyperfang_target"
+	},
+	"hypnosis": {
+		"impacto": "cobblemon:hypnosis_targetimpact"
+	},
+	"icebeam": {
+		"impacto": "cobblemon:icebeam_targetburst"
+	},
+	"icepunch": {
+		"impacto": "cobblemon:icepunch_targetburst",
+		"rastro": "cobblemon:icepunch_hand"
+	},
+	"iceshard": {
+		"impacto": "cobblemon:iceshard_target"
+	},
+	"icywind": {
+		"impacto": "cobblemon:icywind_target"
+	},
+	"lavaplume": {
+		"impacto": "cobblemon:lavaplume_target"
+	},
+	"leechlife": {
+		"impacto": "cobblemon:leechlife_target"
+	},
+	"leechseed": {
+		"impacto": "cobblemon:leechseed_target",
+		"rastro": "cobblemon:leechseed_sprout"
+	},
+	"leer": {
+		"rastro": "cobblemon:leer_gleam"
+	},
+	"lick": {
+		"impacto": "cobblemon:lick_target"
+	},
+	"magicalleaf": {
+		"impacto": "cobblemon:magicalleaf_target"
+	},
+	"minimize": {
+		"rastro": "cobblemon:minimize_actor"
+	},
+	"mudbomb": {
+		"impacto": "cobblemon:mudbomb_target"
+	},
+	"mudsport": {
+		"impacto": "cobblemon:mudsport_target"
+	},
+	"mysticalfire": {
+		"impacto": "cobblemon:mysticalfire_target"
+	},
+	"poisonfang": {
+		"impacto": "cobblemon:poisonfang_targetimpact"
+	},
+	"poisongas": {
+		"impacto": "cobblemon:poisongas_target"
+	},
+	"poisonpowder": {
+		"rastro": "cobblemon:poisonpowder_cloud"
+	},
+	"pound": {
+		"impacto": "cobblemon:pound_target"
+	},
+	"powder": {
+		"rastro": "cobblemon:powder_cloud"
+	},
+	"powdersnow": {
+		"impacto": "cobblemon:powdersnow_target"
+	},
+	"present": {
+		"impacto": "cobblemon:present_target"
+	},
+	"psybeam": {
+		"impacto": "cobblemon:psybeam_targetburst"
+	},
+	"psychic": {
+		"impacto": "cobblemon:psychic_impact"
+	},
+	"pursuit": {
+		"impacto": "cobblemon:pursuit_target"
+	},
+	"quickattack": {
+		"rastro": "cobblemon:quickattack_dashlines"
+	},
+	"ragepowder": {
+		"rastro": "cobblemon:ragepowder_cloud"
+	},
+	"razorleaf": {
+		"impacto": "cobblemon:razorleaf_target"
+	},
+	"rockthrow": {
+		"impacto": "cobblemon:rockthrow_target"
+	},
+	"sandattack": {
+		"impacto": "cobblemon:sandattack_impact",
+		"rastro": "cobblemon:sandattack_residual"
+	},
+	"scaryface": {
+		"rastro": "cobblemon:scaryface_gleam"
+	},
+	"scratch": {
+		"impacto": "cobblemon:scratch_target"
+	},
+	"seedbomb": {
+		"impacto": "cobblemon:seedbomb_target"
+	},
+	"seismictoss": {
+		"impacto": "cobblemon:seismictoss_target",
+		"rastro": "cobblemon:seismictoss_ding"
+	},
+	"shadowball": {
+		"impacto": "cobblemon:shadowball_targetimpact"
+	},
+	"shadowclaw": {
+		"impacto": "cobblemon:shadowclaw_target",
+		"rastro": "cobblemon:shadowclaw_hand"
+	},
+	"sing": {
+		"impacto": "cobblemon:sing_target"
+	},
+	"sleeppowder": {
+		"rastro": "cobblemon:sleeppowder_cloud"
+	},
+	"sludge": {
+		"impacto": "cobblemon:sludge_target"
+	},
+	"sludgebomb": {
+		"impacto": "cobblemon:sludgebomb_target"
+	},
+	"smokescreen": {
+		"impacto": "cobblemon:smokescreen_target"
+	},
+	"spore": {
+		"rastro": "cobblemon:spore_cloud"
+	},
+	"stunspore": {
+		"rastro": "cobblemon:stunspore_cloud"
+	},
+	"superfang": {
+		"impacto": "cobblemon:superfang_target"
+	},
+	"swordsdance": {
+		"rastro": "cobblemon:swordsdance_sparkle"
+	},
+	"synthesis": {
+		"rastro": "cobblemon:synthesis_accretion"
+	},
+	"tackle": {
+		"impacto": "cobblemon:tackle_target"
+	},
+	"thunder": {
+		"impacto": "cobblemon:thunder_target"
+	},
+	"thunderbolt": {
+		"impacto": "cobblemon:thunderbolt_targetimpact"
+	},
+	"thunderpunch": {
+		"impacto": "cobblemon:thunderpunch_targetimpact",
+		"rastro": "cobblemon:thunderpunch_hand"
+	},
+	"thundershock": {
+		"impacto": "cobblemon:thundershock_targetimpact"
+	},
+	"thunderwave": {
+		"rastro": "cobblemon:thunderwave_launch"
+	},
+	"watergun": {
+		"impacto": "cobblemon:watergun_target",
+		"rastro": "cobblemon:watergun_spray"
+	},
+	"waterpulse": {
+		"impacto": "cobblemon:waterpulse_target"
+	},
+	"watersport": {
+		"impacto": "cobblemon:watersport_target"
+	},
+	"willowisp": {
+		"impacto": "cobblemon:willowisp_target"
+	}
+}

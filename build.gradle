@@ -1,0 +1,143 @@
+// build.gradle: a "receita" do mod.
+// Diz ao Gradle quais plugins usar, de onde baixar as dependências,
+// quais são elas e como empacotar o .jar final.
+// Os valores ${project.xxx} vêm do gradle.properties.
+
+plugins {
+    // Fabric Loom: plugin que ensina o Gradle a construir mods Fabric
+    id 'fabric-loom' version "${loom_version}"
+}
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+    // Nome do .jar gerado: cobblemon_combat_za-<versão>.jar (a versão vem do gradle.properties)
+    archivesName = project.archives_base_name
+}
+
+// Onde procurar as DEPENDÊNCIAS (bibliotecas e mods)
+repositories {
+    maven {
+        name = 'ParchmentMC'
+        url = 'https://maven.parchmentmc.org'
+    }
+    maven {
+        // Repositório oficial do Cobblemon
+        name = 'Cobblemon'
+        url = 'https://maven.impactdev.net/repository/development/'
+    }
+    mavenCentral()
+    // 8.4: o Maven do Modrinth, só para o Mega Showdown (a Mega Evolução do modpack). O "exclusiveContent" faz o Gradle
+    // procurar ali SÓ o grupo "maven.modrinth", e não perguntar a ele pelas outras dependências
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = 'Modrinth'
+                url = 'https://api.modrinth.com/maven'
+            }
+        }
+        filter {
+            includeGroup 'maven.modrinth'
+        }
+    }
+}
+
+loom {
+    // Separa o código em duas pastas:
+    //   src/main/java   -> código comum (roda no servidor E no cliente)
+    //   src/client/java -> código só do cliente (teclas, HUD, renderização)
+    // Assim o compilador nos impede de usar coisas de tela no servidor por engano.
+    splitEnvironmentSourceSets()
+
+    mods {
+        "cobblemon_combat_za" {
+            sourceSet sourceSets.main
+            sourceSet sourceSets.client
+        }
+    }
+}
+
+dependencies {
+    // O Minecraft em si
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+
+    // Mappings: traduzem os nomes "embaralhados" do Minecraft para nomes legíveis.
+    // Usamos os nomes oficiais da Mojang (os mesmos que o Cobblemon usa)
+    // + Parchment, que dá nomes aos parâmetros dos métodos.
+    mappings loom.layered() {
+        officialMojangMappings()
+        parchment("org.parchmentmc.data:parchment-${project.minecraft_version}:${project.parchment_version}@zip")
+    }
+
+    // modImplementation = "preciso disso para compilar E o jogo precisa ter isso instalado"
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+    // O Cobblemon é escrito em Kotlin; este mod traz a biblioteca do Kotlin para o jogo
+    modImplementation "net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}"
+    // O Cobblemon como dependência de compilação (não copiamos o código dele para dentro do nosso jar)
+    modImplementation "com.cobblemon:fabric:${project.cobblemon_version}"
+    // 8.4: o Mega Showdown, a versão exata do modpack (Y6di9Ram = 1.8.4+1.7.3+1.21.1 no Modrinth, achada pelo hash do .jar).
+    // modCompileOnly = "só para compilar": o jogo já tem o mod, e o nosso .jar não leva nada dele. Sem ele instalado, a
+    // nossa Mega fica desligada (mega.PonteDoMegaShowdown). transitive = false: não puxa as dependências dele
+    modCompileOnly("maven.modrinth:cobblemon-mega-showdown:Y6di9Ram") {
+        transitive = false
+    }
+    // Party: o Xaero's Minimap, a versão do modpack (Tx54V6kI = fabric-1.21.1-26.4.2 no Modrinth, achada pelo hash do .jar).
+    // Só para compilar: a party aparece no mapa dele quando ele está instalado (client.PartyNoXaero); sem ele, nada muda
+    modCompileOnly("maven.modrinth:xaeros-minimap:Tx54V6kI") {
+        transitive = false
+    }
+    // Party: o Open Parties and Claims, a versão do modpack (YnCCrnDV = fabric-1.21.1-0.32.7 no Modrinth). Com ele no servidor,
+    // a party é a dele (party.PonteDoOpac); só para compilar
+    modCompileOnly("maven.modrinth:open-parties-and-claims:YnCCrnDV") {
+        transitive = false
+    }
+}
+
+processResources {
+    // Troca o texto ${version} dentro do fabric.mod.json pela versão real (0.1.0)
+    inputs.property "version", project.version
+    filesMatching("fabric.mod.json") {
+        expand "version": inputs.properties.version
+    }
+}
+
+// O texto da licença (MIT) vai DENTRO do .jar, com o nome do mod (a licença pede que o aviso acompanhe as cópias, e o nome
+// diferente evita confusão com o LICENSE de outros mods)
+jar {
+    from("LICENSE") {
+        rename { "${it}_${project.base.archivesName.get()}" }
+    }
+}
+
+java {
+    // Compila para Java 21, a versão que o Minecraft 1.21.1 usa
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+tasks.withType(JavaCompile).configureEach {
+    it.options.release = 21
+    it.options.encoding = 'UTF-8'
+}
+
+// Observação: o Gradle só compila o que está em src/. A pasta "referencia"
+// fica de fora automaticamente, nunca entra no build nem no .jar.
+// Pasta mods do perfil de TESTE. Cada PC diz a sua no arquivo pessoal do Gradle
+// (~/.gradle/gradle.properties no Mac, %USERPROFILE%\.gradle\gradle.properties no Windows):
+//   pastaModsDeTeste=C:/Users/.../ModrinthApp/profiles/<perfil de teste>/mods
+// Sem essa linha, usa a pasta do Mac.
+def pastaModsDeTeste = findProperty('pastaModsDeTeste') ?:
+    '/Users/victormottadev/Library/Application Support/ModrinthApp/profiles/COBLEVERSE - TESTE MEU MOD AZ 1.0.0/mods'
+
+tasks.register('instalarNoJogo', Copy){
+    dependsOn remapJar
+    // Antes de copiar, tira da pasta de teste o .jar antigo do NOSSO mod (outra versão = outro nome de arquivo; com dois, o jogo
+    // acha o mod duas vezes e não abre). Só os arquivos cobblemon_combat_za-*.jar
+    doFirst {
+        delete fileTree(pastaModsDeTeste) { include "${project.archives_base_name}-*.jar" }
+    }
+    from remapJar.archiveFile
+    into pastaModsDeTeste
+}

@@ -1,0 +1,18 @@
+// settings.gradle: o primeiro arquivo que o Gradle lê.
+// Ele diz ONDE baixar os plugins e QUAL é o nome do projeto.
+
+pluginManagement {
+    repositories {
+        // Repositório oficial do Fabric: é daqui que vem o plugin "fabric-loom"
+        maven {
+            name = 'Fabric'
+            url = 'https://maven.fabricmc.net/'
+        }
+        // Repositório padrão de plugins do Gradle
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+
+// Nome do projeto (aparece no VS Code e nos logs do Gradle)
+rootProject.name = 'cobblemon_combat_za'

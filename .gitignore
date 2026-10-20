@@ -1,0 +1,15 @@
+# Arquivos gerados automaticamente (não são código-fonte)
+.gradle/
+build/
+out/
+bin/
+run/
+*.class
+
+# Configurações locais da IDE e do Claude Code (cada PC tem as suas)
+.idea/
+*.iml
+.claude/settings.local.json
+
+# Cópia do modpack, só para consulta
+referencia/
