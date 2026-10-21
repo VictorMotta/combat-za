@@ -2,6 +2,7 @@ package dev.victor.combatza.ia;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -49,19 +50,18 @@ import net.minecraft.world.entity.monster.warden.Warden;
 // é seu, e não do guarda. O modo fica guardado no seu jogador (um "anexo" do Fabric: vai junto no save e volta depois de
 // morrer) e é avisado ao seu jogo, para a roda mostrar o atual
 public class Guardas {
+  private static final String FRASE = "cobblemon_combat_za.guardas.";
+
   public enum Modo {
-    PASSIVO("Passivo: só te seguem, nunca atacam"),
-    NEUTRO("Neutro: atacam os monstros que chegam perto de você"),
-    AGRESSIVO("Agressivo: atacam todos os monstros por perto, até a aranha calma");
+    PASSIVO, NEUTRO, AGRESSIVO;
 
-    private final String descricao;
-
-    Modo(String descricao) {
-      this.descricao = descricao;
+    // "Passivo" (a roda e a fileirinha) e "Passivo: só te seguem, nunca atacam" (a roda e a barra de ação)
+    public Component nome() {
+      return Component.translatable(FRASE + "modo." + name().toLowerCase(Locale.ROOT));
     }
 
-    public String descricao() {
-      return descricao;
+    public Component descricao() {
+      return Component.translatable(FRASE + "descricao." + name().toLowerCase(Locale.ROOT));
     }
 
     public static Modo de(String nome) {
@@ -146,7 +146,7 @@ public class Guardas {
 
   public static void mudar(ServerPlayer jogador, Modo modo) {
     jogador.setAttached(MODO, modo.name().toLowerCase());
-    Feedback.barraDeAcao(jogador, Component.literal("🛡 Guardas — " + modo.descricao()));
+    Feedback.barraDeAcao(jogador, Component.translatable(FRASE + "mudou", modo.descricao()));
     CobblemonCombatZA.LOGGER.info("GUARDAS: {} escolheu {}", jogador.getGameProfile().getName(), modo);
   }
 

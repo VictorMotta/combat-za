@@ -28,7 +28,7 @@ public class GolpesTravados {
     }
     CobblemonCombatZA.LOGGER.info("GOLPES TRAVADOS: {} tentou trocar golpes em combate",
         jogador.getGameProfile().getName());
-    Feedback.barraDeAcao(jogador, Component.literal("🔒 Em combate, os golpes não podem ser trocados!"));
+    Feedback.barraDeAcao(jogador, Component.translatable("cobblemon_combat_za.batalha.golpes_travados"));
     return true;
   }
 }

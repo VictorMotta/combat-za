@@ -4,7 +4,6 @@ import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
 import com.cobblemon.mod.common.pokemon.Pokemon;
 
 import dev.victor.combatza.CobblemonCombatZA;
-import dev.victor.combatza.golpes.EfeitosDosGolpes;
 import dev.victor.combatza.golpes.Execucao;
 import dev.victor.combatza.golpes.Feedback;
 import dev.victor.combatza.golpes.Vida;
@@ -21,7 +20,7 @@ public class ItensDeContato {
 
   public static void reagir(Execucao execucao, PokemonEntity atacante, Entity alvo, double pvTirados) {
     if (pvTirados <= 0 || !(alvo instanceof PokemonEntity atingido) || !atacante.isAlive()
-        || !EfeitosDosGolpes.fazContato(execucao.getGolpe())
+        || !ItensSegurados.fazContato(execucao.getPokemon(), execucao.getGolpe())
         || !ItensSegurados.tem(atingido.getPokemon(), ItensSegurados.ELMO_ROCHOSO)) {
       return;
     }

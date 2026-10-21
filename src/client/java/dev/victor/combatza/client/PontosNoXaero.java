@@ -51,6 +51,8 @@ public class PontosNoXaero {
   private static final Map<String, List<MeusPontosPayload.Ponto>> mandados = new HashMap<>();
   private static MinimapWorldRootContainer raizAnterior;
   private static int ticks = 0;
+  // O Xaero mudou por dentro numa versão nova: os waypoints da party se desligam (um aviso no log), em vez de fechar o jogo
+  private static boolean desligado = false;
 
   private PontosNoXaero() {
   }
@@ -60,7 +62,17 @@ public class PontosNoXaero {
       marcas = pacote.marcas();
       mudou = true;
     });
-    ClientTickEvents.END_CLIENT_TICK.register(PontosNoXaero::atualizar);
+    ClientTickEvents.END_CLIENT_TICK.register(cliente -> {
+      if (desligado) {
+        return;
+      }
+      try {
+        atualizar(cliente);
+      } catch (LinkageError erro) {
+        desligado = true;
+        CobblemonCombatZA.LOGGER.error("PARTY: o Xaero's Minimap mudou; os waypoints da party ficam desligados", erro);
+      }
+    });
     ClientPlayConnectionEvents.DISCONNECT.register((conexao, cliente) -> {
       marcas = List.of();
       mudou = false;

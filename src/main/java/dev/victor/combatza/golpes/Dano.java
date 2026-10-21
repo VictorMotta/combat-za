@@ -3,6 +3,7 @@ package dev.victor.combatza.golpes;
 import com.cobblemon.mod.common.api.moves.Move;
 import com.cobblemon.mod.common.api.moves.categories.DamageCategories;
 import com.cobblemon.mod.common.api.types.ElementalType;
+import com.cobblemon.mod.common.api.types.ElementalTypes;
 import com.cobblemon.mod.common.battles.ai.strongBattleAI.AIUtility;
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
 import com.cobblemon.mod.common.pokemon.Pokemon;
@@ -13,7 +14,10 @@ import dev.victor.combatza.campo.ClimaNosGolpes;
 import dev.victor.combatza.campo.EfeitosDoCampo;
 import dev.victor.combatza.config.Configuracao;
 import dev.victor.combatza.habilidades.HabilidadesDeDano;
+import dev.victor.combatza.itens.Bagas;
 import dev.victor.combatza.itens.ItensDeDano;
+import dev.victor.combatza.itens.ItensDoCampo;
+import dev.victor.combatza.itens.ItensSegurados;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -27,8 +31,17 @@ public class Dano {
   private static final double[] CHANCE_DE_CRITICO = { 1.0 / 24, 1.0 / 8, 1.0 / 2, 1.0 };
   private static final ResourceKey<DamageType> TIPO_GOLPE_POKEMON = ResourceKey.create(Registries.DAMAGE_TYPE,
       ResourceLocation.fromNamespaceAndPath(CobblemonCombatZA.MOD_ID, "golpe_pokemon"));
+  // O golpe num POKÉMON ignora a armadura (a tag minecraft:bypasses_armor): a armadura que o Cobblemon dá aos Pokémon de Defesa
+  // alta cortava o dano de novo, por cima da Defesa que a nossa conta já usa (decisão dele, 20/10: "golpes ignoram")
+  private static final ResourceKey<DamageType> TIPO_GOLPE_EM_POKEMON = ResourceKey.create(Registries.DAMAGE_TYPE,
+      ResourceLocation.fromNamespaceAndPath(CobblemonCombatZA.MOD_ID, "golpe_em_pokemon"));
 
-  public record Resultado(float dano, double efetividade, boolean critico) {
+  // Lotes 2 e 3 dos itens: "gema" e "bagaDeResistencia" dizem que o item entrou na conta; quem gasta é o acerto (errou ou
+  // desviou: o item fica)
+  public record Resultado(float dano, double efetividade, boolean critico, boolean gema, boolean bagaDeResistencia) {
+    public Resultado(float dano, double efetividade, boolean critico) {
+      this(dano, efetividade, critico, false, false);
+    }
   }
 
   private Dano() {
@@ -50,10 +63,10 @@ public class Dano {
   // 7.3: o golpe do selvagem em você, como o golpe de um monstro do Minecraft do nível dele: poder ÷ 20 × (1 + nível ÷ 50),
   // × 1,5 se o golpe é do tipo dele, com o crítico e a sorte. Nível 30, golpe de 40: 3,2 (um zumbi tira 3); nível 50, golpe
   // de 80 do tipo dele: 12 (um vindicador tira 13). No modo "pouco" (o padrão, na Configuracao), a metade. A armadura e a
-  // dificuldade do mundo valem por cima, como num monstro (o tipo de dano golpe_pokemon não ignora armadura). A conta de
+  // dificuldade do mundo valem por cima, como num monstro (o tipo de dano golpe_pokemon não ignora armadura; o golpe_em_pokemon, num Pokémon, ignora). A conta de
   // monstro (contraMob) não servia: no nível 100, um golpe de 120 tirava 45, você morria de uma vez
   private static Resultado contraJogador(Pokemon atacante, Move golpe, RandomSource sorte) {
-    boolean critico = sorte.nextDouble() < chanceDeCritico(golpe);
+    boolean critico = sorte.nextDouble() < chanceDeCritico(atacante, golpe);
     double poder = DanoEspecial.temDanoFixo(golpe) ? Balanceamento.PODER_CONTRA_MOB
         : DanoEspecial.poder(atacante, golpe, null, sorte);
     double dano = poder / Balanceamento.PODER_POR_DANO_NO_JOGADOR
@@ -61,7 +74,7 @@ public class Dano {
         * multiplicadorDeCritico(critico) * aleatorio(sorte) * Balanceamento.MULTIPLICADOR_DE_DANO
         * Configuracao.multiplicadorDoDanoNoJogador() * ItensDeDano.doAtacante(atacante, golpe)
         * EfeitosDoCampo.contraQuemNaoEPokemon(atacante, golpe);
-    return new Resultado((float) dano, 1.0, critico);
+    return new Resultado((float) dano, 1.0, critico, ItensDeDano.usaGema(atacante, golpe), false);
   }
 
   // 7.2: para a IA do selvagem escolher o golpe (IaDoSelvagem): o multiplicador do tipo contra o alvo (em quem não é
@@ -95,16 +108,18 @@ public class Dano {
         * CampoEBarreiras.poder(atacante, defensor, golpe);
     double base = (2.0 * atacante.getLevel() / 5 + 2) * poder * ataqueDoAtacante / defesaDoAlvo / 50 + 2;
     boolean critico = !HabilidadesDeDano.semCritico(defensor) && !CampoEBarreiras.semCritico(defensor)
-        && sorte.nextDouble() < chanceDeCritico(golpe);
+        && sorte.nextDouble() < chanceDeCritico(atacante, golpe);
     double queimadura = fisico && "brn".equals(EfeitosDeStatus.siglaDoStatus(atacante))
         && !HabilidadesDeDano.ignoraQueimadura(atacante) ? 0.5 : 1.0;
+    // Lote 2: a baga que corta pela metade o super efetivo do tipo dela (a Chilan, qualquer golpe Normal)
+    double baga = Bagas.resistencia(defensor, ClimaNosGolpes.tipo(atacante, golpe), efetividade);
     double danoEmPv = base * stab(atacante, golpe) * efetividade * multiplicadorDeCritico(critico) * aleatorio(sorte)
-        * queimadura * HabilidadesDeDano.danoFinal(defensor, efetividade) * ItensDeDano.danoFinal(atacante, efetividade)
+        * queimadura * baga * HabilidadesDeDano.danoFinal(defensor, efetividade) * ItensDeDano.danoFinal(atacante, efetividade)
         * EfeitosDoCampo.danoFinal(atacante, defensor, golpe) * CampoEBarreiras.barreira(defensor, fisico, critico)
         * Balanceamento.MULTIPLICADOR_DE_DANO;
 
     float danoNaVida = (float) (danoEmPv * alvo.getMaxHealth() / defensor.getMaxHealth());
-    return new Resultado(danoNaVida, efetividade, critico);
+    return new Resultado(danoNaVida, efetividade, critico, ItensDeDano.usaGema(atacante, golpe), baga < 1.0);
   }
 
   public static float daConfusao(PokemonEntity entidade, RandomSource sorte) {
@@ -117,14 +132,14 @@ public class Dano {
   }
 
   private static Resultado contraMob(Pokemon atacante, Move golpe, RandomSource sorte) {
-    boolean critico = sorte.nextDouble() < chanceDeCritico(golpe);
+    boolean critico = sorte.nextDouble() < chanceDeCritico(atacante, golpe);
     double poder = DanoEspecial.temDanoFixo(golpe) ? Balanceamento.PODER_CONTRA_MOB
         : DanoEspecial.poder(atacante, golpe, null, sorte);
     double dano = poder / Balanceamento.PODER_POR_PONTO_DE_VIDA_EM_MOB * atacante.getLevel()
         / Balanceamento.NIVEL_DE_REFERENCIA_EM_MOB * stab(atacante, golpe) * multiplicadorDeCritico(critico)
         * aleatorio(sorte) * Balanceamento.MULTIPLICADOR_DE_DANO * ItensDeDano.doAtacante(atacante, golpe)
         * EfeitosDoCampo.contraQuemNaoEPokemon(atacante, golpe);
-    return new Resultado((float) dano, 1.0, critico);
+    return new Resultado((float) dano, 1.0, critico, ItensDeDano.usaGema(atacante, golpe), false);
   }
 
   // 5b.2: o tipo do golpe agora (a Esfera Climática muda com o clima)
@@ -134,28 +149,38 @@ public class Dano {
     return mesmoTipo ? HabilidadesDeDano.stab(atacante) : 1.0;
   }
 
+  // Lote 3: o Balão de Ar (imune a Terra até estourar) e a Bola de Ferro (ela "aterra": a Levitação e o tipo Voador não
+  // escapam da Terra); o Alvo Anelado tira as imunidades de tipo de quem segura
   private static double efetividade(Move golpe, Pokemon atacante, Pokemon defensor) {
-    if (HabilidadesDeDano.imune(golpe, defensor)) {
+    boolean aterrado = ItensSegurados.tem(defensor, ItensSegurados.BOLA_DE_FERRO);
+    if (HabilidadesDeDano.imune(golpe, defensor) && !aterrado || ItensDoCampo.noBalao(defensor)
+        && ClimaNosGolpes.tipo(atacante, golpe) == ElementalTypes.GROUND) {
       return 0;
     }
-    double multiplicador = contraOTipo(golpe, atacante, defensor.getPrimaryType());
+    double multiplicador = contraOTipo(golpe, atacante, defensor, defensor.getPrimaryType());
     ElementalType segundoTipo = defensor.getSecondaryType();
     if (segundoTipo != null) {
-      multiplicador *= contraOTipo(golpe, atacante, segundoTipo);
+      multiplicador *= contraOTipo(golpe, atacante, defensor, segundoTipo);
     }
     return multiplicador;
   }
 
-  private static double contraOTipo(Move golpe, Pokemon atacante, ElementalType tipoDoDefensor) {
-    double multiplicador = AIUtility.INSTANCE.getDamageMultiplier(ClimaNosGolpes.tipo(atacante, golpe), tipoDoDefensor);
-    if (multiplicador <= 0 && HabilidadesDeDano.ignoraImunidade(atacante, golpe, tipoDoDefensor)) {
+  private static double contraOTipo(Move golpe, Pokemon atacante, Pokemon defensor, ElementalType tipoDoDefensor) {
+    ElementalType tipoDoGolpe = ClimaNosGolpes.tipo(atacante, golpe);
+    double multiplicador = AIUtility.INSTANCE.getDamageMultiplier(tipoDoGolpe, tipoDoDefensor);
+    if (multiplicador <= 0 && (HabilidadesDeDano.ignoraImunidade(atacante, golpe, tipoDoDefensor)
+        || ItensSegurados.tem(defensor, ItensSegurados.ALVO_ANELADO)
+        || tipoDoGolpe == ElementalTypes.GROUND && tipoDoDefensor == ElementalTypes.FLYING
+            && ItensSegurados.tem(defensor, ItensSegurados.BOLA_DE_FERRO))) {
       return 1.0;
     }
     return multiplicador;
   }
 
-  private static double chanceDeCritico(Move golpe) {
-    int estagio = Math.clamp((long) golpe.getTemplate().getCritRatio() - 1, 0, CHANCE_DE_CRITICO.length - 1);
+  // O estágio de crítico: o do golpe (Talho, Folha Navalha: +1) e o dos itens (Lentes de Mira, Garra Afiada, Baga Lansat)
+  private static double chanceDeCritico(Pokemon atacante, Move golpe) {
+    int estagio = Math.clamp((long) golpe.getTemplate().getCritRatio() - 1 + ItensDeDano.estagioDeCritico(atacante), 0,
+        CHANCE_DE_CRITICO.length - 1);
     return CHANCE_DE_CRITICO[estagio] * Balanceamento.MULTIPLICADOR_CHANCE_CRITICO;
   }
 
@@ -168,7 +193,8 @@ public class Dano {
         + sorte.nextDouble() * (Balanceamento.ALEATORIO_MAXIMO - Balanceamento.ALEATORIO_MINIMO);
   }
 
-  public static DamageSource fonte(PokemonEntity atacante) {
-    return atacante.damageSources().source(TIPO_GOLPE_POKEMON, atacante);
+  // Num Pokémon, sem a armadura dele; em você (e em monstros), a armadura vale, como contra um monstro
+  public static DamageSource fonte(PokemonEntity atacante, Entity alvo) {
+    return atacante.damageSources().source(alvo instanceof PokemonEntity ? TIPO_GOLPE_EM_POKEMON : TIPO_GOLPE_POKEMON, atacante);
   }
 }

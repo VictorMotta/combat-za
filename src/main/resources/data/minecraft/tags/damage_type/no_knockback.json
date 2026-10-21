@@ -2,6 +2,8 @@
   "replace": false,
   "values": [
     "cobblemon_combat_za:golpe_pokemon",
-    "cobblemon_combat_za:status_pokemon"
+    "cobblemon_combat_za:status_pokemon",
+    "cobblemon_combat_za:golpe_em_pokemon",
+    "cobblemon_combat_za:status_em_pokemon"
   ]
 }

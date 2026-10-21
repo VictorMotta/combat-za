@@ -74,6 +74,8 @@ public class Mega {
   // O último medidor que foi para o jogo de cada jogador, na batalha ou fora dela (só vai de novo se mudou)
   private static final Map<UUID, MedidorDaMegaPayload> ENVIADOS = new HashMap<>();
 
+  private static boolean ponteQuebrada = false;
+
   private Mega() {
   }
 
@@ -93,15 +95,29 @@ public class Mega {
   // O aviso de desmaio do Cobblemon sai sempre que a vida chega a zero (Pokemon.setCurrentHealth), na nossa batalha também
   private static void aoDesmaiar(PokemonFaintedEvent evento) {
     Pokemon pokemon = evento.getPokemon();
-    if (instalado() && PonteDoMegaShowdown.ehMega(pokemon)) {
-      PonteDoMegaShowdown.desmegar(pokemon);
-      CobblemonCombatZA.LOGGER.info("MEGA: {} desmaiou e voltou ao normal", pokemon.getSpecies().getName());
+    try {
+      if (instalado() && PonteDoMegaShowdown.ehMega(pokemon)) {
+        PonteDoMegaShowdown.desmegar(pokemon);
+        CobblemonCombatZA.LOGGER.info("MEGA: {} desmaiou e voltou ao normal", pokemon.getSpecies().getName());
+      }
+    } catch (LinkageError erro) {
+      quebrou(erro);
     }
   }
 
-  // O Mega Showdown está no jogo? Sem ele, a tecla só avisa
+  // O Mega Showdown está no jogo (e a ponte com ele funciona)? Sem ele, a tecla só avisa
   private static boolean instalado() {
-    return FabricLoader.getInstance().isModLoaded(MOD_DA_MEGA);
+    return !ponteQuebrada && FabricLoader.getInstance().isModLoaded(MOD_DA_MEGA);
+  }
+
+  // Se o Mega Showdown mudar por dentro numa versão nova (um método que a PonteDoMegaShowdown usa sumiu), a Mega se desliga com
+  // um aviso no log, em vez de fechar o servidor. Tudo o que chama a ponte passa pelo pedido da tecla, pelo atualizar e pelo
+  // aviso de desmaio: os três param aqui
+  private static void quebrou(LinkageError erro) {
+    if (!ponteQuebrada) {
+      ponteQuebrada = true;
+      CobblemonCombatZA.LOGGER.error("MEGA: o Mega Showdown mudou e a ponte com ele não funciona mais; a Mega fica desligada", erro);
+    }
   }
 
   // Na animação da Mega o Pokémon fica parado: os golpes dele esperam (ControleDeGolpes)
@@ -117,6 +133,15 @@ public class Mega {
   // A tecla da Mega: fora da batalha, transforma e destransforma o selecionado que está fora; na batalha, mega o lutador se
   // o medidor está cheio (quem conta o minuto é o atualizar, depois da animação)
   private static void pediu(ServerPlayer jogador) {
+    try {
+      pedido(jogador);
+    } catch (LinkageError erro) {
+      quebrou(erro);
+      avisar(jogador, Component.translatable(FRASE + "sem_mod"));
+    }
+  }
+
+  private static void pedido(ServerPlayer jogador) {
     if (!instalado()) {
       avisar(jogador, Component.translatable(FRASE + "sem_mod"));
       return;
@@ -184,6 +209,14 @@ public class Mega {
   // A cada tick: o medidor de quem está numa batalha anda (enche, ou esvazia com o Mega lutando). De 5 em 5 ticks, o
   // medidor vai para o jogo de cada jogador: o da batalha, ou o de fora dela (8.4e)
   public static void atualizar(MinecraftServer servidor) {
+    try {
+      atualizarComOMod(servidor);
+    } catch (LinkageError erro) {
+      quebrou(erro);
+    }
+  }
+
+  private static void atualizarComOMod(MinecraftServer servidor) {
     if (!instalado()) {
       return;
     }

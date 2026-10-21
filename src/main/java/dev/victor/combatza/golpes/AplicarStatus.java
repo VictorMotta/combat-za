@@ -11,10 +11,13 @@ import dev.victor.combatza.CobblemonCombatZA;
 import dev.victor.combatza.campo.CampoEBarreiras;
 import dev.victor.combatza.campo.ClimaNosGolpes;
 import dev.victor.combatza.habilidades.Habilidades;
+import dev.victor.combatza.itens.ItensSegurados;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
 
 public class AplicarStatus {
+  private static final String FRASE = "cobblemon_combat_za.status.";
+
   private AplicarStatus() {
   }
 
@@ -44,24 +47,42 @@ public class AplicarStatus {
     }
   }
 
+  // Lote 3 dos itens: o Orbe de Chamas (queima) e o Orbe Tóxico (envenena muito) em quem segura, a cada turno. Pega como o
+  // status de um golpe, sem o campo (não há golpe nem lado), e a frase leva o nome do item. Devolve se pegou
+  public static boolean porItem(PokemonEntity quem, String sigla, Component item, long agora) {
+    Pokemon pokemon = quem.getPokemon();
+    if (!(Statuses.getStatus(sigla) instanceof PersistentStatus status) || pokemon.isFainted()
+        || pokemon.getStatus() != null || imunePeloTipo(pokemon, sigla) || Habilidades.imuneAoStatus(pokemon, sigla)) {
+      return false;
+    }
+    pokemon.applyStatus(status);
+    StatusNossos.anotar(pokemon, sigla);
+    SonoECongelado.comecar(quem, sigla, agora);
+    CobblemonCombatZA.LOGGER.info("STATUS: {} ficou com {} ({})", pokemon.getSpecies().getName(), sigla, item.getString());
+    ItensSegurados.avisar(pokemon, Component.translatable(status.getApplyMessage(), pokemon.getDisplayName(false))
+        .append(Component.literal(" (").append(item).append(")")));
+    return true;
+  }
+
   public static boolean temTipo(Pokemon pokemon, ElementalType tipo) {
     return pokemon.getPrimaryType() == tipo || pokemon.getSecondaryType() == tipo;
   }
 
   // Showdown: imunidade a "powder" (tipo Planta ou a habilidade Invólucro)
   public static boolean imuneAoPo(Pokemon pokemon) {
-    return temTipo(pokemon, ElementalTypes.GRASS) || Habilidades.tem(pokemon, Habilidades.INVOLUCRO);
+    return temTipo(pokemon, ElementalTypes.GRASS) || Habilidades.tem(pokemon, Habilidades.INVOLUCRO)
+        || ItensSegurados.tem(pokemon, ItensSegurados.OCULOS_DE_PROTECAO);
   }
 
   private static Component porQueNaoPega(Execucao execucao, Pokemon pokemon, String sigla) {
     if (pokemon.getStatus() != null) {
-      return Component.literal("já está com outro status");
+      return Component.translatable(FRASE + "ja_tem_outro");
     }
     if (imunePeloTipo(pokemon, sigla) || (golpeDePo(execucao) && imuneAoPo(pokemon))) {
-      return Component.literal("não é afetado");
+      return Component.translatable(FRASE + "nao_e_afetado");
     }
     if (Habilidades.imuneAoStatus(pokemon, sigla)) {
-      return Component.literal("não é afetado: ").append(Habilidades.nome(pokemon));
+      return Component.translatable(FRASE + "nao_e_afetado_por", Habilidades.nome(pokemon));
     }
     // 5b.3: o Campo Enevoado, o Elétrico (sono) e a Salvaguarda
     Component doCampo = CampoEBarreiras.bloqueiaStatus(execucao, pokemon, sigla);

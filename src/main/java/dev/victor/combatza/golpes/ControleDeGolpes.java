@@ -29,6 +29,7 @@ import dev.victor.combatza.itens.ItensDeDano;
 import dev.victor.combatza.itens.ItensDeVida;
 import dev.victor.combatza.itens.ItensSegurados;
 import dev.victor.combatza.itens.TravaDaEscolha;
+import dev.victor.combatza.itens.ItensDoAcerto;
 import dev.victor.combatza.rede.UsarGolpePayload;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
@@ -46,7 +47,9 @@ public class ControleDeGolpes {
   private static final int TAMANHO_DO_TIME = 6;
   public static final int MAXIMO_DE_GOLPES = 4;
   public static final float DANO_PROVISORIO = 4.0f;
-  public static final String TEM_ALGO_CAMINHO = "tem algo no caminho";
+  private static final String FRASE = "cobblemon_combat_za.golpe.";
+  // Os motivos do "errou" (FRASE + "errou." + motivo, no arquivo de idioma)
+  public static final String TEM_ALGO_CAMINHO = "tem_algo_no_caminho";
 
   private record Acerto(Entity alvo, double multiplicador) {
   }
@@ -95,8 +98,7 @@ public class ControleDeGolpes {
     if (PrimeiroTurno.passouDaHora(pokemon, golpe)) {
       CobblemonCombatZA.LOGGER.info("PRIMEIRO TURNO: {} já agiu, {} desligado", pokemon.getSpecies().getName(),
           golpe.getName());
-      Feedback.barraDeAcao(jogador, Component.literal("🚫 ").append(golpe.getDisplayName())
-          .append(" só sai logo que o Pokémon entra!"));
+      Feedback.barraDeAcao(jogador, Component.translatable(FRASE + "so_ao_entrar", golpe.getDisplayName()));
       return;
     }
 
@@ -106,34 +108,34 @@ public class ControleDeGolpes {
     long restantes = Recargas.ticksRestantes(pokemon, slotGolpe, agora);
     if (restantes > 0) {
       CobblemonCombatZA.LOGGER.info("{} em recarga: faltam {} s", golpe.getName(), Recargas.emSegundos(restantes));
-      Feedback.barraDeAcao(jogador, Component.literal("⏱ ").append(golpe.getDisplayName())
-          .append(" em recarga: " + String.format("%.1f", Recargas.emSegundos(restantes)) + " s"));
+      Feedback.barraDeAcao(jogador, Component.translatable(FRASE + "em_recarga", golpe.getDisplayName(),
+          String.format("%.1f", Recargas.emSegundos(restantes))));
       return;
     }
 
     if (SonoECongelado.estaParado(pokemon)) {
       CobblemonCombatZA.LOGGER.info("{} está parado (dormindo ou congelado): {} ignorado",
           pokemon.getSpecies().getName(), golpe.getName());
-      Feedback.historico(jogador, pokemon, pokemon.getDisplayName(false).copy().append(" não consegue se mexer!"));
+      Feedback.historico(jogador, pokemon,
+          Component.translatable(FRASE + "nao_consegue_se_mexer", pokemon.getDisplayName(false)));
       return;
     }
 
     if (Furia.emFuria(pokemon)) {
       CobblemonCombatZA.LOGGER.info("{} está em fúria: {} ignorado", pokemon.getSpecies().getName(), golpe.getName());
-      Feedback.barraDeAcao(jogador, pokemon.getDisplayName(false).copy().append(" está em fúria e não obedece!"));
+      Feedback.barraDeAcao(jogador, Component.translatable(FRASE + "em_furia", pokemon.getDisplayName(false)));
       return;
     }
 
     if (Preso.estaPreso(pokemon)) {
       CobblemonCombatZA.LOGGER.info("{} está preso: {} ignorado", pokemon.getSpecies().getName(), golpe.getName());
-      Feedback.historico(jogador, pokemon,
-          pokemon.getDisplayName(false).copy().append(" está preso e não consegue atacar!"));
+      Feedback.historico(jogador, pokemon, Component.translatable(FRASE + "preso", pokemon.getDisplayName(false)));
       return;
     }
 
     if (AgendaDeGolpes.estaOcupado(pokemon) || Jatos.estaJorrando(pokemon)) {
       CobblemonCombatZA.LOGGER.info("{} está ocupado: {} ignorado", pokemon.getSpecies().getName(), golpe.getName());
-      Feedback.barraDeAcao(jogador, Component.literal("⏳ Ocupado executando outro golpe..."));
+      Feedback.barraDeAcao(jogador, Component.translatable(FRASE + "ocupado"));
       return;
     }
 
@@ -167,7 +169,7 @@ public class ControleDeGolpes {
         pokemon.getSpecies().getName(), golpe.getName(), execucao.getArquetipo(),
         execucao.getTickImpacto() - agora, execucao.getTickFim() - agora, golpe.getType().getName(),
         golpe.getTemplate().getTarget());
-    Feedback.barraDeAcao(jogador, Component.literal("⏳ ").append(golpe.getDisplayName()).append(": carregando..."));
+    Feedback.barraDeAcao(jogador, Component.translatable(FRASE + "carregando", golpe.getDisplayName()));
   }
 
   // 6.11c: o marcador que veio do seu jogo, conferido aqui (o servidor manda): só com o foco num alvo de verdade, num golpe
@@ -248,8 +250,7 @@ public class ControleDeGolpes {
         golpe.getName());
     Feedback.efeitoDoCobblemon(pokemon.getEntity(), "paralysis_actor");
     Feedback.efeitoDoCobblemon(pokemon.getEntity(), "paralysis_actorresidual");
-    Feedback.historico(quemVe, pokemon,
-        pokemon.getDisplayName(false).copy().append(" está paralisado e não conseguiu usar o golpe!"));
+    Feedback.historico(quemVe, pokemon, Component.translatable(FRASE + "paralisado", pokemon.getDisplayName(false)));
     return true;
   }
 
@@ -441,11 +442,12 @@ public class ControleDeGolpes {
     float danoCheio = (float) (resultado.dano() * multiplicadorDeArea * doBando * doAmigo);
     float depoisDaRobustez = HabilidadesDeDano.robustez(alvo, danoCheio);
     boolean robustezAgiu = depoisDaRobustez < danoCheio;
-    // 9.1: a Cinta de Foco, se a Robustez não segurou
-    float dano = ItensDeDano.cintaDeFoco(alvo, depoisDaRobustez, robustezAgiu);
+    // 9.1: a Cinta de Foco, se a Robustez não segurou; lote 3: a Faixa de Foco (10%), se nada segurou
+    float comCinta = ItensDeDano.cintaDeFoco(alvo, depoisDaRobustez, robustezAgiu);
+    float dano = ItensDoAcerto.faixaDeFoco(alvo, comCinta, robustezAgiu || comCinta < depoisDaRobustez);
 
     float vidaAntes = Vida.vidaDe(alvo);
-    boolean pegou = alvo.hurt(Dano.fonte(atacante), dano);
+    boolean pegou = alvo.hurt(Dano.fonte(atacante, alvo), dano);
     semRevideEmBatalha(execucao, atacante, alvo);
     // 8.4: o golpe do seu Pokémon que acerta um selvagem adianta o medidor da Mega (uma vez por golpe: o jato acerta várias)
     if (pegou && primeiro && !pokemon.isWild() && alvo instanceof PokemonEntity selvagem
@@ -477,9 +479,12 @@ public class ControleDeGolpes {
     if (robustezAgiu) {
       Feedback.historico(execucao.getJogador(), alvo,
           Component.translatable("cobblemon.battle.ability.sturdy", alvo.getName()));
-    } else if (dano < depoisDaRobustez) {
+    } else if (comCinta < depoisDaRobustez) {
       Feedback.historico(execucao.getJogador(), alvo,
           Component.translatable("cobblemon_combat_za.item.cinta", alvo.getName()));
+    } else if (dano < comCinta && alvo instanceof PokemonEntity comFaixa) {
+      Feedback.historico(execucao.getJogador(), alvo, Component.translatable("cobblemon_combat_za.item.faixa",
+          alvo.getName(), ItensSegurados.nome(comFaixa.getPokemon())));
     }
     EfeitosDeVida.depoisDoDano(execucao, atacante, alvo, pvTirados);
     ItensDeVida.orbeDaVida(execucao, atacante, pvTirados);
@@ -489,6 +494,10 @@ public class ControleDeGolpes {
     }
     HabilidadesDeContato.reagir(execucao, atacante, alvo, pvTirados);
     ItensDeContato.reagir(execucao, atacante, alvo, pvTirados);
+    // Lotes 2 e 3 dos itens: a gema e a baga de resistência são gastas; o Balão, as Políticas, o Sino, o Cartão Vermelho...
+    if (pegou) {
+      ItensDoAcerto.depoisDoAcerto(execucao, atacante, alvo, resultado, pvTirados, primeiro);
+    }
     // 5b.2: a Lançareia chama a Areia
     long agora = atacante.getServer() == null ? 0 : atacante.getServer().getTickCount();
     ClimaNosGolpes.depoisDoAcerto(alvo, pvTirados, agora);
@@ -502,7 +511,7 @@ public class ControleDeGolpes {
       Vec3 ponto = execucao.getMirada().getLocation();
       // A mira sai do olho do jogador: só os golpes de alcance curto (5.4c) conferem a distância até o ponto
       if (alcance < Mira.ALCANCE && atacante.getEyePosition().distanceTo(ponto) > alcance) {
-        errou(execucao, "fora de alcance");
+        errou(execucao, "fora_de_alcance");
         return null;
       }
       if (!Mira.chegaAte(atacante, ponto)) {
@@ -514,11 +523,11 @@ public class ControleDeGolpes {
 
     Entity alvo = acertoEntidade.getEntity();
     if (!alvo.isAlive()) {
-      errou(execucao, "o alvo sumiu");
+      errou(execucao, "alvo_sumiu");
       return null;
     }
     if (atacante.distanceTo(alvo) > alcance) {
-      errou(execucao, "fora de alcance");
+      errou(execucao, "fora_de_alcance");
       return null;
     }
     if (!atacante.hasLineOfSight(alvo)) {
@@ -535,10 +544,11 @@ public class ControleDeGolpes {
   }
 
   private static void errou(Execucao execucao, String motivo) {
+    Component porque = Component.translatable(FRASE + "errou." + motivo);
     CobblemonCombatZA.LOGGER.info("ERROU: {} usou {}: {}",
-        execucao.getPokemon().getSpecies().getName(), execucao.getGolpe().getName(), motivo);
+        execucao.getPokemon().getSpecies().getName(), execucao.getGolpe().getName(), porque.getString());
     Feedback.historico(execucao.getJogador(), execucao.getPokemon(),
-        Component.translatable("cobblemon.battle.missed").append(" (" + motivo + ")"));
+        Component.translatable("cobblemon.battle.missed").append(" (").append(porque).append(")"));
   }
 
   // Como no Z-A e no log de batalha do Cobblemon: depois do "usou", só aparece o que não é neutro, falando do alvo

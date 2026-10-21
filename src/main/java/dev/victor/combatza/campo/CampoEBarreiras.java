@@ -188,7 +188,7 @@ public class CampoEBarreiras {
       CobblemonCombatZA.LOGGER.info("CAMPO DE PLANTAS: {} +{} PV", pokemon.getSpecies().getName(), curou);
       for (ServerPlayer jogador : arena.jogadores()) {
         Feedback.historico(jogador, pokemon, Component.translatable("cobblemon.battle.heal.grassyterrain",
-            pokemon.getDisplayName(false)).append(" (+" + curou + " PV)"));
+            pokemon.getDisplayName(false)).append(Component.translatable("cobblemon_combat_za.pv.ganhou", curou)));
       }
     }
   }

@@ -153,7 +153,7 @@ public class Lutadores {
     // Com uma bola no ar (alguém do time saindo ou voltando, 1,5 s), esta troca se misturaria com a outra: o que voltava
     // viraria o lutador, ou quem chega da bola recolheria quem acabou de entrar
     if (TROCANDO.contains(jogador.getUUID()) || bolaNoAr(jogador) || entidade.isBusy()) {
-      Feedback.barraDeAcao(jogador, Component.literal("⏳ Espere a troca terminar"));
+      Feedback.barraDeAcao(jogador, Component.translatable("cobblemon_combat_za.batalha.espere_a_troca"));
       return;
     }
     Pokemon antigo = de(jogador);

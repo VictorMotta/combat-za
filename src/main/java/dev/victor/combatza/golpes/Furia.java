@@ -9,6 +9,7 @@ import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
 import com.cobblemon.mod.common.pokemon.Pokemon;
 
 import dev.victor.combatza.CobblemonCombatZA;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.EntityHitResult;
 
@@ -74,7 +75,7 @@ public class Furia {
     CobblemonCombatZA.LOGGER.info("FÚRIA: {} ataca de novo com {} (faltam {} depois desta)",
         pokemon.getSpecies().getName(), execucao.getGolpe().getName(), faltam - 1);
     Feedback.historico(execucao.getJogador(), pokemon,
-        pokemon.getDisplayName(false).copy().append(" continua em fúria!"));
+        Component.translatable("cobblemon_combat_za.status.continua_em_furia", pokemon.getDisplayName(false)));
     return true;
   }
 
@@ -96,7 +97,7 @@ public class Furia {
     CobblemonCombatZA.LOGGER.info("FÚRIA: {} se cansou de {}", pokemon.getSpecies().getName(),
         execucao.getGolpe().getName());
     Feedback.historico(execucao.getJogador(), pokemon,
-        pokemon.getDisplayName(false).copy().append(" se cansou da fúria!"));
+        Component.translatable("cobblemon_combat_za.status.cansou_da_furia", pokemon.getDisplayName(false)));
     Confusao.tentar(execucao, entidade);
   }
 }

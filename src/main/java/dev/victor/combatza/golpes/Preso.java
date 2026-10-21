@@ -6,9 +6,11 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.cobblemon.mod.common.api.moves.Move;
+import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
 import com.cobblemon.mod.common.pokemon.Pokemon;
 
 import dev.victor.combatza.CobblemonCombatZA;
+import dev.victor.combatza.itens.ItensDoCampo;
 import net.minecraft.SharedConstants;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -43,17 +45,21 @@ public class Preso {
     private final Move golpe;
     private final ServerPlayer jogador;
     private final long soltaNoTick;
+    private final double fracao;
     private long proximoTurno;
     private int turnosFaltam;
-    private boolean travado = true;
+    private boolean travado;
 
-    private Prisao(LivingEntity alvo, Move golpe, ServerPlayer jogador, long agora, int turnos) {
+    private Prisao(LivingEntity alvo, Move golpe, ServerPlayer jogador, long agora, int turnos, double fracao,
+        boolean travado) {
       this.alvo = alvo;
       this.golpe = golpe;
       this.jogador = jogador;
       this.soltaNoTick = agora + Math.round(SEGUNDOS_PRESO * SharedConstants.TICKS_PER_SECOND);
       this.proximoTurno = agora + EfeitosDeStatus.ticksPorTurno();
       this.turnosFaltam = turnos;
+      this.fracao = fracao;
+      this.travado = travado;
     }
   }
 
@@ -75,13 +81,21 @@ public class Preso {
       return;
     }
     long agora = execucao.getJogador().server.getTickCount();
-    int turnos = alvo.getRandom().nextIntBetweenInclusive(TURNOS_MINIMO, TURNOS_MAXIMO);
-    PRESOS.put(alvo.getUUID(), new Prisao(alvo, execucao.getGolpe(), execucao.getJogador(), agora, turnos));
-    travar(alvo);
+    // Lote 3 dos itens: a Garra de Aperto (7 turnos) e a Faixa de Amarrar (1/6) de quem prende; a Casca Descartável de quem
+    // fica preso (leva o dano, mas não fica parado)
+    Pokemon quemPrende = execucao.getPokemon();
+    int turnos = ItensDoCampo.turnosDoPreso(quemPrende,
+        alvo.getRandom().nextIntBetweenInclusive(TURNOS_MINIMO, TURNOS_MAXIMO));
+    boolean comCasca = alvo instanceof PokemonEntity preso && ItensDoCampo.cascaDescartavel(preso.getPokemon());
+    PRESOS.put(alvo.getUUID(), new Prisao(alvo, execucao.getGolpe(), execucao.getJogador(), agora, turnos,
+        ItensDoCampo.fracaoDoPreso(quemPrende, FRACAO_POR_TURNO), !comCasca));
+    if (!comCasca) {
+      travar(alvo);
+    }
     CobblemonCombatZA.LOGGER.info("PRESO: {} preso por {} (3 s parado, {} turnos de dano)", alvo.getName().getString(),
         execucao.getGolpe().getName(), turnos);
-    Feedback.historico(execucao.getJogador(), alvo, Component.literal("🔒 ").append(alvo.getName())
-        .append(" ficou preso: ").append(execucao.getGolpe().getDisplayName()).append("!"));
+    Feedback.historico(execucao.getJogador(), alvo, Component.translatable("cobblemon_combat_za.status.ficou_preso",
+        alvo.getName(), execucao.getGolpe().getDisplayName()));
   }
 
   // Só nos 3 segundos parado (depois, ele age, mesmo levando o dano)
@@ -123,19 +137,20 @@ public class Preso {
   // 1/8 da vida, com a fonte do status (sem atacante: o rolamento não desvia, como da queimadura)
   private static void turnoDeDano(Prisao prisao, long agora) {
     LivingEntity alvo = prisao.alvo;
-    float dano = (float) (alvo.getMaxHealth() * FRACAO_POR_TURNO);
+    float dano = (float) (alvo.getMaxHealth() * prisao.fracao);
     boolean pegou = alvo.hurt(EfeitosDeStatus.fonteDoStatus(alvo), dano);
     Feedback.particulas(alvo, Projetil.particulaDoTipo(prisao.golpe), PARTICULAS);
-    CobblemonCombatZA.LOGGER.info("PRESO: {} perdeu 1/8 da vida no {} ({} de dano, aplicado? {})",
-        alvo.getName().getString(), prisao.golpe.getName(), String.format("%.1f", dano), pegou);
+    CobblemonCombatZA.LOGGER.info("PRESO: {} perdeu 1/{} da vida no {} ({} de dano, aplicado? {})",
+        alvo.getName().getString(), Math.round(1 / prisao.fracao), prisao.golpe.getName(), String.format("%.1f", dano),
+        pegou);
     prisao.turnosFaltam--;
     if (prisao.turnosFaltam > 0) {
       prisao.proximoTurno = agora + EfeitosDeStatus.ticksPorTurno();
       return;
     }
     PRESOS.remove(alvo.getUUID());
-    Feedback.historico(prisao.jogador, alvo, alvo.getName().copy().append(" se livrou: ")
-        .append(prisao.golpe.getDisplayName()).append("!"));
+    Feedback.historico(prisao.jogador, alvo, Component.translatable("cobblemon_combat_za.status.se_livrou",
+        alvo.getName(), prisao.golpe.getDisplayName()));
   }
 
   // Parado: sem andar (velocidade zerada, como no sono da 4.5b-3) e sem alvo (não ataca)

@@ -48,6 +48,7 @@ import net.minecraft.world.phys.Vec3;
 // outros que estão fora te defendem, Guardas); o lado se troca com uma tecla SEM tecla padrão (Controles → "Trocar o lado
 // do Pokémon"). A posição é a decidida na 4.3: > "na frente à direita, meio que inclinado ao personagem"
 public class Parceiro {
+  private static final String FRASE = "cobblemon_combat_za.parceiro.";
   private static final String DIREITA = "direita";
   private static final String ESQUERDA = "esquerda";
 
@@ -157,17 +158,16 @@ public class Parceiro {
   // O botão (um toque no U, RodaDosGuardas): liga e desliga, só fora da batalha
   private static void alternarTodosDeGuarda(ServerPlayer jogador) {
     if (GerenciarCombates.estaEmCombate(jogador)) {
-      Feedback.barraDeAcao(jogador,
-          Component.literal("🛡 Na batalha, quem luta é o lutador: \"todos de guarda\" é só fora dela"));
+      Feedback.barraDeAcao(jogador, Component.translatable(FRASE + "todos_de_guarda_na_batalha"));
       return;
     }
     if (todosDeGuarda(jogador)) {
       desligar(jogador);
-      Feedback.barraDeAcao(jogador, Component.literal("🛡 Todos de guarda: desligado"));
+      Feedback.barraDeAcao(jogador, Component.translatable(FRASE + "todos_de_guarda_desligado"));
       return;
     }
     jogador.setAttached(TODOS_DE_GUARDA, true);
-    Feedback.barraDeAcao(jogador, Component.literal("🛡 Todos de guarda: ninguém selecionado, todos te defendem"));
+    Feedback.barraDeAcao(jogador, Component.translatable(FRASE + "todos_de_guarda_ligado"));
     CobblemonCombatZA.LOGGER.info("PARCEIRO: {} ligou o \"todos de guarda\"", jogador.getGameProfile().getName());
   }
 
@@ -410,17 +410,17 @@ public class Parceiro {
   private static void trocarOLado(ServerPlayer jogador) {
     boolean esquerda = !naEsquerda(jogador);
     jogador.setAttached(LADO, esquerda ? ESQUERDA : DIREITA);
-    Feedback.barraDeAcao(jogador, Component.literal("⇄ O seu Pokémon anda " + comoFala(esquerda)));
+    Feedback.barraDeAcao(jogador, Component.translatable(FRASE + "anda", comoFala(esquerda)));
     CobblemonCombatZA.LOGGER.info("PARCEIRO: {} pôs o Pokémon {}", jogador.getGameProfile().getName(),
-        comoFala(esquerda));
+        comoFala(esquerda).getString());
   }
 
   private static boolean naEsquerda(ServerPlayer jogador) {
     return ESQUERDA.equals(jogador.getAttachedOrElse(LADO, DIREITA));
   }
 
-  private static String comoFala(boolean esquerda) {
-    return esquerda ? "à sua esquerda" : "à sua direita";
+  private static Component comoFala(boolean esquerda) {
+    return Component.translatable(FRASE + (esquerda ? ESQUERDA : DIREITA));
   }
 
   private static void contarNoLog(ServerPlayer jogador, Pokemon pokemon) {

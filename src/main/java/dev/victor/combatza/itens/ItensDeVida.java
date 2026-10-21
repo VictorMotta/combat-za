@@ -55,8 +55,12 @@ public class ItensDeVida {
           continue;
         }
         frutas(combate, entidade);
+        // Lotes 2 e 3: as bagas da vida baixa e as Sementes, a cada tick; os Orbes e a Farpa, a cada turno
+        Bagas.aCadaTick(entidade);
+        ItensDoTurno.aCadaTick(entidade);
         if (virouTurno) {
           porTurno(combate, entidade);
+          ItensDoTurno.porTurno(entidade, agora);
         }
       }
     }
@@ -126,7 +130,7 @@ public class ItensDeVida {
     int curou = Vida.curar(entidade, SUCO_DE_BAGA);
     ItensSegurados.gastar(pokemon, ItensSegurados.SUCO_DE_BAGA);
     avisar(combate, pokemon, Component.translatable("cobblemon.battle.enditem.berryjuice", pokemon.getDisplayName(false))
-        .append(" (+" + curou + " PV)"));
+        .append(Component.translatable("cobblemon_combat_za.pv.ganhou", curou)));
     CobblemonCombatZA.LOGGER.info("ITEM: {} bebeu o Suco de Baga: +{} PV ({}/{})", pokemon.getSpecies().getName(), curou,
         Vida.pvAtual(pokemon), pokemon.getMaxHealth());
   }

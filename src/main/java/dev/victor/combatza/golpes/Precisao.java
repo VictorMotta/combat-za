@@ -9,6 +9,9 @@ import com.cobblemon.mod.common.pokemon.Pokemon;
 import dev.victor.combatza.CobblemonCombatZA;
 import dev.victor.combatza.campo.ClimaNosGolpes;
 import dev.victor.combatza.habilidades.Habilidades;
+import dev.victor.combatza.itens.EstadoDosItens;
+import dev.victor.combatza.itens.ItensDePrecisao;
+import dev.victor.combatza.itens.ItensDoAcerto;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
@@ -59,6 +62,8 @@ public class Precisao {
     if (Habilidades.tem(atacante, COM_OLHOS_COMPOSTOS)) {
       chance *= OLHOS_COMPOSTOS;
     }
+    // Lote 2 dos itens: Lentes Largas, Lentes de Aumento, Baga Micle e Pó Brilhante
+    chance *= ItensDePrecisao.multiplicador(atacante, alvo);
     return Math.min(1.0, chance);
   }
 
@@ -73,11 +78,15 @@ public class Precisao {
       return false;
     }
     double chance = chanceDeAcertar(execucao.getPokemon(), execucao.getGolpe(), defensor);
+    // Lote 2 dos itens: a Baga Micle vale para um sorteio só
+    EstadoDosItens.usouMicle(execucao.getPokemon());
     if (chance >= 1.0 || atacante.getRandom().nextDouble() < chance) {
       return false;
     }
     pular(atacante, entidade);
     execucao.marcarDesvio(alvo);
+    // Lote 3 dos itens: a Política de Erro
+    ItensDoAcerto.politicaDeErro(execucao);
     CobblemonCombatZA.LOGGER.info("DESVIOU: {} desviou de {} (chance de acertar {}%)", alvo.getName().getString(),
         execucao.getGolpe().getName(), Math.round(chance * 100));
     Feedback.historico(execucao.getJogador(), alvo,

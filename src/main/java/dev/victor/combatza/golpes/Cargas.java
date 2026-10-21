@@ -12,6 +12,7 @@ import dev.victor.combatza.CobblemonCombatZA;
 import dev.victor.combatza.habilidades.Habilidades;
 import dev.victor.combatza.rede.CargasPayload;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import dev.victor.combatza.itens.ItensDeCarga;
 import net.minecraft.SharedConstants;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.RandomSource;
@@ -147,7 +148,9 @@ public class Cargas {
     }
     RandomSource sorte = pokemon.getEntity() != null ? pokemon.getEntity().getRandom() : RandomSource.create();
     if (minimo == 2 && maximo == 5) {
-      return SORTEIO_DE_2_A_5[sorte.nextInt(SORTEIO_DE_2_A_5.length)];
+      // Lote 3 dos itens: o Dado Viciado dá 4 ou 5
+      Integer doDado = ItensDeCarga.dadoViciado(pokemon, sorte);
+      return doDado != null ? doDado : SORTEIO_DE_2_A_5[sorte.nextInt(SORTEIO_DE_2_A_5.length)];
     }
     return sorte.nextIntBetweenInclusive(minimo, maximo);
   }

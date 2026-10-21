@@ -35,7 +35,9 @@ public class Parties {
   private static final int SEGUNDOS_DO_CONVITE = 60;
   private static final int A_CADA_TICKS = 10;
   private static final float PASSOS_DA_VIDA = 20f;
-  private static final boolean COM_OPAC = FabricLoader.getInstance().isModLoaded("openpartiesandclaims");
+  // Com o OPAC no servidor, a party é a dele. Se ele mudar por dentro numa versão nova (um método que a PonteDoOpac usa sumiu),
+  // a ponte se desliga com um aviso no log e a party volta a ser a nossa, em vez de fechar o servidor
+  private static boolean comOpac = FabricLoader.getInstance().isModLoaded("openpartiesandclaims");
 
   // Um membro, do jeito que a lista precisa (a PonteDoOpac devolve assim, sem tipos do OPAC aqui)
   record Membro(UUID jogador, String nome, boolean lider) {
@@ -65,8 +67,12 @@ public class Parties {
     if (a.getUUID().equals(b.getUUID())) {
       return true;
     }
-    if (COM_OPAC) {
-      return PonteDoOpac.saoAliados(a, b);
+    if (comOpac) {
+      try {
+        return PonteDoOpac.saoAliados(a, b);
+      } catch (LinkageError erro) {
+        opacQuebrou(erro);
+      }
     }
     Party party = DE.get(a.getUUID());
     return party != null && party == DE.get(b.getUUID());
@@ -74,8 +80,12 @@ public class Parties {
 
   // Os outros da party que estão online
   public static List<ServerPlayer> outrosOnline(ServerPlayer jogador) {
-    if (COM_OPAC) {
-      return PonteDoOpac.outrosOnline(jogador);
+    if (comOpac) {
+      try {
+        return PonteDoOpac.outrosOnline(jogador);
+      } catch (LinkageError erro) {
+        opacQuebrou(erro);
+      }
     }
     List<ServerPlayer> outros = new ArrayList<>();
     Party party = DE.get(jogador.getUUID());
@@ -98,8 +108,12 @@ public class Parties {
     if (saoAliados(de, para)) {
       return erro(de, "ja_esta");
     }
-    if (COM_OPAC) {
-      return PonteDoOpac.convidar(de, para);
+    if (comOpac) {
+      try {
+        return PonteDoOpac.convidar(de, para);
+      } catch (LinkageError erro) {
+        opacQuebrou(erro);
+      }
     }
     if (DE.containsKey(para.getUUID())) {
       return erro(de, "ja_tem_party", para.getDisplayName());
@@ -126,7 +140,7 @@ public class Parties {
         .append(" ").append(botao("recusar", "/party recusar", ChatFormatting.RED)));
     de.sendSystemMessage(Component.translatable(FRASE + "convidou", para.getDisplayName()));
     CobblemonCombatZA.LOGGER.info("PARTY: {} convidou {}{}", de.getName().getString(), para.getName().getString(),
-        COM_OPAC ? " (OPAC)" : "");
+        comOpac ? " (OPAC)" : "");
   }
 
   public static int aceitar(ServerPlayer quem) {
@@ -134,8 +148,12 @@ public class Parties {
     if (convite == null || quem.server.getTickCount() > convite.ate()) {
       return erro(quem, "sem_convite");
     }
-    if (COM_OPAC) {
-      return PonteDoOpac.aceitar(quem, convite.quemConvidou());
+    if (comOpac) {
+      try {
+        return PonteDoOpac.aceitar(quem, convite.quemConvidou());
+      } catch (LinkageError erro) {
+        opacQuebrou(erro);
+      }
     }
     Party party = DE.get(convite.quemConvidou());
     if (party == null) {
@@ -159,8 +177,12 @@ public class Parties {
     if (convite == null) {
       return erro(quem, "sem_convite");
     }
-    if (COM_OPAC) {
-      PonteDoOpac.recusou(quem, convite.quemConvidou());
+    if (comOpac) {
+      try {
+        PonteDoOpac.recusou(quem, convite.quemConvidou());
+      } catch (LinkageError erro) {
+        opacQuebrou(erro);
+      }
     }
     ServerPlayer quemConvidou = quem.server.getPlayerList().getPlayer(convite.quemConvidou());
     if (quemConvidou != null) {
@@ -171,8 +193,12 @@ public class Parties {
   }
 
   public static int sair(ServerPlayer quem) {
-    if (COM_OPAC) {
-      return PonteDoOpac.sair(quem);
+    if (comOpac) {
+      try {
+        return PonteDoOpac.sair(quem);
+      } catch (LinkageError erro) {
+        opacQuebrou(erro);
+      }
     }
     if (!DE.containsKey(quem.getUUID())) {
       return erro(quem, "sem_party");
@@ -183,8 +209,12 @@ public class Parties {
   }
 
   public static int expulsar(ServerPlayer lider, ServerPlayer alvo) {
-    if (COM_OPAC) {
-      return PonteDoOpac.expulsar(lider, alvo);
+    if (comOpac) {
+      try {
+        return PonteDoOpac.expulsar(lider, alvo);
+      } catch (LinkageError erro) {
+        opacQuebrou(erro);
+      }
     }
     Party party = DE.get(lider.getUUID());
     if (party == null) {
@@ -203,8 +233,12 @@ public class Parties {
 
   // "/party": quem está na sua party
   public static int listar(ServerPlayer quem) {
-    if (COM_OPAC) {
-      return PonteDoOpac.listar(quem);
+    if (comOpac) {
+      try {
+        return PonteDoOpac.listar(quem);
+      } catch (LinkageError erro) {
+        opacQuebrou(erro);
+      }
     }
     Party party = DE.get(quem.getUUID());
     if (party == null) {
@@ -252,7 +286,7 @@ public class Parties {
   public static void aoDesconectar(ServerPlayer jogador) {
     CONVITES.remove(jogador.getUUID());
     ULTIMO_ENVIO.remove(jogador.getUUID());
-    if (!COM_OPAC && DE.containsKey(jogador.getUUID())) {
+    if (!comOpac && DE.containsKey(jogador.getUUID())) {
       tirar(jogador.server, jogador.getUUID(), Component.translatable(FRASE + "saiu", jogador.getDisplayName()));
     }
   }
@@ -290,13 +324,17 @@ public class Parties {
     Convite convite = CONVITES.get(jogador.getUUID());
     ServerPlayer quemConvidou = convite == null ? null : jogador.server.getPlayerList().getPlayer(convite.quemConvidou());
     return new PartyPayload(membros, quemConvidou == null ? "" : quemConvidou.getGameProfile().getName(),
-        souLider(jogador), COM_OPAC);
+        souLider(jogador), comOpac);
   }
 
   // Os outros da party (com o OPAC, também os offline). Os waypoints da party (PontosDaParty) usam
   static List<Membro> outrosMembros(ServerPlayer jogador) {
-    if (COM_OPAC) {
-      return PonteDoOpac.outrosMembros(jogador);
+    if (comOpac) {
+      try {
+        return PonteDoOpac.outrosMembros(jogador);
+      } catch (LinkageError erro) {
+        opacQuebrou(erro);
+      }
     }
     List<Membro> outros = new ArrayList<>();
     Party party = DE.get(jogador.getUUID());
@@ -312,8 +350,12 @@ public class Parties {
   }
 
   private static boolean souLider(ServerPlayer jogador) {
-    if (COM_OPAC) {
-      return PonteDoOpac.ehDono(jogador);
+    if (comOpac) {
+      try {
+        return PonteDoOpac.ehDono(jogador);
+      } catch (LinkageError erro) {
+        opacQuebrou(erro);
+      }
     }
     Party party = DE.get(jogador.getUUID());
     return party != null && party.lider.equals(jogador.getUUID());
@@ -330,6 +372,14 @@ public class Parties {
       if (online != null) {
         online.sendSystemMessage(aviso);
       }
+    }
+  }
+
+  private static void opacQuebrou(LinkageError erro) {
+    if (comOpac) {
+      comOpac = false;
+      CobblemonCombatZA.LOGGER.error("PARTY: o Open Parties and Claims mudou e a ponte com ele não funciona mais; a party volta a ser a "
+          + "do Cobblemon Combat ZA", erro);
     }
   }
 

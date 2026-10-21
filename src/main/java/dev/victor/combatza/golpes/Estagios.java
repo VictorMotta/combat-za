@@ -24,6 +24,7 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 public class Estagios {
   public static final int MINIMO = -6;
   public static final int MAXIMO = 6;
+  public static final String FRASE = "cobblemon_combat_za.estagio.";
   public static final ResourceLocation ID_VELOCIDADE_DE_ANDAR = ResourceLocation
       .fromNamespaceAndPath(CobblemonCombatZA.MOD_ID, "estagio_de_velocidade");
 
@@ -84,6 +85,20 @@ public class Estagios {
     return depois - antes;
   }
 
+  // Lote 3 dos itens (Erva Branca): as quedas somem, as subidas ficam. Devolve se havia alguma queda
+  public static boolean tirarQuedas(Pokemon pokemon) {
+    Ficha ficha = PLACAR.get(pokemon.getUuid());
+    if (ficha == null) {
+      return false;
+    }
+    boolean caiaAVelocidade = ficha.estagios().containsKey("spe") && ficha.estagios().get("spe").valor() < 0;
+    boolean tirou = ficha.estagios().values().removeIf(estagio -> estagio.valor() < 0);
+    if (caiaAVelocidade) {
+      atualizarVelocidadeDeAndar(pokemon);
+    }
+    return tirou;
+  }
+
   public static double multiplicador(Pokemon pokemon, String atributo) {
     int estagio = de(pokemon, atributo);
     return estagio >= 0 ? (2.0 + estagio) / 2.0 : 2.0 / (2.0 - estagio);
@@ -122,11 +137,11 @@ public class Estagios {
   }
 
   private static void aoVoltarAoNormal(Pokemon pokemon, String atributo) {
-    String frase = nomeDoAtributo(atributo) + " de " + pokemon.getSpecies().getName() + " voltou ao normal";
-    CobblemonCombatZA.LOGGER.info("ESTÁGIO ACABOU: {}", frase);
+    Component frase = Component.translatable(FRASE + "voltou_ao_normal", nomeDoAtributo(atributo, pokemon));
+    CobblemonCombatZA.LOGGER.info("ESTÁGIO ACABOU: {}", frase.getString());
     ServerPlayer dono = pokemon.getOwnerPlayer();
     if (dono != null) {
-      Feedback.historico(dono, pokemon, Component.literal(frase));
+      Feedback.historico(dono, pokemon, frase);
     }
     if ("spe".equals(atributo)) {
       atualizarVelocidadeDeAndar(pokemon);
@@ -141,17 +156,14 @@ public class Estagios {
     }
   }
 
-  public static String nomeDoAtributo(String atributo) {
-    return switch (atributo) {
-      case "atk" -> "O Ataque";
-      case "def" -> "A Defesa";
-      case "spa" -> "O Ataque Especial";
-      case "spd" -> "A Defesa Especial";
-      case "spe" -> "A Velocidade";
-      case "accuracy" -> "A Precisão";
-      case "evasion" -> "A Evasão";
-      default -> atributo;
-    };
+  // "O Ataque" (no arquivo de idioma); um atributo que não está lá aparece pelo nome do Showdown
+  public static Component nomeDoAtributo(String atributo) {
+    return Component.translatableWithFallback(FRASE + "nome." + atributo, atributo);
+  }
+
+  // "O Ataque de Pikachu" (em inglês, "Pikachu's Attack": por isso a frase inteira fica no arquivo de idioma)
+  public static Component nomeDoAtributo(String atributo, Pokemon pokemon) {
+    return Component.translatableWithFallback(FRASE + "de." + atributo, atributo, pokemon.getSpecies().getName());
   }
 
   private static void atualizarVelocidadeDeAndar(Pokemon pokemon) {

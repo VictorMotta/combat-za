@@ -19,6 +19,7 @@ import dev.victor.combatza.CobblemonCombatZA;
 import dev.victor.combatza.combate.GerenciarCombates;
 import dev.victor.combatza.combate.Lados;
 import dev.victor.combatza.habilidades.Habilidades;
+import dev.victor.combatza.itens.ItensDoCampo;
 import net.minecraft.SharedConstants;
 import net.minecraft.core.particles.BlockParticleOption;
 import net.minecraft.core.particles.ItemParticleOption;
@@ -54,6 +55,7 @@ public class Armadilhas {
   private static final int PARTICULAS_POR_CAMADA = 3;
   private static final int MAXIMO_POR_JOGADOR = 6;
   private static final double[] ESPINHOS_POR_CAMADA = { 1.0 / 8, 1.0 / 6, 1.0 / 4 };
+  private static final String FRASE = "cobblemon_combat_za.armadilha.";
   private static final String LEVITACAO = "levitate";
 
   private enum Tipo {
@@ -169,10 +171,9 @@ public class Armadilhas {
   private static void avisarQueFicou(Execucao execucao, Armadilha armadilha) {
     CobblemonCombatZA.LOGGER.info("ARMADILHA: {} deixou {} no chão ({} camada(s))",
         execucao.getPokemon().getSpecies().getName(), armadilha.golpe().getName(), armadilha.camadas);
-    Component frase = armadilha.golpe().getDisplayName().copy().append(" ficou no chão!");
-    if (armadilha.tipo.camadasMaximas > 1) {
-      frase = frase.copy().append(" (camada " + armadilha.camadas + ")");
-    }
+    Component frase = armadilha.tipo.camadasMaximas > 1
+        ? Component.translatable(FRASE + "ficou_camada", armadilha.golpe().getDisplayName(), armadilha.camadas)
+        : Component.translatable(FRASE + "ficou", armadilha.golpe().getDisplayName());
     Feedback.historico(execucao.getJogador(), execucao.getPokemon(), frase);
   }
 
@@ -208,11 +209,17 @@ public class Armadilhas {
     if (pokemon != null && armadilha.tipo != Tipo.PEDRA && voa(pokemon)) {
       return;
     }
+    // Lote 3 dos itens: as Botas Grossas
+    if (pokemon != null && ItensDoCampo.botas(pokemon)) {
+      CobblemonCombatZA.LOGGER.info("ARMADILHA: {} pisou em {} de Botas Grossas", pokemon.getSpecies().getName(),
+          armadilha.golpe().getName());
+      return;
+    }
     if (vitima instanceof PokemonEntity entidade && pokemon.isWild()) {
       GerenciarCombates.entrarEmCombate(armadilha.jogador, entidade, null);
     }
-    Feedback.historico(armadilha.jogador, vitima, vitima.getName().copy().append(" pisou em ")
-        .append(armadilha.golpe().getDisplayName()).append("!"));
+    Feedback.historico(armadilha.jogador, vitima,
+        Component.translatable(FRASE + "pisou", vitima.getName(), armadilha.golpe().getDisplayName()));
     Feedback.particulas(vitima, particula(armadilha.tipo), PONTOS_DA_BORDA);
     switch (armadilha.tipo) {
       case ESPINHOS -> ferir(armadilha, vitima, ESPINHOS_POR_CAMADA[armadilha.camadas - 1]);
@@ -221,8 +228,8 @@ public class Armadilhas {
         if (pokemon != null && AplicarStatus.temTipo(pokemon, ElementalTypes.POISON)) {
           ARMADILHAS.remove(armadilha);
           CobblemonCombatZA.LOGGER.info("ARMADILHA: {} recolheu os Espinhos Tóxicos", pokemon.getSpecies().getName());
-          Feedback.historico(armadilha.jogador, vitima, vitima.getName().copy().append(" recolheu ")
-              .append(armadilha.golpe().getDisplayName()).append("!"));
+          Feedback.historico(armadilha.jogador, vitima,
+              Component.translatable(FRASE + "recolheu", vitima.getName(), armadilha.golpe().getDisplayName()));
           return;
         }
         AplicarStatus.tentar(armadilha.execucao, vitima, armadilha.camadas >= 2 ? "tox" : "psn");
@@ -253,8 +260,13 @@ public class Armadilhas {
   }
 
   // 5b.3: também quem fica fora do campo (CampoEBarreiras): voa = não está "no chão"
+  // Lote 3 dos itens: o Balão de Ar também flutua; a Bola de Ferro "aterra" (até o Voador)
   public static boolean voa(Pokemon pokemon) {
-    return AplicarStatus.temTipo(pokemon, ElementalTypes.FLYING) || Habilidades.tem(pokemon, LEVITACAO);
+    if (ItensDoCampo.aterrado(pokemon)) {
+      return false;
+    }
+    return AplicarStatus.temTipo(pokemon, ElementalTypes.FLYING) || Habilidades.tem(pokemon, LEVITACAO)
+        || ItensDoCampo.noBalao(pokemon);
   }
 
   // A borda do círculo e umas partículas dentro, mais com mais camadas

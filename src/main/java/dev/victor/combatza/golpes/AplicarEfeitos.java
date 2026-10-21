@@ -1,5 +1,6 @@
 package dev.victor.combatza.golpes;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
@@ -9,6 +10,8 @@ import dev.victor.combatza.CobblemonCombatZA;
 import dev.victor.combatza.campo.CampoEBarreiras;
 import dev.victor.combatza.campo.ClimaNosGolpes;
 import dev.victor.combatza.habilidades.Habilidades;
+import dev.victor.combatza.itens.ItensDeEstagio;
+import dev.victor.combatza.itens.ItensSegurados;
 import net.minecraft.SharedConstants;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
@@ -61,6 +64,13 @@ public class AplicarEfeitos {
       escudoDePoeira(execucao, protegido.getPokemon());
       return;
     }
+    // Lote 3 dos itens: a Capa Furtiva, como o Escudo de Poeira (em silêncio, como no Showdown)
+    if (secundario.self() == null && alvo instanceof PokemonEntity protegido
+        && ItensSegurados.tem(protegido.getPokemon(), ItensSegurados.CAPA_FURTIVA)) {
+      CobblemonCombatZA.LOGGER.info("ITEM: {} não sofreu o efeito extra de {} (Capa Furtiva)",
+          protegido.getPokemon().getSpecies().getName(), execucao.getGolpe().getName());
+      return;
+    }
     if (secundario.boosts() != null) {
       mudarAtributos(execucao, alvo, secundario.boosts());
     }
@@ -90,11 +100,18 @@ public class AplicarEfeitos {
     Pokemon pokemon = pokemonEntity.getPokemon();
     boolean veioDeOutro = pokemon != execucao.getPokemon();
     long acabaNoTick = quandoAcaba(execucao);
+    Map<String, Integer> mudaram = new HashMap<>();
+    boolean amuletoAvisou = false;
     for (Map.Entry<String, Integer> mudanca : mudancas.entrySet()) {
       String atributo = mudanca.getKey();
       int pedido = mudanca.getValue();
       if (pedido < 0 && veioDeOutro && Habilidades.naoDeixaCair(pokemon, atributo)) {
         quedaBloqueada(execucao, pokemon, atributo);
+        continue;
+      }
+      // Lote 3 dos itens: o Amuleto Purificador (a frase uma vez só, mesmo segurando dois atributos)
+      if (pedido < 0 && veioDeOutro && ItensSegurados.tem(pokemon, ItensSegurados.AMULETO_PURIFICADOR)) {
+        amuletoAvisou = amuletoAvisou || ItensDeEstagio.amuletoSegura(pokemon);
         continue;
       }
       // 5b.3: a Névoa do lado dele
@@ -105,25 +122,34 @@ public class AplicarEfeitos {
         continue;
       }
       int mudou = Estagios.mudar(pokemon, atributo, pedido, acabaNoTick);
-      String frase = Estagios.nomeDoAtributo(atributo) + " de " + pokemon.getSpecies().getName() + " "
-          + comoMudou(pedido, mudou);
-      CobblemonCombatZA.LOGGER.info("ESTÁGIO: {} (agora {})", frase, Estagios.de(pokemon, atributo));
-      Feedback.historico(execucao.getJogador(), pokemon, Component.literal(frase));
+      Component frase = Component.translatable(Estagios.FRASE + comoMudou(pedido, mudou),
+          Estagios.nomeDoAtributo(atributo, pokemon));
+      CobblemonCombatZA.LOGGER.info("ESTÁGIO: {} (agora {})", frase.getString(), Estagios.de(pokemon, atributo));
+      Feedback.historico(execucao.getJogador(), pokemon, frase);
+      if (mudou != 0) {
+        mudaram.put(atributo, mudou);
+      }
+    }
+    // Lote 3 dos itens: a Erva Branca, a Mochila Ejetora e a Erva Imitadora reagem ao que mudou
+    if (!mudaram.isEmpty()) {
+      ItensDeEstagio.mudaram(pokemon, mudaram);
     }
   }
 
   private static void quedaBloqueada(Execucao execucao, Pokemon pokemon, String atributo) {
-    String frase = Estagios.nomeDoAtributo(atributo) + " de " + pokemon.getSpecies().getName() + " não caiu";
-    CobblemonCombatZA.LOGGER.info("ESTÁGIO BLOQUEADO: {} ({})", frase, pokemon.getAbility().getName());
+    Component nome = Estagios.nomeDoAtributo(atributo, pokemon);
+    CobblemonCombatZA.LOGGER.info("ESTÁGIO BLOQUEADO: {} não caiu ({})", nome.getString(),
+        pokemon.getAbility().getName());
     Feedback.historico(execucao.getJogador(), pokemon,
-        Component.literal(frase + ": ").append(Habilidades.nome(pokemon)).append("!"));
+        Component.translatable(Estagios.FRASE + "nao_caiu", nome, Habilidades.nome(pokemon)));
   }
 
   private static void escudoDePoeira(Execucao execucao, Pokemon protegido) {
     CobblemonCombatZA.LOGGER.info("ESCUDO DE POEIRA: {} não sofreu o efeito extra de {}",
         protegido.getSpecies().getName(), execucao.getGolpe().getName());
-    Feedback.historico(execucao.getJogador(), protegido, protegido.getDisplayName(false).copy()
-        .append(" não sofreu o efeito extra: ").append(Habilidades.nome(protegido)).append("!"));
+    Feedback.historico(execucao.getJogador(), protegido,
+        Component.translatable("cobblemon_combat_za.habilidade.sem_efeito_extra", protegido.getDisplayName(false),
+            Habilidades.nome(protegido)));
   }
 
   public static long quandoAcaba(Execucao execucao) {
@@ -132,15 +158,16 @@ public class AplicarEfeitos {
     return execucao.getJogador().server.getTickCount() + duracao;
   }
 
-  private static String comoMudou(int pedido, int mudou) {
+  // A chave da frase (Estagios.FRASE + "subiu_muito": "%s subiu muito!")
+  public static String comoMudou(int pedido, int mudou) {
     if (mudou == 0) {
-      return pedido > 0 ? "não pode subir mais!" : "não pode cair mais!";
+      return pedido > 0 ? "nao_sobe_mais" : "nao_cai_mais";
     }
     String direcao = mudou > 0 ? "subiu" : "caiu";
     return switch (Math.abs(mudou)) {
-      case 1 -> direcao + "!";
-      case 2 -> direcao + " muito!";
-      default -> direcao + " drasticamente!";
+      case 1 -> direcao;
+      case 2 -> direcao + "_muito";
+      default -> direcao + "_drasticamente";
     };
   }
 }

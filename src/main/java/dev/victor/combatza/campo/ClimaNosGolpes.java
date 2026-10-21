@@ -16,6 +16,7 @@ import dev.victor.combatza.golpes.Execucao;
 import dev.victor.combatza.golpes.Feedback;
 import dev.victor.combatza.golpes.Vida;
 import dev.victor.combatza.habilidades.Habilidades;
+import dev.victor.combatza.itens.ItensDeDano;
 import net.minecraft.SharedConstants;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -88,8 +89,12 @@ public class ClimaNosGolpes {
         || clima == Clima.NEVE && Habilidades.tem(alvo, "snowcloak") ? EVASAO_DO_CLIMA : 1.0;
   }
 
-  // O tipo do golpe agora (a Esfera Climática muda com o clima)
+  // O tipo do golpe agora (a Esfera Climática muda com o clima; o Julgamento, o Multiataque e a Tecno-Explosão, com o item)
   public static ElementalType tipo(Pokemon atacante, Move golpe) {
+    ElementalType doItem = ItensDeDano.tipoDoGolpe(atacante, golpe);
+    if (doItem != null) {
+      return doItem;
+    }
     if (!ESFERA_CLIMATICA.equals(golpe.getName())) {
       return golpe.getType();
     }

@@ -79,7 +79,7 @@ public class AgendaDeGolpes {
         pokemon.getSpecies().getName(), execucao.getGolpe().getName());
     Feedback.particulas(execucao.getEntidade(), ParticleTypes.SMOKE, 20);
     Feedback.historico(execucao.getJogador(), pokemon,
-        execucao.getGolpe().getDisplayName().copy().append(" foi cancelado!"));
+        Component.translatable("cobblemon_combat_za.golpe.cancelado", execucao.getGolpe().getDisplayName()));
     return true;
   }
 
@@ -114,7 +114,8 @@ public class AgendaDeGolpes {
     CobblemonCombatZA.LOGGER.info("NÃO ALCANÇOU: {} não chegou até o alvo com {}",
         execucao.getPokemon().getSpecies().getName(), execucao.getGolpe().getName());
     Feedback.historico(execucao.getJogador(), execucao.getPokemon(),
-        Component.translatable("cobblemon.battle.missed").append(" (não alcançou o alvo)"));
+        Component.translatable("cobblemon.battle.missed").append(" (")
+            .append(Component.translatable("cobblemon_combat_za.golpe.errou.nao_alcancou")).append(")"));
   }
 
   private static void atualizarExecucao(Execucao execucao, long agora) {

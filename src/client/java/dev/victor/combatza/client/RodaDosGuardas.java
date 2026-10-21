@@ -59,7 +59,6 @@ public class RodaDosGuardas {
     private static final Guardas.Modo[] MODOS = { Guardas.Modo.NEUTRO, Guardas.Modo.PASSIVO, Guardas.Modo.AGRESSIVO };
     private static final double[] ANGULOS = { 90, 210, 330 };
     private static final int[] CORES = { 0xFF5AA0FF, 0xFF6FCF97, 0xFFFF5A5A };
-    private static final String[] NOMES = { "Neutro", "Passivo", "Agressivo" };
 
     // 7.9: soltar a tecla antes disso, sem apontar outro modo, é um TOQUE: liga ou desliga o "todos de guarda" (o botão
     // que ele pediu: "algum botão que faça isso", "configurável e predefinido"). Até lá, a roda nem aparece (sem piscar)
@@ -113,12 +112,13 @@ public class RodaDosGuardas {
         }
       }
       tela.flush();
-      tela.drawCenteredString(font, "Guardas", (int) cx, (int) cy - 4, BRANCO);
+      tela.drawCenteredString(font, Component.translatable("cobblemon_combat_za.guardas.titulo"), (int) cx,
+          (int) cy - 4, BRANCO);
       for (int i = 0; i < MODOS.length; i++) {
         double angulo = Math.toRadians(ANGULOS[i]);
         int x = Math.round(cx + (float) Math.cos(angulo) * DISTANCIA_DA_OPCAO);
         int y = Math.round(cy - (float) Math.sin(angulo) * DISTANCIA_DA_OPCAO);
-        tela.drawCenteredString(font, NOMES[i], x, y - 4, BRANCO);
+        tela.drawCenteredString(font, MODOS[i].nome(), x, y - 4, BRANCO);
       }
       tela.drawCenteredString(font, MODOS[escolhida].descricao(), (int) cx,
           (int) (cy + DISTANCIA_DA_OPCAO + RAIO_DA_OPCAO + 10), CINZA);

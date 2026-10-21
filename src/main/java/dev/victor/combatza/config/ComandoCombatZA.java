@@ -15,6 +15,7 @@ import net.minecraft.network.chat.Component;
 // /combatza recarregar       lê de novo o config/cobblemon_combat_za.json (depois de editar o arquivo)
 public class ComandoCombatZA {
   private static final int NIVEL_DE_OPERADOR = 2;
+  private static final String FRASE = "cobblemon_combat_za.comando.";
 
   private ComandoCombatZA() {
   }
@@ -31,32 +32,29 @@ public class ComandoCombatZA {
   }
 
   private static int mostrarODano(CommandContext<CommandSourceStack> contexto) {
-    contexto.getSource().sendSuccess(() -> Component.literal("Dano dos selvagens em você: " + descricao()), false);
+    contexto.getSource().sendSuccess(() -> Component.translatable(FRASE + "dano", descricao()), false);
     return 1;
   }
 
   private static int mudarODano(CommandContext<CommandSourceStack> contexto, String modo) {
     boolean gravou = Configuracao.mudarDanoNoJogador(modo);
-    String aviso = gravou ? "" : " (só até fechar o jogo: o arquivo de configuração tem um erro; veja o log)";
-    contexto.getSource().sendSuccess(() -> Component.literal("Dano dos selvagens em você agora: " + descricao() + aviso),
-        true);
+    Component aviso = gravou ? Component.empty() : Component.translatable(FRASE + "nao_gravou");
+    contexto.getSource().sendSuccess(() -> Component.translatable(FRASE + "dano_agora", descricao(), aviso), true);
     return 1;
   }
 
   // 7.3b: com erro no arquivo, avisa no chat e continua valendo o que já valia
   private static int recarregar(CommandContext<CommandSourceStack> contexto) {
     if (!Configuracao.carregar()) {
-      contexto.getSource().sendFailure(Component.literal("O config/cobblemon_combat_za.json tem um erro (veja o log). "
-          + "Continua valendo o que já valia."));
+      contexto.getSource().sendFailure(Component.translatable(FRASE + "erro_no_arquivo"));
       return 0;
     }
-    contexto.getSource().sendSuccess(() -> Component.literal("Configuração do Combat ZA recarregada. Dano em você: "
-        + descricao()), true);
+    contexto.getSource().sendSuccess(() -> Component.translatable(FRASE + "recarregou", descricao()), true);
     return 1;
   }
 
-  private static String descricao() {
-    return Configuracao.MONSTRO.equals(Configuracao.danoNoJogador()) ? "monstro (como um monstro do nível dele)"
-        : "pouco (metade de um monstro do nível dele)";
+  private static Component descricao() {
+    return Component.translatable(FRASE + (Configuracao.MONSTRO.equals(Configuracao.danoNoJogador()) ? "dano_monstro"
+        : "dano_pouco"));
   }
 }

@@ -12,6 +12,7 @@ import net.minecraft.world.entity.LivingEntity;
 
 public class Flinch {
   private static final int PARTICULAS = 8;
+  private static final String FRASE = "cobblemon_combat_za.status.";
 
   private Flinch() {
   }
@@ -22,15 +23,15 @@ public class Flinch {
     }
     if (vivo instanceof PokemonEntity comHabilidade
         && Habilidades.tem(comHabilidade.getPokemon(), Habilidades.FORCA_INTERIOR)) {
-      Feedback.historico(execucao.getJogador(), vivo, vivo.getName().copy().append(" não hesitou: ")
-          .append(Component.translatable(comHabilidade.getPokemon().getAbility().getDisplayName())).append("!"));
+      Feedback.historico(execucao.getJogador(), vivo, Component.translatable(FRASE + "nao_hesitou", vivo.getName(),
+          Component.translatable(comHabilidade.getPokemon().getAbility().getDisplayName())));
       CobblemonCombatZA.LOGGER.info("FLINCH BLOQUEADO: {} tem Força Interior", vivo.getName().getString());
       return;
     }
     vivo.knockback(Balanceamento.EMPURRAO_DO_FLINCH, atacante.getX() - vivo.getX(), atacante.getZ() - vivo.getZ());
     vivo.hurtMarked = true;
     Feedback.particulas(vivo, ParticleTypes.POOF, PARTICULAS);
-    Feedback.historico(execucao.getJogador(), vivo, vivo.getName().copy().append(" hesitou!"));
+    Feedback.historico(execucao.getJogador(), vivo, Component.translatable(FRASE + "hesitou", vivo.getName()));
     CobblemonCombatZA.LOGGER.info("FLINCH: {} hesitou com {}", vivo.getName().getString(),
         execucao.getGolpe().getName());
     if (vivo instanceof PokemonEntity pokemonEntity) {
@@ -46,8 +47,8 @@ public class Flinch {
     int mudou = Estagios.mudar(pokemon, "spe", 1, AplicarEfeitos.quandoAcaba(execucao));
     CobblemonCombatZA.LOGGER.info("INABALÁVEL: {} hesitou e a Velocidade subiu (agora {})",
         pokemon.getSpecies().getName(), Estagios.de(pokemon, "spe"));
-    Feedback.historico(execucao.getJogador(), pokemon, pokemon.getDisplayName(false).copy()
-        .append(mudou > 0 ? " hesitou, e a Velocidade subiu: " : " hesitou, e a Velocidade não pode subir mais: ")
-        .append(Habilidades.nome(pokemon)).append("!"));
+    Feedback.historico(execucao.getJogador(), pokemon,
+        Component.translatable(FRASE + (mudou > 0 ? "hesitou_velocidade_subiu" : "hesitou_velocidade_no_maximo"),
+            pokemon.getDisplayName(false), Habilidades.nome(pokemon)));
   }
 }

@@ -62,7 +62,7 @@ public class Vida {
   public static void ferir(PokemonEntity entidade, double pv) {
     Pokemon pokemon = entidade.getPokemon();
     int depois = (int) Math.max(0, pvAtual(pokemon) - Math.round(pv));
-    entidade.hurt(Dano.fonte(entidade), naVida(entidade, pv));
+    entidade.hurt(Dano.fonte(entidade, entidade), naVida(entidade, pv));
     if (depois == 0) {
       desmaiar(entidade);
     } else if (entidade.isAlive()) {

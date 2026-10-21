@@ -365,7 +365,7 @@ public class Projetil extends Entity {
     Feedback.particulas((ServerLevel) level(), ParticleTypes.POOF, ponto, 6);
     // Se ele desviou, o "desviou!" já apareceu
     if (!desviaram.contains(marcado)) {
-      ControleDeGolpes.projetilErrou(execucao, "o alvo saiu da frente");
+      ControleDeGolpes.projetilErrou(execucao, "alvo_saiu_da_frente");
     }
   }
 

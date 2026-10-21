@@ -37,9 +37,9 @@ public class Confusao {
       return;
     }
     if (Habilidades.tem(pokemon, Habilidades.RITMO_PROPRIO)) {
-      Feedback.historico(execucao.getJogador(), pokemon, pokemon.getDisplayName(false).copy()
-          .append(" não ficou confuso: ").append(Component.translatable(pokemon.getAbility().getDisplayName()))
-          .append("!"));
+      Feedback.historico(execucao.getJogador(), pokemon, Component.translatable(
+          "cobblemon_combat_za.status.nao_ficou_confuso", pokemon.getDisplayName(false),
+          Component.translatable(pokemon.getAbility().getDisplayName())));
       CobblemonCombatZA.LOGGER.info("CONFUSÃO BLOQUEADA: {} tem Ritmo Próprio", pokemon.getSpecies().getName());
       return;
     }
@@ -59,6 +59,20 @@ public class Confusao {
         Component.translatable("cobblemon.battle.start.confusion", pokemon.getDisplayName(false)));
   }
 
+  // Lote 2 dos itens: as bagas de cura (Figy, Wiki...) confundem quem não gosta do sabor. Sem golpe por trás: quem chama avisa.
+  // Devolve se confundiu (o Ritmo Próprio não deixa, como sempre)
+  public static boolean confundirPorItem(PokemonEntity entidade, long agora) {
+    Pokemon pokemon = entidade.getPokemon();
+    if (pokemon.isFainted() || estaConfuso(pokemon) || Habilidades.tem(pokemon, Habilidades.RITMO_PROPRIO)) {
+      return false;
+    }
+    int turnos = entidade.getRandom().nextIntBetweenInclusive(Balanceamento.TURNOS_DE_CONFUSAO_MINIMO,
+        Balanceamento.TURNOS_DE_CONFUSAO_MAXIMO);
+    CONFUSOS.put(pokemon.getUuid(), new Confuso(pokemon, agora + turnos * EfeitosDeStatus.ticksPorTurno()));
+    CobblemonCombatZA.LOGGER.info("CONFUSO: {} por {} turno(s) (baga)", pokemon.getSpecies().getName(), turnos);
+    return true;
+  }
+
   public static boolean estaConfuso(Pokemon pokemon) {
     return CONFUSOS.containsKey(pokemon.getUuid());
   }
@@ -69,7 +83,7 @@ public class Confusao {
       return false;
     }
     float dano = Dano.daConfusao(entidade, entidade.getRandom());
-    entidade.hurt(Dano.fonte(entidade), dano);
+    entidade.hurt(Dano.fonte(entidade, entidade), dano);
     Feedback.avisarQuemImporta(pokemon, Component.literal("🌀 ")
         .append(Component.translatable("cobblemon.battle.damage.confusion", pokemon.getDisplayName(false))));
     CobblemonCombatZA.LOGGER.info("CONFUSÃO: {} se feriu ({} de dano)", pokemon.getSpecies().getName(),

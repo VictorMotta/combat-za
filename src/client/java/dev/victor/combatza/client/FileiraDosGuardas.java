@@ -63,7 +63,7 @@ public class FileiraDosGuardas {
       return topo;
     }
     Guardas.Modo modo = Guardas.Modo.de(cliente.player.getAttachedOrElse(Guardas.MODO, "neutro"));
-    Component rotulo = Component.literal(nome(modo));
+    Component rotulo = modo.nome();
     float larguraDoRotulo = ESCUDO + ESPACO_DO_ESCUDO + cliente.font.width(rotulo) * LETRA;
     float altura = MARGEM + ROSTO + ESPACO_DA_BARRINHA + BARRINHA + MARGEM;
     float largura = MARGEM + larguraDoRotulo + ESPACO + guardas.size() * (ROSTO + ESPACO) - ESPACO + MARGEM;
@@ -125,14 +125,6 @@ public class FileiraDosGuardas {
       int cor = HistoricoDaBatalha.corDaVida(vida);
       Formas.retangulo(tela, x, y, largura * vida, altura, Formas.raios(altura / 2), cor, cor);
     }
-  }
-
-  private static String nome(Guardas.Modo modo) {
-    return switch (modo) {
-      case PASSIVO -> "Passivo";
-      case NEUTRO -> "Neutro";
-      case AGRESSIVO -> "Agressivo";
-    };
   }
 
   private static int cor(Guardas.Modo modo) {

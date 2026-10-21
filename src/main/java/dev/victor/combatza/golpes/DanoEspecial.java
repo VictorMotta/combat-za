@@ -8,6 +8,7 @@ import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
 import com.cobblemon.mod.common.pokemon.Pokemon;
 
 import dev.victor.combatza.CobblemonCombatZA;
+import dev.victor.combatza.itens.ItensDeDano;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
 
@@ -92,7 +93,7 @@ public class DanoEspecial {
 
   // Em hectogramas, a mesma unidade do Showdown (Snorlax = 4600)
   private static double massa(Pokemon pokemon) {
-    return pokemon.getForm().getWeight();
+    return pokemon.getForm().getWeight() * ItensDeDano.peso(pokemon);
   }
 
   private static double pelaMassa(double massa) {
@@ -131,7 +132,8 @@ public class DanoEspecial {
   }
 
   private static double velocidade(Pokemon pokemon) {
-    return Math.max(1, pokemon.getSpeed() * Estagios.multiplicador(pokemon, "spe") * Paralisia.multiplicador(pokemon));
+    return Math.max(1, pokemon.getSpeed() * Estagios.multiplicador(pokemon, "spe") * Paralisia.multiplicador(pokemon)
+        * ItensDeDano.velocidade(pokemon));
   }
 
   private static double fracaoDaVida(Pokemon pokemon) {

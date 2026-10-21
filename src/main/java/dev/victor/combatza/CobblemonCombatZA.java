@@ -100,6 +100,7 @@ import dev.victor.combatza.rede.TravaDaEscolhaPayload;
 import dev.victor.combatza.golpes.CorridaMontada;
 import dev.victor.combatza.rede.CorridaMontadaPayload;
 import dev.victor.combatza.party.PontosDaParty;
+import dev.victor.combatza.itens.EstadoDosItens;
 import dev.victor.combatza.rede.MeusPontosPayload;
 import dev.victor.combatza.rede.PontosDaPartyPayload;
 import dev.victor.combatza.rede.UsarGolpePayload;
@@ -426,6 +427,8 @@ public class CobblemonCombatZA implements ModInitializer {
     Absorcao.esquecer(pokemon);
     // 9.1: voltou para a bola, a Escolha destrava (como nos jogos; a Cinta de Foco gasta continua gasta até o fim da batalha)
     TravaDaEscolha.esquecer(pokemon);
+    // Lotes 2 e 3 dos itens: o que estava guardado (Lansat, Micle, Custap, Metrônomo) acaba, como nos jogos
+    EstadoDosItens.esquecer(pokemon);
     Lutadores.saiu(pokemon);
     if (Habilidades.tem(pokemon, Habilidades.CURA_NATURAL) && pokemon.getStatus() != null) {
       pokemon.setStatus(null);

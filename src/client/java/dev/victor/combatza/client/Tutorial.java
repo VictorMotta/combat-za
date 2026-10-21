@@ -271,11 +271,14 @@ public class Tutorial {
     }
 
     // Como na tela de Controles do Minecraft (KeyBindsScreen): grava nas opções (que salvam o options.txt) e refaz o mapa
-    // das teclas. Esc cancela (lá, Esc apaga a tecla)
+    // das teclas. Esc cancela (lá, Esc apaga a tecla); Delete ou Backspace deixam a ação SEM tecla (dele, 20/10: a tecla do
+    // lado tinha ficado no Windows esquerdo, e aqui não dava para tirar)
     @Override
     public boolean keyPressed(int tecla, int codigo, int modificadores) {
       if (ouvindo != null) {
-        if (tecla != GLFW.GLFW_KEY_ESCAPE) {
+        if (tecla == GLFW.GLFW_KEY_DELETE || tecla == GLFW.GLFW_KEY_BACKSPACE) {
+          gravar(InputConstants.UNKNOWN);
+        } else if (tecla != GLFW.GLFW_KEY_ESCAPE) {
           gravar(InputConstants.getKey(tecla, codigo));
         }
         ouvindo = null;
@@ -442,7 +445,9 @@ public class Tutorial {
       Tecla aParty = new Tecla(frase("tecla.party"), party);
       List<Tecla> todas = new ArrayList<>(List.of(anterior, proximo, aSoltar, oLado));
       todas.addAll(golpes);
-      todas.addAll(List.of(oFoco, aRolar, osGuardas, aMega, oZoom, aParty));
+      // A Mega só existe com o Mega Showdown: sem ele, nem a página nem a tecla aparecem (como a do OPAC e a do Xaero)
+      boolean comMega = FabricLoader.getInstance().isModLoaded("mega_showdown");
+      todas.addAll(comMega ? List.of(oFoco, aRolar, osGuardas, aMega, oZoom, aParty) : List.of(oFoco, aRolar, osGuardas, oZoom, aParty));
 
       List<Pagina> paginas = new ArrayList<>();
       paginas.add(pagina(1, List.of(), texto("1.1"), texto("1.2")));
@@ -462,11 +467,17 @@ public class Tutorial {
       // 8.2: a página do XP (as chaves vão pelo número, não pela posição: a 10 vem antes da 8)
       paginas.add(pagina(10, List.of(), texto("10.1"), texto("10.2"), texto("10.3")));
       // 8.4: a Mega Evolução (a 11 vem depois da 10, antes da 8)
-      paginas.add(pagina(11, List.of(aMega), texto("11.1"),
-          mega.isUnbound() ? texto("11.2_sem_tecla") : texto("11.2", mega), texto("11.3")));
+      if (comMega) {
+        paginas.add(pagina(11, List.of(aMega), texto("11.1"),
+            mega.isUnbound() ? texto("11.2_sem_tecla") : texto("11.2", mega), texto("11.3")));
+      }
       // 8.7 e 8.8: as bolas especiais e a mochila na batalha
       paginas.add(pagina(12, List.of(), texto("12.1"), texto("12.2"), texto("12.3"), texto("12.4")));
       paginas.add(pagina(13, List.of(), texto("13.1"), texto("13.2"), texto("13.3"), texto("13.4")));
+      // Lotes 2 e 3 dos itens segurados (dele, 20/10: "preciso que termine os lotes 2 e 3")
+      paginas.add(pagina(19, List.of(), texto("19.1"), texto("19.2"), texto("19.3")));
+      paginas.add(pagina(20, List.of(), texto("20.1"), texto("20.2"), texto("20.3")));
+      paginas.add(pagina(21, List.of(), texto("21.1"), texto("21.2"), texto("21.3")));
       paginas.add(pagina(14, List.of(), texto("14.1"), texto("14.2"), texto("14.3")));
       paginas.add(pagina(15, List.of(), texto("15.1"), texto("15.2"), texto("15.3")));
       paginas.add(pagina(16, List.of(), texto("16.1"), texto("16.2")));

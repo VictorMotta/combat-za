@@ -19,6 +19,7 @@ public class EfeitosDeVida {
   private static final String CLOROFILEISER = "chloroblast";
   private static final String GAMBITO_FINAL = "finalgambit";
   private static final Set<String> CURAM_METADE = Set.of("synthesis", "moonlight", "morningsun", "shoreup");
+  private static final String FRASE = "cobblemon_combat_za.golpe.";
 
   private EfeitosDeVida() {
   }
@@ -33,8 +34,8 @@ public class EfeitosDeVida {
     Vida.ferir(atacante, custo);
     CobblemonCombatZA.LOGGER.info("CUSTO DE VIDA: {} pagou {} PV para usar {}", pokemon.getSpecies().getName(), custo,
         execucao.getGolpe().getName());
-    Feedback.historico(execucao.getJogador(), pokemon, pokemon.getDisplayName(false).copy()
-        .append(" gastou metade da vida em ").append(execucao.getGolpe().getDisplayName()).append("!"));
+    Feedback.historico(execucao.getJogador(), pokemon, Component.translatable(FRASE + "gastou_metade_da_vida",
+        pokemon.getDisplayName(false), execucao.getGolpe().getDisplayName()));
   }
 
   public static void depoisDoDano(Execucao execucao, PokemonEntity atacante, Entity alvo, double pvTirados) {
@@ -50,7 +51,7 @@ public class EfeitosDeVida {
       CobblemonCombatZA.LOGGER.info("GAMBITO FINAL: {} deu toda a vida e desmaiou",
           atacante.getPokemon().getSpecies().getName());
       Feedback.historico(execucao.getJogador(), atacante,
-          atacante.getPokemon().getDisplayName(false).copy().append(" deu toda a vida no golpe e desmaiou!"));
+          Component.translatable(FRASE + "gambito_final", atacante.getPokemon().getDisplayName(false)));
     }
     EfeitosDosGolpes.Efeito efeito = EfeitosDosGolpes.de(golpe);
     if (efeito == null) {
@@ -98,22 +99,24 @@ public class EfeitosDeVida {
     CobblemonCombatZA.LOGGER.info("DRENOU: {} recuperou {} PV de {}", atacante.getPokemon().getSpecies().getName(),
         curou, alvo.getName().getString());
     Feedback.historico(execucao.getJogador(), alvo,
-        Component.translatable("cobblemon.battle.heal.drain", alvo.getName()).append(" (+" + curou + " PV)"));
+        Component.translatable("cobblemon.battle.heal.drain", alvo.getName())
+            .append(Component.translatable("cobblemon_combat_za.pv.ganhou", curou)));
   }
 
   private static void recuar(Execucao execucao, PokemonEntity atacante, int pv) {
     Pokemon pokemon = atacante.getPokemon();
     if (Habilidades.tem(pokemon, Habilidades.CABECA_DE_PEDRA)) {
       CobblemonCombatZA.LOGGER.info("RECUO BLOQUEADO: {} tem Cabeça de Pedra", pokemon.getSpecies().getName());
-      Feedback.historico(execucao.getJogador(), pokemon, pokemon.getDisplayName(false).copy()
-          .append(" não sofreu o recuo: ").append(Habilidades.nome(pokemon)).append("!"));
+      Feedback.historico(execucao.getJogador(), pokemon,
+          Component.translatable(FRASE + "sem_recuo", pokemon.getDisplayName(false), Habilidades.nome(pokemon)));
       return;
     }
     Vida.ferir(atacante, pv);
     CobblemonCombatZA.LOGGER.info("RECUO: {} perdeu {} PV com {}", pokemon.getSpecies().getName(), pv,
         execucao.getGolpe().getName());
     Feedback.historico(execucao.getJogador(), pokemon,
-        Component.translatable("cobblemon.battle.damage.recoil", pokemon.getDisplayName(false)).append(" (-" + pv + " PV)"));
+        Component.translatable("cobblemon.battle.damage.recoil", pokemon.getDisplayName(false))
+            .append(Component.translatable("cobblemon_combat_za.pv.perdeu", pv)));
   }
 
   private static void curar(Execucao execucao, PokemonEntity quem, double pv) {
@@ -126,7 +129,8 @@ public class EfeitosDeVida {
     CobblemonCombatZA.LOGGER.info("CUROU: {} recuperou {} PV com {}", pokemon.getSpecies().getName(), curou,
         execucao.getGolpe().getName());
     Feedback.historico(execucao.getJogador(), pokemon,
-        Component.translatable("cobblemon.battle.heal.generic", pokemon.getDisplayName(false)).append(" (+" + curou + " PV)"));
+        Component.translatable("cobblemon.battle.heal.generic", pokemon.getDisplayName(false))
+            .append(Component.translatable("cobblemon_combat_za.pv.ganhou", curou)));
   }
 
   private static void descansar(Execucao execucao, PokemonEntity entidade) {
@@ -150,8 +154,8 @@ public class EfeitosDeVida {
     if (Habilidades.imuneAoStatus(pokemon, "slp")) {
       CobblemonCombatZA.LOGGER.info("DESCANSO FALHOU: {} não dorme ({})", pokemon.getSpecies().getName(),
           pokemon.getAbility().getName());
-      Feedback.historico(execucao.getJogador(), pokemon, pokemon.getDisplayName(false).copy()
-          .append(" não consegue dormir: ").append(Habilidades.nome(pokemon)).append("!"));
+      Feedback.historico(execucao.getJogador(), pokemon, Component.translatable(FRASE + "nao_consegue_dormir",
+          pokemon.getDisplayName(false), Habilidades.nome(pokemon)));
       return;
     }
     pokemon.applyStatus(Statuses.SLEEP);
@@ -160,8 +164,8 @@ public class EfeitosDeVida {
         execucao.getJogador().server.getTickCount());
     int curou = Vida.curar(entidade, pokemon.getMaxHealth());
     CobblemonCombatZA.LOGGER.info("DESCANSOU: {} dormiu e recuperou {} PV", pokemon.getSpecies().getName(), curou);
-    Feedback.historico(execucao.getJogador(), pokemon, pokemon.getDisplayName(false).copy()
-        .append(" dormiu e recuperou toda a vida! (+" + curou + " PV)"));
+    Feedback.historico(execucao.getJogador(), pokemon,
+        Component.translatable(FRASE + "descansou", pokemon.getDisplayName(false), curou));
   }
 
   private static void vidaCheia(Execucao execucao, Pokemon pokemon) {

@@ -2,6 +2,7 @@ package dev.victor.combatza.habilidades;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import com.cobblemon.mod.common.Cobblemon;
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
@@ -11,12 +12,14 @@ import dev.victor.combatza.CobblemonCombatZA;
 import dev.victor.combatza.campo.CampoEBarreiras;
 import dev.victor.combatza.golpes.Estagios;
 import dev.victor.combatza.golpes.Feedback;
+import dev.victor.combatza.itens.ItensDeEstagio;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 
 public class Intimidacao {
   private static final String HABILIDADE = "intimidate";
+  private static final String FRASE = "cobblemon_combat_za.habilidade.";
 
   private Intimidacao() {
   }
@@ -50,11 +53,15 @@ public class Intimidacao {
 
   private static void intimidar(Pokemon quem, Pokemon vitima, long agora) {
     ServerPlayer jogador = quem.getOwnerPlayer() != null ? quem.getOwnerPlayer() : vitima.getOwnerPlayer();
-    Component inicio = quem.getDisplayName(false).copy().append(" intimidou ").append(vitima.getDisplayName(false));
     if (Habilidades.ignoraIntimidacao(vitima) || Habilidades.naoDeixaCair(vitima, "atk")) {
       CobblemonCombatZA.LOGGER.info("INTIMIDAÇÃO BLOQUEADA: {} tem {}", vitima.getSpecies().getName(),
           vitima.getAbility().getName());
-      avisar(jogador, quem, inicio.copy().append(", que não ligou: ").append(Habilidades.nome(vitima)).append("!"));
+      avisar(jogador, quem, Component.translatable(FRASE + "intimidou_nao_ligou", quem.getDisplayName(false),
+          vitima.getDisplayName(false), Habilidades.nome(vitima)));
+      return;
+    }
+    // Lote 3 dos itens: o Amuleto Purificador
+    if (ItensDeEstagio.amuletoSegura(vitima)) {
       return;
     }
     // 5b.3: a Névoa do lado dele
@@ -66,7 +73,13 @@ public class Intimidacao {
     int mudou = Estagios.mudar(vitima, "atk", -1, agora);
     CobblemonCombatZA.LOGGER.info("INTIMIDAÇÃO: {} intimidou {} (Ataque agora {})", quem.getSpecies().getName(),
         vitima.getSpecies().getName(), Estagios.de(vitima, "atk"));
-    avisar(jogador, quem, inicio.copy().append(mudou < 0 ? ": o Ataque caiu!" : ": o Ataque não pode cair mais!"));
+    avisar(jogador, quem, Component.translatable(FRASE + (mudou < 0 ? "intimidou" : "intimidou_no_minimo"),
+        quem.getDisplayName(false), vitima.getDisplayName(false)));
+    // Lote 3 dos itens: a Erva Branca e a Mochila Ejetora na queda; o Orbe de Adrenalina sobe a Velocidade
+    if (mudou < 0) {
+      ItensDeEstagio.mudaram(vitima, Map.of("atk", mudou));
+    }
+    ItensDeEstagio.orbeDeAdrenalina(vitima, mudou);
   }
 
   // A frase vai para o histórico da batalha, com o rosto de quem intimidou

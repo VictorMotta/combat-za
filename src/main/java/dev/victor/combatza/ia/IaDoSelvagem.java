@@ -34,6 +34,7 @@ import dev.victor.combatza.golpes.Projetil;
 import dev.victor.combatza.golpes.SonoECongelado;
 import net.minecraft.SharedConstants;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
@@ -274,6 +275,15 @@ public class IaDoSelvagem {
     return deLonge > deContato;
   }
 
+  // Lote 3 dos itens (o Cartão Vermelho): o selvagem sai correndo, como o arisco que foge (Combate tira da luta quem se afasta)
+  public static void fazerFugir(PokemonEntity selvagem) {
+    Cerebro cerebro = CEREBROS.get(selvagem.getUUID());
+    if (cerebro != null) {
+      cerebro.fugindo = true;
+      CobblemonCombatZA.LOGGER.info("IA: {} foi expulso da batalha (Cartão Vermelho)", selvagem.getPokemon().getSpecies().getName());
+    }
+  }
+
   // Só o arisco, e uma vez: a partir daí ele só corre (Combate tira da luta quem passa de 24 blocos de todos)
   private static boolean comecouAFugir(PokemonEntity selvagem, List<ServerPlayer> jogadores, Cerebro cerebro) {
     Pokemon pokemon = selvagem.getPokemon();
@@ -285,7 +295,8 @@ public class IaDoSelvagem {
     CobblemonCombatZA.LOGGER.info("IA: {} (arisco) está fugindo com {}/{} de vida", pokemon.getSpecies().getName(),
         pokemon.getCurrentHealth(), pokemon.getMaxHealth());
     for (ServerPlayer jogador : jogadores) {
-      Feedback.historico(jogador, pokemon, pokemon.getDisplayName(false).copy().append(" está fugindo!"));
+      Feedback.historico(jogador, pokemon,
+          Component.translatable("cobblemon_combat_za.batalha.fugindo", pokemon.getDisplayName(false)));
     }
     return true;
   }

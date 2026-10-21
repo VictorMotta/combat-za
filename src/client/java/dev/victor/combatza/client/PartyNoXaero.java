@@ -31,12 +31,23 @@ public class PartyNoXaero implements IRenderedPlayerTracker<PartyPayload.Membro>
   // O Xaero se prepara depois de nós: tenta a cada tick até ele estar pronto, e registra uma vez
   public static void registrar() {
     ClientTickEvents.END_CLIENT_TICK.register(cliente -> {
-      if (registrado || HudMod.INSTANCE == null || HudMod.INSTANCE.getPlayerTracker() == null) {
+      try {
+        if (registrado || HudMod.INSTANCE == null || HudMod.INSTANCE.getPlayerTracker() == null) {
+          return;
+        }
+      } catch (LinkageError erro) {
+        registrado = true;
+        CobblemonCombatZA.LOGGER.error("PARTY: o Xaero's Minimap mudou; a party não aparece no mapa dele", erro);
         return;
       }
-      HudMod.INSTANCE.getPlayerTracker().register(NOME, new PartyNoXaero());
       registrado = true;
-      CobblemonCombatZA.LOGGER.info("PARTY: a party aparece no mapa do Xaero");
+      // Se o Xaero mudar por dentro numa versão nova, a party só não aparece no mapa (um aviso no log), em vez de fechar o jogo
+      try {
+        HudMod.INSTANCE.getPlayerTracker().register(NOME, new PartyNoXaero());
+        CobblemonCombatZA.LOGGER.info("PARTY: a party aparece no mapa do Xaero");
+      } catch (LinkageError erro) {
+        CobblemonCombatZA.LOGGER.error("PARTY: o Xaero's Minimap mudou; a party não aparece no mapa dele", erro);
+      }
     });
   }
 

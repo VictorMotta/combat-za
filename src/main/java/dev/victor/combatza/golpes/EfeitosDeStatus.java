@@ -33,6 +33,9 @@ public class EfeitosDeStatus {
 
   private static final ResourceKey<DamageType> TIPO_STATUS_POKEMON = ResourceKey.create(Registries.DAMAGE_TYPE,
       ResourceLocation.fromNamespaceAndPath(CobblemonCombatZA.MOD_ID, "status_pokemon"));
+  // Num Pokémon, o dano de status (uma parte da vida, como nos jogos) também ignora a armadura do Cobblemon
+  private static final ResourceKey<DamageType> TIPO_STATUS_EM_POKEMON = ResourceKey.create(Registries.DAMAGE_TYPE,
+      ResourceLocation.fromNamespaceAndPath(CobblemonCombatZA.MOD_ID, "status_em_pokemon"));
 
   private static final Map<UUID, Integer> TURNOS_DE_TOXICO = new HashMap<>();
 
@@ -82,7 +85,7 @@ public class EfeitosDeStatus {
 
   // O dano "de status": sem atacante (o rolamento não desvia). A queimadura, o veneno e o preso (Preso) usam
   public static DamageSource fonteDoStatus(Entity entidade) {
-    return entidade.damageSources().source(TIPO_STATUS_POKEMON);
+    return entidade.damageSources().source(entidade instanceof PokemonEntity ? TIPO_STATUS_EM_POKEMON : TIPO_STATUS_POKEMON);
   }
 
   public static long ticksPorTurno() {
@@ -148,7 +151,7 @@ public class EfeitosDeStatus {
   private static void trocarDePele(Pokemon pokemon, String sigla) {
     pokemon.setStatus(null);
     CobblemonCombatZA.LOGGER.info("PELE VERTENTE: {} se livrou de {}", pokemon.getSpecies().getName(), sigla);
-    Feedback.avisarQuemImporta(pokemon, Component.literal("✨ ").append(pokemon.getDisplayName(false))
-        .append(" se curou: ").append(Habilidades.nome(pokemon)).append("!"));
+    Feedback.avisarQuemImporta(pokemon, Component.translatable("cobblemon_combat_za.status.se_curou",
+        pokemon.getDisplayName(false), Habilidades.nome(pokemon)));
   }
 }

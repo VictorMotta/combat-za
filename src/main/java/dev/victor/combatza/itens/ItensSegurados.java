@@ -7,12 +7,17 @@ import java.util.Set;
 import java.util.UUID;
 
 import com.cobblemon.mod.common.Cobblemon;
+import com.cobblemon.mod.common.api.moves.Move;
 import com.cobblemon.mod.common.CobblemonItemComponents;
 import com.cobblemon.mod.common.api.tags.CobblemonItemTags;
 import com.cobblemon.mod.common.pokemon.Pokemon;
 import com.cobblemon.mod.common.item.components.HeldItemEffectComponent;
 import com.cobblemon.mod.common.pokemon.helditem.CobblemonHeldItemManager;
 
+import dev.victor.combatza.combate.Combate;
+import dev.victor.combatza.combate.GerenciarCombates;
+import dev.victor.combatza.golpes.EfeitosDosGolpes;
+import dev.victor.combatza.golpes.Feedback;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -23,7 +28,10 @@ import net.minecraft.world.item.ItemStack;
 // nossa luta não passa por lá, então nenhum funcionava. Aqui, como as habilidades da 4H: cada item pelo id do Showdown ("lifeorb",
 // "leftovers"...), que o próprio Cobblemon traduz do item (CobblemonHeldItemManager.showdownId, javap: também respeita os itens
 // de outros mods). O lote 1 está em ItensDeDano (os números), ItensDeVida (frutas, Sobras, Lodo, Orbe), ItensDeContato (Elmo)
-// e TravaDaEscolha. Vale para o seu Pokémon e para o selvagem (o Cobblemon faz o selvagem nascer com item)
+// e TravaDaEscolha. Os lotes 2 e 3 (dele, 20/10: "preciso que termine os lotes 2 e 3, como uma pessoa vai jogar o Cobblemon
+// sem usar os itens?"), por quando agem: Bagas, ItensDoAcerto, ItensDeEstagio, ItensDeCarga, ItensDoTurno e ItensDoCampo (e
+// o que fica guardado no Pokémon, EstadoDosItens). Vale para o seu Pokémon e para o selvagem (o Cobblemon faz o selvagem
+// nascer com item)
 public class ItensSegurados {
   public static final String SOBRAS = "leftovers";
   public static final String LODO_ESCURO = "blacksludge";
@@ -48,6 +56,17 @@ public class ItensSegurados {
   public static final String COLETE_DE_ATAQUE = "assaultvest";
   public static final String EVIOLITA = "eviolite";
   public static final String ELMO_ROCHOSO = "rockyhelmet";
+  // Lotes 2 e 3: os que mais de uma classe consulta
+  public static final String BOLA_DE_FERRO = "ironball";
+  public static final String BALAO_DE_AR = "airballoon";
+  public static final String ALVO_ANELADO = "ringtarget";
+  public static final String PROTETORES = "protectivepads";
+  public static final String LUVA_DE_SOCO = "punchingglove";
+  public static final String CAPA_FURTIVA = "covertcloak";
+  public static final String AMULETO_PURIFICADOR = "clearamulet";
+  public static final String OCULOS_DE_PROTECAO = "safetygoggles";
+  public static final String GUARDA_CHUVA = "utilityumbrella";
+  public static final String BOTAS_GROSSAS = "heavydutyboots";
   private static final String NENHUM = "";
 
   // Os itens que valem uma vez por batalha e ficam com o Pokémon (a Cinta de Foco), por Pokémon
@@ -91,6 +110,39 @@ public class ItensSegurados {
     }
   }
 
+  // O item de uma vez ainda vale (ele segura, e não gastou nesta batalha: a Cinta de Foco e o Balão ficam com ele)
+  public static boolean disponivel(Pokemon pokemon, String id) {
+    return tem(pokemon, id) && !usadoNestaBatalha(pokemon, id);
+  }
+
+  // Gasta e devolve o nome, para a frase (gasto, o item pode sumir da mão)
+  public static Component gastarComNome(Pokemon pokemon, String id) {
+    Component nome = nome(pokemon);
+    gastar(pokemon, id);
+    return nome;
+  }
+
+  // A frase de um item vai para o histórico de quem está na batalha dele (fora de uma batalha, nenhuma)
+  public static void avisar(Pokemon pokemon, Component frase) {
+    Combate combate = GerenciarCombates.combateDe(pokemon);
+    if (combate == null) {
+      return;
+    }
+    for (ServerPlayer jogador : combate.getJogadores()) {
+      Feedback.historico(jogador, pokemon, frase);
+    }
+  }
+
+  // O contato que conta para as reações (Elmo Rochoso, Estática, Farpa Grudenta...): os Protetores tiram de todos os golpes de
+  // quem segura; a Luva de Soco, dos socos
+  public static boolean fazContato(Pokemon atacante, Move golpe) {
+    if (!EfeitosDosGolpes.fazContato(golpe)) {
+      return false;
+    }
+    String item = id(atacante);
+    return !PROTETORES.equals(item) && !(LUVA_DE_SOCO.equals(item) && EfeitosDosGolpes.ehSoco(golpe));
+  }
+
   public static boolean usadoNestaBatalha(Pokemon pokemon, String id) {
     Set<String> usados = USADOS.get(pokemon.getUuid());
     return usados != null && usados.contains(id);
@@ -106,10 +158,12 @@ public class ItensSegurados {
   public static void esquecer(Pokemon pokemon) {
     USADOS.remove(pokemon.getUuid());
     TravaDaEscolha.esquecer(pokemon);
+    EstadoDosItens.esquecer(pokemon);
   }
 
   public static void limpar() {
     USADOS.clear();
     TravaDaEscolha.limpar();
+    EstadoDosItens.limpar();
   }
 }

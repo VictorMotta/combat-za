@@ -13,6 +13,8 @@ import dev.victor.combatza.combate.GerenciarCombates;
 import dev.victor.combatza.campo.CampoEBarreiras;
 import dev.victor.combatza.campo.ClimaNosGolpes;
 import dev.victor.combatza.itens.ItensDeDano;
+import dev.victor.combatza.itens.EstadoDosItens;
+import dev.victor.combatza.itens.ItensDeCarga;
 import net.minecraft.server.level.ServerBossEvent;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.BossEvent;
@@ -75,10 +77,16 @@ public class Execucao {
     this.golpe = golpe;
     this.slot = slot;
     this.arquetipo = Arquetipo.classificar(golpe);
-    double ritmo = ritmoDoCasting(pokemon);
-    int pulados = semCarga ? arquetipo.ticksDeCarga() : 0;
+    // Lote 3 dos itens: a Cauda Pesada deixa a carga mais lenta; a Garra Rápida e a Baga Custap pulam a carga; a Erva do Poder
+    // tira a carga a mais; o Metrônomo conta o golpe seguido
+    double ritmo = ritmoDoCasting(pokemon) * ItensDeCarga.ritmo(pokemon);
+    int pulados = semCarga || ItensDeCarga.pulaACarga(pokemon) ? arquetipo.ticksDeCarga() : 0;
     // 5b.2: o Raio Solar fora do Sol carrega 2 s a mais
-    long cargaDoClima = semCarga ? 0 : ClimaNosGolpes.cargaExtra(pokemon, golpe);
+    long cargaDoClima = semCarga ? 0 : ItensDeCarga.ervaDoPoder(pokemon, ClimaNosGolpes.cargaExtra(pokemon, golpe));
+    // (o Metrônomo conta a vez do golpe, não cada acerto de um golpe de vários acertos)
+    if (!semCarga) {
+      EstadoDosItens.comecouGolpe(pokemon, golpe);
+    }
     // 7.2d: no selvagem, só a parte até o impacto fica mais longa; o resto do golpe é igual
     long aMaisDoSelvagem = pokemon.isWild()
         ? Math.round((arquetipo.ticksAteImpacto() - pulados) * ritmo * (Balanceamento.CARGA_DO_SELVAGEM - 1))

@@ -2,6 +2,7 @@ package dev.victor.combatza.golpes;
 
 import dev.victor.combatza.campo.CampoEBarreiras;
 import dev.victor.combatza.campo.ClimaNosGolpes;
+import dev.victor.combatza.itens.Bagas;
 import dev.victor.combatza.itens.ItensDeDano;
 
 import java.util.HashMap;
@@ -68,6 +69,8 @@ public class Recargas {
         * Paralisia.multiplicador(pokemon) * ItensDeDano.velocidade(pokemon) * ClimaNosGolpes.velocidade(pokemon)
         * CampoEBarreiras.velocidade(pokemon));
     float segundos = EfeitosDeVida.ehDeCura(golpe) ? RECARGA_DA_CURA : calcularRecarga(golpe, velocidade);
+    // Lote 2 dos itens: a Baga Leppa acelera esta recarga (como o Éter)
+    Bagas.leppa(pokemon, slot, golpe, agora);
 
     int ticks = Math.round(segundos * TICKS_POR_SEGUNDO);
     if (aceleradoAte(pokemon, slot) > agora) {

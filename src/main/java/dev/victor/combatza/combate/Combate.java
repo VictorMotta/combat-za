@@ -17,6 +17,7 @@ import dev.victor.combatza.golpes.StatusNossos;
 import dev.victor.combatza.habilidades.Intimidacao;
 import dev.victor.combatza.ia.Deteccao;
 import dev.victor.combatza.itens.ItensSegurados;
+import dev.victor.combatza.itens.ItensDoCampo;
 import dev.victor.combatza.mega.Mega;
 import dev.victor.combatza.party.Parties;
 import net.minecraft.server.level.ServerPlayer;
@@ -53,6 +54,8 @@ public class Combate {
     Arenas.entrouNaBatalha(jogador, this);
     zerarEstagiosDoTime(jogador);
     PrimeiroTurno.esquecerTime(jogador);
+    // Lotes 2 e 3 dos itens: a batalha começa com os itens de uma vez valendo e sem nada guardado (o Metrônomo do zero)
+    ItensSegurados.fimDaBatalha(jogador);
     Intimidacao.doTime(jogador, selvagens);
     return true;
   }
@@ -65,6 +68,7 @@ public class Combate {
     Estagios.zerar(selvagem.getPokemon());
     StatusNossos.acordarSeDormeDeCansaco(selvagem);
     PrimeiroTurno.esquecer(selvagem.getPokemon());
+    ItensSegurados.esquecer(selvagem.getPokemon());
     Intimidacao.doSelvagem(selvagem, jogadores);
     return true;
   }
@@ -164,8 +168,8 @@ public class Combate {
     return selvagens.stream().map(PokemonEntity::getPokemon).toList();
   }
 
-  private boolean estaoPerto(ServerPlayer jogador, PokemonEntity selvagem) {
-    return jogador.level() == selvagem.level() && jogador.distanceTo(selvagem) <= DISTANCIA_FUGA;
+  private boolean estaoPerto(ServerPlayer jogador, PokemonEntity selvagem, float distancia) {
+    return jogador.level() == selvagem.level() && jogador.distanceTo(selvagem) <= distancia;
   }
 
   private boolean jogadorFugiu(ServerPlayer jogador) {
@@ -182,9 +186,12 @@ public class Combate {
     return true;
   }
 
+  // Lote 3 dos itens: com a Bola de Fumaça no time e todos na bola, a distância para fugir cai para 8 blocos (só a sua fuga;
+  // o selvagem sai da batalha na distância de sempre)
   private boolean pertoDeAlgumSelvagem(ServerPlayer jogador) {
+    float distancia = ItensDoCampo.distanciaDeFuga(jogador, DISTANCIA_FUGA);
     for (PokemonEntity selvagem : selvagens) {
-      if (estaoPerto(jogador, selvagem)) {
+      if (estaoPerto(jogador, selvagem, distancia)) {
         return true;
       }
     }
@@ -193,7 +200,7 @@ public class Combate {
 
   private boolean selvagemFicouParaTras(PokemonEntity selvagem) {
     for (ServerPlayer jogador : jogadores) {
-      if (estaoPerto(jogador, selvagem)) {
+      if (estaoPerto(jogador, selvagem, DISTANCIA_FUGA)) {
         return false;
       }
     }

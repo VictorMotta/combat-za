@@ -19,6 +19,7 @@ import dev.victor.combatza.golpes.AplicarStatus;
 import dev.victor.combatza.golpes.Balanceamento;
 import dev.victor.combatza.golpes.EfeitosDeStatus;
 import dev.victor.combatza.golpes.Execucao;
+import dev.victor.combatza.itens.ItensDoCampo;
 import dev.victor.combatza.itens.ItensSegurados;
 import net.minecraft.SharedConstants;
 import net.minecraft.core.BlockPos;
@@ -70,7 +71,8 @@ public class EfeitosDoCampo {
   // O clima que vale para este Pokémon agora (o selvagem fora da batalha: nenhum)
   public static Clima clima(Pokemon pokemon) {
     Arena arena = Arenas.de(pokemon);
-    return arena == null ? Clima.NENHUM : climaQueVale(arena);
+    // Lote 3 dos itens: com o Guarda-chuva Útil, o Sol e a Chuva não valem para ele
+    return arena == null ? Clima.NENHUM : ItensDoCampo.comGuardaChuva(pokemon, climaQueVale(arena));
   }
 
   // 5b.2: com Climatização ou Bloqueio Aéreo na arena, o clima continua lá (no ícone) mas não faz nada
@@ -90,7 +92,11 @@ public class EfeitosDoCampo {
   // O clima entre quem ataca e quem apanha ("defensor" null = um monstro ou você)
   public static Clima climaEntre(Pokemon atacante, Pokemon defensor) {
     Clima doAtacante = clima(atacante);
-    return doAtacante != Clima.NENHUM || defensor == null ? doAtacante : clima(defensor);
+    if (doAtacante != Clima.NENHUM || defensor == null) {
+      return doAtacante;
+    }
+    // Lote 3 dos itens: o clima do lado de quem apanha também passa pelo Guarda-chuva de quem ataca
+    return ItensDoCampo.comGuardaChuva(atacante, clima(defensor));
   }
 
   // O golpe é de clima? Então chama o clima (ou falha) e devolve true
@@ -171,7 +177,7 @@ public class EfeitosDoCampo {
     if (virouTurno && vale != Clima.NENHUM) {
       for (PokemonEntity entidade : arena.pokemons()) {
         if (entidade.isAlive() && !entidade.getPokemon().isFainted()) {
-          ClimaNosGolpes.porTurno(arena, entidade, vale);
+          ClimaNosGolpes.porTurno(arena, entidade, ItensDoCampo.comGuardaChuva(entidade.getPokemon(), vale));
         }
       }
     }
@@ -224,6 +230,11 @@ public class EfeitosDoCampo {
   // O dano final (Dano.contraPokemon): a Chuva e o Sol no Fogo e na Água ("defensor" null = um monstro ou você)
   public static double danoFinal(Pokemon atacante, Pokemon defensor, Move golpe) {
     Clima clima = climaEntre(atacante, defensor);
+    // Lote 3 dos itens: o Guarda-chuva Útil de qualquer um dos dois tira o Sol e a Chuva deste golpe
+    if (ItensDoCampo.comGuardaChuva(atacante, clima) != clima
+        || defensor != null && ItensDoCampo.comGuardaChuva(defensor, clima) != clima) {
+      return 1.0;
+    }
     ElementalType tipo = ClimaNosGolpes.tipo(atacante, golpe);
     if (clima == Clima.CHUVA) {
       return tipo == ElementalTypes.WATER ? FORTE : tipo == ElementalTypes.FIRE ? FRACO : 1.0;

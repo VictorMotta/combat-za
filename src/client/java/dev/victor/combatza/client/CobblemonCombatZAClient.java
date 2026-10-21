@@ -49,8 +49,12 @@ public class CobblemonCombatZAClient implements ClientModInitializer {
     TelaDaParty.registrar();
     // A party e os waypoints da party no mapa do Xaero: só com ele instalado (sem ele, as classes nem são carregadas)
     if (FabricLoader.getInstance().isModLoaded("xaerominimap")) {
-      PartyNoXaero.registrar();
-      PontosNoXaero.registrar();
+      try {
+        PartyNoXaero.registrar();
+        PontosNoXaero.registrar();
+      } catch (LinkageError erro) {
+        CobblemonCombatZA.LOGGER.error("PARTY: o Xaero's Minimap mudou; a party não aparece no mapa dele", erro);
+      }
     }
     PreviaDoGolpe.registrar();
     DesenhoDaPrevia.registrar();

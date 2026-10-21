@@ -8,14 +8,15 @@ import com.cobblemon.mod.common.pokemon.Pokemon;
 
 import dev.victor.combatza.CobblemonCombatZA;
 import dev.victor.combatza.golpes.AplicarStatus;
-import dev.victor.combatza.golpes.EfeitosDosGolpes;
 import dev.victor.combatza.golpes.Execucao;
 import dev.victor.combatza.golpes.Feedback;
 import dev.victor.combatza.golpes.Vida;
+import dev.victor.combatza.itens.ItensSegurados;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
 
 public class HabilidadesDeContato {
+  private static final String FRASE = "cobblemon_combat_za.habilidade.";
   private static final Map<String, String> STATUS_NO_CONTATO = Map.of(
       "static", "par",
       "poisonpoint", "psn",
@@ -30,12 +31,13 @@ public class HabilidadesDeContato {
   // Showdown, onDamagingHit: um golpe de contato tirou vida, e a habilidade de quem apanhou reage em quem bateu
   public static void reagir(Execucao execucao, PokemonEntity atacante, Entity alvo, double pvTirados) {
     if (pvTirados <= 0 || !(alvo instanceof PokemonEntity atingido)
-        || !EfeitosDosGolpes.fazContato(execucao.getGolpe())) {
+        || !ItensSegurados.fazContato(execucao.getPokemon(), execucao.getGolpe())) {
       return;
     }
     Pokemon defensor = atingido.getPokemon();
     String habilidade = defensor.getAbility().getName();
-    Component deOnde = Habilidades.nome(defensor).append(" de ").append(defensor.getDisplayName(false));
+    Component deOnde = Component.translatable(FRASE + "de", Habilidades.nome(defensor),
+        defensor.getDisplayName(false));
 
     String sigla = STATUS_NO_CONTATO.get(habilidade);
     if (sigla != null && atacante.getRandom().nextInt(100) < CHANCE_DO_STATUS) {
@@ -71,7 +73,7 @@ public class HabilidadesDeContato {
     Vida.ferir(atacante, pv);
     CobblemonCombatZA.LOGGER.info("CONTATO: {} perdeu {} PV ({})", pokemon.getSpecies().getName(), pv,
         deOnde.getString());
-    Feedback.historico(execucao.getJogador(), pokemon, pokemon.getDisplayName(false).copy()
-        .append(" se feriu: ").append(deOnde).append("! (-" + pv + " PV)"));
+    Feedback.historico(execucao.getJogador(), pokemon,
+        Component.translatable(FRASE + "feriu", pokemon.getDisplayName(false), deOnde, pv));
   }
 }

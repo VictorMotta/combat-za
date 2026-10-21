@@ -51,16 +51,16 @@ public class SoltarNoSelvagem {
       return;
     }
     if (pokemon.isFainted()) {
-      aviso(jogador, pokemon, " está desmaiado!");
+      aviso(jogador, pokemon, "desmaiado");
       return;
     }
     if (jogador.distanceTo(selvagem) > Mira.ALCANCE) {
-      aviso(jogador, pokemon, ": o selvagem está longe demais");
+      aviso(jogador, pokemon, "longe_demais");
       return;
     }
     Vec3 onde = onde(jogador, selvagem);
     if (onde == null) {
-      aviso(jogador, pokemon, ": não tem chão para ele cair");
+      aviso(jogador, pokemon, "sem_chao");
       return;
     }
     // Primeiro a batalha, depois a bola: quando ele sair, o Lutadores já sabe que é batalha (lutador novo, ou a troca).
@@ -113,6 +113,7 @@ public class SoltarNoSelvagem {
   }
 
   private static void aviso(ServerPlayer jogador, Pokemon pokemon, String motivo) {
-    Feedback.barraDeAcao(jogador, Component.literal("🚫 ").append(pokemon.getDisplayName(false)).append(motivo));
+    Feedback.barraDeAcao(jogador,
+        Component.translatable("cobblemon_combat_za.soltar." + motivo, pokemon.getDisplayName(false)));
   }
 }

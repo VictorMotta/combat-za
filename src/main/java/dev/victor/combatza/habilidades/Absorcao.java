@@ -57,14 +57,15 @@ public class Absorcao {
     if (absorve == null || golpe.getType() != absorve.tipo()) {
       return false;
     }
-    MutableComponent aviso = pokemon.getDisplayName(false).copy().append(" absorveu ")
-        .append(golpe.getDisplayName()).append(": ").append(Habilidades.nome(pokemon)).append("!");
+    MutableComponent aviso = Component.translatable("cobblemon_combat_za.habilidade.absorveu",
+        pokemon.getDisplayName(false), golpe.getDisplayName(), Habilidades.nome(pokemon));
     if (absorve.atributo() == null) {
       int curou = Vida.curar(entidade, pokemon.getMaxHealth() / 4.0);
-      aviso.append(curou > 0 ? " (+" + curou + " PV)" : "");
+      aviso.append(curou > 0 ? Component.translatable("cobblemon_combat_za.pv.ganhou", curou) : Component.empty());
     } else {
       int mudou = Estagios.mudar(pokemon, absorve.atributo(), absorve.estagios(), AplicarEfeitos.quandoAcaba(execucao));
-      aviso.append(" " + Estagios.nomeDoAtributo(absorve.atributo()) + (mudou > 0 ? " subiu!" : " não pode subir mais!"));
+      aviso.append(" ").append(Component.translatable(Estagios.FRASE + (mudou > 0 ? "subiu" : "nao_sobe_mais"),
+          Estagios.nomeDoAtributo(absorve.atributo())));
     }
     CobblemonCombatZA.LOGGER.info("ABSORVEU: {} absorveu {} ({})", pokemon.getSpecies().getName(), golpe.getName(),
         pokemon.getAbility().getName());
