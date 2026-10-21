@@ -15,6 +15,7 @@ import dev.victor.combatza.campo.CampoEBarreiras;
 import dev.victor.combatza.captura.Irritados;
 import dev.victor.combatza.campo.ClimaNosGolpes;
 import dev.victor.combatza.campo.EfeitosDoCampo;
+import dev.victor.combatza.campo.LimpezaDoCampo;
 import dev.victor.combatza.combate.GerenciarCombates;
 import dev.victor.combatza.combate.Lados;
 import dev.victor.combatza.combate.Lutadores;
@@ -24,6 +25,11 @@ import dev.victor.combatza.ia.Parceiro;
 import dev.victor.combatza.mega.Mega;
 import dev.victor.combatza.habilidades.HabilidadesDeContato;
 import dev.victor.combatza.habilidades.HabilidadesDeDano;
+import dev.victor.combatza.habilidades.LacoFamiliar;
+import dev.victor.combatza.habilidades.HabilidadesDeProtecao;
+import dev.victor.combatza.habilidades.HabilidadesDePrioridade;
+import dev.victor.combatza.habilidades.HabilidadesQueReagem;
+import dev.victor.combatza.habilidades.HabilidadesDeForma;
 import dev.victor.combatza.itens.ItensDeContato;
 import dev.victor.combatza.itens.ItensDeDano;
 import dev.victor.combatza.itens.ItensDeVida;
@@ -93,6 +99,10 @@ public class ControleDeGolpes {
       Feedback.barraDeAcao(jogador, Component.literal("🚫 ").append(TravaDaEscolha.porque(pokemon, golpe)));
       return;
     }
+    // 21/10: desligado pela Provocação ou pelo Bis (riscado no losango, GolpesDesligados)
+    if (GolpesDesligados.recusou(jogador, pokemon, slotGolpe, golpe)) {
+      return;
+    }
 
     // Antes da recarga e sem recarga nova: o golpe gasto fica desligado até o Pokémon voltar para a bola
     if (PrimeiroTurno.passouDaHora(pokemon, golpe)) {
@@ -150,7 +160,9 @@ public class ControleDeGolpes {
       return;
     }
 
-    if (falhouPelaParalisia(jogador, pokemon, slotGolpe, golpe, agora)) {
+    // 21/10: a paixão da Atração (metade das vezes não age), antes da paralisia, como no Showdown
+    if (Atracao.naoAgiu(jogador, pokemon, slotGolpe, golpe, agora)
+        || falhouPelaParalisia(jogador, pokemon, slotGolpe, golpe, agora)) {
       return;
     }
 
@@ -158,6 +170,7 @@ public class ControleDeGolpes {
     Execucao execucao = AgendaDeGolpes.iniciar(jogador, pokemon, golpe, slotGolpe, agora, pedido.alvoTravado(),
         semCarga, marcadorDoPedido(jogador, pokemon, golpe, pedido));
     TravaDaEscolha.usou(pokemon, slotGolpe);
+    Bis.usou(pokemon, slotGolpe);
     ClimaNosGolpes.aoCarregar(execucao);
     VisualDosGolpes.aoCarregar(execucao);
     if (!Corrida.precisaCorrer(execucao)) {
@@ -215,7 +228,8 @@ public class ControleDeGolpes {
       long agora) {
     Pokemon pokemon = atacante.getPokemon();
     Move golpe = pokemon.getMoveSet().get(slotGolpe);
-    if (golpe == null || alvo == null || !alvo.isAlive() || TravaDaEscolha.bloqueia(pokemon, slotGolpe, golpe)) {
+    if (golpe == null || alvo == null || !alvo.isAlive() || TravaDaEscolha.bloqueia(pokemon, slotGolpe, golpe)
+        || GolpesDesligados.bloqueia(pokemon, slotGolpe, golpe)) {
       return false;
     }
     PrimeiroTurno.agiu(pokemon);
@@ -223,12 +237,14 @@ public class ControleDeGolpes {
       Recargas.iniciarRecarga(pokemon, slotGolpe, golpe, agora);
       return true;
     }
-    if (falhouPelaParalisia(quemVe, pokemon, slotGolpe, golpe, agora)) {
+    if (Atracao.naoAgiu(quemVe, pokemon, slotGolpe, golpe, agora)
+        || falhouPelaParalisia(quemVe, pokemon, slotGolpe, golpe, agora)) {
       return true;
     }
     boolean semCarga = Cargas.aoUsar(pokemon, slotGolpe, golpe);
     Execucao execucao = AgendaDeGolpes.iniciarDaIa(quemVe, pokemon, golpe, slotGolpe, agora, alvo, semCarga);
     TravaDaEscolha.usou(pokemon, slotGolpe);
+    Bis.usou(pokemon, slotGolpe);
     ClimaNosGolpes.aoCarregar(execucao);
     VisualDosGolpes.aoCarregar(execucao);
     if (!Corrida.precisaCorrer(execucao)) {
@@ -266,6 +282,10 @@ public class ControleDeGolpes {
     }
     Feedback.historico(execucao.getJogador(), pokemon,
         Component.translatable("cobblemon.battle.used_move", pokemon.getDisplayName(false), golpe.getDisplayName()));
+    // 21/10 (habilidades, lote da entrada e das imunidades): a Umidade e os climas fortes fazem o golpe falhar
+    if (HabilidadesDeProtecao.golpeFalhou(execucao, atacante)) {
+      return;
+    }
     EfeitosDeVida.pagarComVida(execucao, atacante);
 
     FormaDoGolpe forma = FormaDoGolpe.de(golpe);
@@ -327,8 +347,14 @@ public class ControleDeGolpes {
           continue;
         }
         registrarAgressao(execucao, atacante, acerto.alvo());
-        // 5.3: a Hipnose (60%) também pode ser desviada
-        if (!Absorcao.absorveu(execucao, atacante, acerto.alvo()) && !Precisao.desviou(execucao, atacante, acerto.alvo())) {
+        // 21/10 (habilidades, lote das reações): o golpe de status da Travessura não pega no inimigo do tipo Sombrio
+        if (HabilidadesDePrioridade.falhaNoSombrio(execucao, acerto.alvo())) {
+          continue;
+        }
+        // 5.3: a Hipnose (60%) também pode ser desviada. 21/10: as habilidades que seguram o golpe (Ouro de Qualidade...)
+        if (!Absorcao.absorveu(execucao, atacante, acerto.alvo())
+            && !HabilidadesDeProtecao.bloqueou(execucao, atacante, acerto.alvo())
+            && !Precisao.desviou(execucao, atacante, acerto.alvo())) {
           AplicarEfeitos.depoisDeAcertar(execucao, atacante, acerto.alvo());
         }
       }
@@ -401,7 +427,10 @@ public class ControleDeGolpes {
   }
 
   private static void acertar(Execucao execucao, PokemonEntity atacante, Entity alvo, double multiplicadorDeArea) {
-    acertar(execucao, atacante, alvo, multiplicadorDeArea, true, true);
+    // 21/10 (habilidades, lote da conta do dano): pegou, e o Laço Familiar bate de novo (o jato não passa por aqui)
+    if (acertar(execucao, atacante, alvo, multiplicadorDeArea, true, true)) {
+      LacoFamiliar.agendar(execucao, atacante, alvo, multiplicadorDeArea);
+    }
   }
 
   // 5.4a: um pedaço do jato (Jatos), com a fração do dano. Devolve se o golpe pegou: imune ou absorvido, o jato para.
@@ -414,16 +443,23 @@ public class ControleDeGolpes {
   // As frases de efetividade e os efeitos extras só no primeiro acerto do golpe (um jato acerta várias vezes)
   private static boolean acertar(Execucao execucao, PokemonEntity atacante, Entity alvo, double multiplicadorDeArea,
       boolean primeiro, boolean comVisual) {
-    // Party: o Pokémon de um estranho e o selvagem da batalha de outra pessoa: o golpe passa (nem dano, nem batalha)
-    if (Lados.foraDaSuaLuta(execucao, alvo)) {
+    // Party: o Pokémon de um estranho e o selvagem da batalha de outra pessoa: o golpe passa (nem dano, nem batalha). E nenhum
+    // golpe (seu, do guarda ou do selvagem) pega num NPC treinador (Lados.ehNpc), nem a área
+    if (Lados.foraDaSuaLuta(execucao, alvo) || Lados.ehNpc(alvo)) {
       return false;
     }
     registrarAgressao(execucao, atacante, alvo);
-    if (Absorcao.absorveu(execucao, atacante, alvo) || CampoEBarreiras.bloqueiaPrioridade(execucao, alvo)) {
+    // 21/10 (habilidades, lote da entrada e das imunidades): Antirruído, Blindado, Defesa Mágica, Presença Régia...
+    if (Absorcao.absorveu(execucao, atacante, alvo) || CampoEBarreiras.bloqueiaPrioridade(execucao, alvo)
+        || HabilidadesDeProtecao.bloqueou(execucao, atacante, alvo)) {
       return false;
     }
     Pokemon pokemon = execucao.getPokemon();
     Move golpe = execucao.getGolpe();
+    // 21/10: Quebra-telha, Caninos Psíquicos e Investida Furiosa quebram as telas do alvo antes do dano (LimpezaDoCampo)
+    if (primeiro) {
+      LimpezaDoCampo.antesDoDano(execucao, alvo);
+    }
     Dano.Resultado resultado = Dano.calcular(pokemon, golpe, alvo, atacante.getRandom());
     if (resultado.efetividade() <= 0) {
       CobblemonCombatZA.LOGGER.info("IMUNE: {} não afeta {}", golpe.getName(), alvo.getName().getString());
@@ -439,7 +475,9 @@ public class ControleDeGolpes {
     double doBando = execucao.getPokemon().isWild() ? GerenciarCombates.equilibrioDoBando(atacante) : 1.0;
     // Fogo amigo (dele, 20/10: "dar apenas 75% no aliado"): a área em volta (Terremoto, Surfar) pega os Pokémon do seu lado
     double doAmigo = Lados.fogoAmigo(execucao, alvo);
-    float danoCheio = (float) (resultado.dano() * multiplicadorDeArea * doBando * doAmigo);
+    // 21/10 (lote das formas): o Disfarce e a Cara de Gelo seguram o golpe (dano 0)
+    float danoCheio = HabilidadesDeForma.antesDoDano(execucao, alvo,
+        (float) (resultado.dano() * multiplicadorDeArea * doBando * doAmigo));
     float depoisDaRobustez = HabilidadesDeDano.robustez(alvo, danoCheio);
     boolean robustezAgiu = depoisDaRobustez < danoCheio;
     // 9.1: a Cinta de Foco, se a Robustez não segurou; lote 3: a Faixa de Foco (10%), se nada segurou
@@ -449,9 +487,10 @@ public class ControleDeGolpes {
     float vidaAntes = Vida.vidaDe(alvo);
     boolean pegou = alvo.hurt(Dano.fonte(atacante, alvo), dano);
     semRevideEmBatalha(execucao, atacante, alvo);
-    // 8.4: o golpe do seu Pokémon que acerta um selvagem adianta o medidor da Mega (uma vez por golpe: o jato acerta várias)
+    // 8.4: o golpe do seu Pokémon que acerta um selvagem adianta o medidor da Mega (uma vez por golpe: o jato acerta
+    // várias). 21/10 (PvP): no duelo, o acerto no Pokémon do adversário também (Lados.ehInimigoDe)
     if (pegou && primeiro && !pokemon.isWild() && alvo instanceof PokemonEntity selvagem
-        && selvagem.getPokemon().isWild()) {
+        && Lados.ehInimigoDe(atacante, selvagem)) {
       Mega.acertou(execucao.getJogador());
     }
     double pvTirados = Vida.pvTirados(alvo, vidaAntes);
@@ -494,10 +533,14 @@ public class ControleDeGolpes {
     }
     HabilidadesDeContato.reagir(execucao, atacante, alvo, pvTirados);
     ItensDeContato.reagir(execucao, atacante, alvo, pvTirados);
+    // 21/10 (lote das formas): o Disfarce cai, o Míssil Glutão cospe, Múmia e companhia, Troca de Cor, Forte Vínculo
+    HabilidadesDeForma.depoisDoAcerto(execucao, atacante, alvo, pvTirados);
     // Lotes 2 e 3 dos itens: a gema e a baga de resistência são gastas; o Balão, as Políticas, o Sino, o Cartão Vermelho...
     if (pegou) {
       ItensDoAcerto.depoisDoAcerto(execucao, atacante, alvo, resultado, pvTirados, primeiro);
     }
+    // 21/10 (habilidades, lote das reações): Estamina, Armadura Frágil, Corpo Maldito, Furto, Arrogância, Resultado...
+    HabilidadesQueReagem.depoisDoAcerto(execucao, atacante, alvo, resultado, pvTirados, primeiro);
     // 5b.2: a Lançareia chama a Areia
     long agora = atacante.getServer() == null ? 0 : atacante.getServer().getTickCount();
     ClimaNosGolpes.depoisDoAcerto(alvo, pvTirados, agora);
@@ -604,7 +647,8 @@ public class ControleDeGolpes {
     CobblemonCombatZA.LOGGER.info("SEM_ALVO: {} usou {}",
         execucao.getPokemon().getSpecies().getName(), execucao.getGolpe().getName());
     // 5b.1: os golpes de clima (Dança da Chuva, Dia Ensolarado...)
-    if (EfeitosDoCampo.aoUsarGolpe(execucao, atacante) || CampoEBarreiras.aoUsarGolpe(execucao, atacante)) {
+    if (EfeitosDoCampo.aoUsarGolpe(execucao, atacante) || CampoEBarreiras.aoUsarGolpe(execucao, atacante)
+        || GolpesDeStatus.semAlvo(execucao, atacante)) {
       return;
     }
     Feedback.particulas(atacante, ParticleTypes.HAPPY_VILLAGER, 15);

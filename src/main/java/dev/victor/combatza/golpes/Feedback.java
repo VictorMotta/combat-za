@@ -11,6 +11,7 @@ import com.cobblemon.mod.common.pokemon.Pokemon;
 
 import dev.victor.combatza.combate.GerenciarCombates;
 import dev.victor.combatza.combate.Lutadores;
+import dev.victor.combatza.pvp.Duelos;
 import dev.victor.combatza.rede.HistoricoPayload;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.particles.ParticleOptions;
@@ -41,6 +42,12 @@ public class Feedback {
   // histórico é da BATALHA. Fora dela, nenhum cartão; nela, só os Pokémon da luta: os selvagens dela e o seu lutador. Os
   // guardas (e os golpes deles nos monstros) ficam de fora
   public static void historico(ServerPlayer jogador, Pokemon sobreQuem, Component mensagem) {
+    // 21/10 (PvP): no duelo, a frase sobre um Pokémon dele vai para os dois jogadores, uma vez só (pvp.Duelos)
+    List<ServerPlayer> doDuelo = Duelos.quemVeNoHistorico(jogador, sobreQuem, mensagem);
+    if (doDuelo != null) {
+      doDuelo.forEach(quem -> enviarHistorico(quem, sobreQuem, mensagem));
+      return;
+    }
     if (daBatalha(jogador, sobreQuem)) {
       enviarHistorico(jogador, sobreQuem, mensagem);
     }
@@ -83,9 +90,10 @@ public class Feedback {
     return lutador != null && lutador.getUuid().equals(sobreQuem.getUuid());
   }
 
+  // 21/10 (PvP): o cartão do Pokémon do adversário do duelo é vermelho, como o do selvagem
   private static void enviarHistorico(ServerPlayer jogador, Pokemon sobreQuem, Component mensagem) {
     enviarHistorico(jogador, sobreQuem.getSpecies().getResourceIdentifier().toString(),
-        List.copyOf(sobreQuem.getAspects()), sobreQuem.isWild(), mensagem);
+        List.copyOf(sobreQuem.getAspects()), sobreQuem.isWild() || Duelos.ehDoAdversario(jogador, sobreQuem), mensagem);
   }
 
   // Sem o nosso mod no cliente (um servidor com alguém de fora), a frase cai na barra de ação como antes

@@ -14,6 +14,7 @@ import dev.victor.combatza.CobblemonCombatZA;
 import dev.victor.combatza.combate.Combate;
 import dev.victor.combatza.combate.GerenciarCombates;
 import dev.victor.combatza.combate.Lutadores;
+import dev.victor.combatza.pvp.Duelo;
 import net.minecraft.server.level.ServerPlayer;
 
 // P5-10 (veto dele, 20/10: "fora de batalha pode adicionar também a mesma coisa de dentro"): fora da batalha, cada jogador
@@ -75,7 +76,7 @@ public class Arenas {
     if (pessoal == null || !pessoal.temEfeitoDeGolpe()) {
       return;
     }
-    combate.getCampo().receber(pessoal);
+    combate.getCampo().receber(pessoal, true, ladoNaBatalha(jogador, combate));
     pessoal.esvaziarOsGolpes();
     CobblemonCombatZA.LOGGER.info("CAMPO: o que valia para {} entrou na batalha", jogador.getName().getString());
   }
@@ -85,7 +86,13 @@ public class Arenas {
     if (jogador.hasDisconnected()) {
       return;
     }
-    PESSOAIS.computeIfAbsent(jogador.getUUID(), uuid -> new CampoDaBatalha()).receber(combate.getCampo());
+    PESSOAIS.computeIfAbsent(jogador.getUUID(), uuid -> new CampoDaBatalha()).receber(combate.getCampo(),
+        ladoNaBatalha(jogador, combate), true);
+  }
+
+  // O lado do jogador no campo da batalha: o dos jogadores; no duelo, cada um tem o seu (pvp.Duelo)
+  private static boolean ladoNaBatalha(ServerPlayer jogador, Combate combate) {
+    return !(combate instanceof Duelo duelo) || duelo.ladoDe(jogador);
   }
 
   public static void esquecer(ServerPlayer jogador) {

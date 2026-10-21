@@ -1,6 +1,8 @@
 package dev.victor.combatza.captura;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -9,6 +11,8 @@ import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
 import com.cobblemon.mod.common.pokemon.Pokemon;
 
 import dev.victor.combatza.CobblemonCombatZA;
+import dev.victor.combatza.combate.Captura;
+import dev.victor.combatza.combate.Combate;
 import dev.victor.combatza.combate.GerenciarCombates;
 import dev.victor.combatza.golpes.Feedback;
 import net.minecraft.SharedConstants;
@@ -39,8 +43,17 @@ public class Irritados {
     }
   }
 
+  // A bola falhou (dele, 21/10: "ele ficou dormindo ainda quando saiu (...) nesse caso ele deveria ter acordado, ficado bolado e
+  // iniciado o combate se não pegou"; escolheu "qualquer selvagem"): quando ele sair da bola, a batalha com quem jogou começa (e,
+  // ao entrar nela, o sono do mundo acaba: Combate). Espera a saída da bola até 5 s
+  private record Escapou(PokemonEntity selvagem, ServerPlayer jogador, long ate) {
+  }
+
+  private static final int SEGUNDOS_PARA_SAIR_DA_BOLA = 5;
+
   // Pelo UUID do Pokémon
   private static final Map<UUID, Irritado> IRRITADOS = new HashMap<>();
+  private static final List<Escapou> ESCAPARAM = new ArrayList<>();
 
   private Irritados() {
   }
@@ -78,9 +91,33 @@ public class Irritados {
     }
   }
 
-  // Passou o tempo: acalma sozinho
+  public static void lutarAoSair(PokemonEntity selvagem, ServerPlayer quemJogou, long agora) {
+    if (quemJogou != null) {
+      ESCAPARAM.add(new Escapou(selvagem, quemJogou, agora + SEGUNDOS_PARA_SAIR_DA_BOLA * (long) SharedConstants.TICKS_PER_SECOND));
+    }
+  }
+
+  // Passou o tempo: acalma sozinho. E quem escapou da bola e já saiu dela começa a lutar
   public static void atualizar(long agora) {
     IRRITADOS.values().removeIf(irritado -> agora >= irritado.ate);
+    ESCAPARAM.removeIf(escapou -> comecarSeSaiu(escapou, agora));
+  }
+
+  // true = resolvido (começou, ou não dá mais: sumiu, o jogador saiu, passou o tempo)
+  private static boolean comecarSeSaiu(Escapou escapou, long agora) {
+    PokemonEntity selvagem = escapou.selvagem();
+    if (!selvagem.isAlive() || selvagem.isRemoved() || escapou.jogador().isRemoved() || agora > escapou.ate()) {
+      return true;
+    }
+    if (Captura.dentroDaBola(selvagem)) {
+      return false;
+    }
+    if (!Combate.timeTodoDesmaiado(escapou.jogador())) {
+      CobblemonCombatZA.LOGGER.info("IRRITADO: {} escapou da bola e vai lutar com {}", selvagem.getPokemon().getSpecies().getName(),
+          escapou.jogador().getGameProfile().getName());
+      GerenciarCombates.entrarEmCombate(escapou.jogador(), selvagem, null);
+    }
+    return true;
   }
 
   // Na batalha, no histórico; fora dela, na barra de ação
@@ -101,5 +138,6 @@ public class Irritados {
 
   public static void limpar() {
     IRRITADOS.clear();
+    ESCAPARAM.clear();
   }
 }

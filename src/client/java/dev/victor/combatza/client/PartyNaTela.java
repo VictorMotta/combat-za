@@ -88,7 +88,11 @@ public class PartyNaTela {
     y += ALTURA + ESPACO;
     for (PartyPayload.Membro membro : membros) {
       boolean perto = membro.onde().mundo().equals(cliente.level.dimension().location().toString());
-      linha(tela, cliente, membro.jogador(), membro.nome(), membro.vida(), membro.emBatalha(), membro.lider(), perto,
+      // Saiu do jogo: continua na party, apagado e com "(offline)"
+      String nome = membro.onde().mundo().isEmpty()
+          ? membro.nome() + " (" + Component.translatable(FRASE + "offline").getString() + ")"
+          : membro.nome();
+      linha(tela, cliente, membro.jogador(), nome, membro.vida(), membro.emBatalha(), membro.lider(), perto,
           FUNDO, x, y);
       y += ALTURA + ESPACO;
     }

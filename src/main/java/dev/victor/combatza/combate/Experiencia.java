@@ -120,6 +120,12 @@ public class Experiencia {
     distribuir(servidor, selvagem, true, null);
   }
 
+  // 21/10 (PvP): um Pokémon do adversário desmaiou no duelo (pvp.Duelo). O XP é o de derrotar, na mesma conta do Cobblemon
+  // (que também dá XP no PvP, com a opção allowExperienceFromPvP ligada): inteiro para quem o enfrentou, e o Compartilhador
+  public static void derrotadoNoDuelo(ServerPlayer jogador, Pokemon derrotado, Set<UUID> enfrentaram) {
+    darAoTime(jogador, derrotado, enfrentaram, true, PARTE_DE_QUEM_ENFRENTOU);
+  }
+
   // GerenciarCombates, a cada tick: quem está em cada batalha, e o lutador de cada um, anotados para cada selvagem dela
   public static void anotar(List<Combate> combates) {
     for (Combate combate : combates) {

@@ -16,7 +16,9 @@ import dev.victor.combatza.captura.Desmaio;
 import dev.victor.combatza.captura.Irritados;
 import dev.victor.combatza.captura.ChanceDeCaptura;
 import dev.victor.combatza.golpes.Estagios;
+import dev.victor.combatza.pvp.Duelos;
 import dev.victor.combatza.rede.PlacasPayload;
+import dev.victor.combatza.treinadores.BatalhasDeTreinador;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -53,8 +55,12 @@ public class PlacasDosSelvagens {
     List<PlacasPayload.Placa> placas = new ArrayList<>();
     Map<Integer, String> setasAntes = SETAS_ANOTADAS.getOrDefault(jogador.getUUID(), Map.of());
     Map<Integer, String> setasAgora = new HashMap<>();
+    // 21/10 (treinadores): o Pokémon do treinador que caiu (voltando para a bola) fica sem placa. 21/10 (PvP): no duelo, os
+    // Pokémon do adversário também ganham a placa (pvp.Duelos)
     for (PokemonEntity selvagem : jogador.level().getEntitiesOfClass(PokemonEntity.class,
-        jogador.getBoundingBox().inflate(DISTANCIA), entidade -> entidade.isAlive() && entidade.getPokemon().isWild())) {
+        jogador.getBoundingBox().inflate(DISTANCIA), entidade -> entidade.isAlive()
+            && !BatalhasDeTreinador.desmaiou(entidade)
+            && (entidade.getPokemon().isWild() || Duelos.ehDoAdversario(jogador, entidade.getPokemon())))) {
       Pokemon pokemon = selvagem.getPokemon();
       PersistentStatusContainer status = pokemon.getStatus();
       List<PlacasPayload.Estagio> estagios = new ArrayList<>();

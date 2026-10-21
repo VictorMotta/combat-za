@@ -8,6 +8,8 @@ import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
 import com.cobblemon.mod.common.pokemon.Pokemon;
 
 import dev.victor.combatza.CobblemonCombatZA;
+import dev.victor.combatza.habilidades.HabilidadesDaConta;
+import dev.victor.combatza.habilidades.HabilidadesDeForma;
 import dev.victor.combatza.itens.ItensDeDano;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
@@ -27,9 +29,10 @@ public class DanoEspecial {
 
   // Showdown, onTryImmunity: golpes que falham por uma regra, e não pelo tipo
   public static boolean falha(Pokemon atacante, Move golpe, Entity alvo) {
+    // 21/10 (lote das formas): o Comatoso conta como dormindo
     if (DEVORADOR_DE_SONHOS.equals(golpe.getName())) {
-      return !(alvo instanceof PokemonEntity entidade
-          && "slp".equals(EfeitosDeStatus.siglaDoStatus(entidade.getPokemon())));
+      return !(alvo instanceof PokemonEntity entidade && ("slp".equals(EfeitosDeStatus.siglaDoStatus(entidade.getPokemon()))
+          || HabilidadesDeForma.contaComoDormindo(entidade.getPokemon())));
     }
     if (ESFORCO.equals(golpe.getName()) && alvo instanceof PokemonEntity entidade) {
       return Vida.pvAtual(atacante) >= Vida.pvAtual(entidade.getPokemon());
@@ -93,7 +96,8 @@ public class DanoEspecial {
 
   // Em hectogramas, a mesma unidade do Showdown (Snorlax = 4600)
   private static double massa(Pokemon pokemon) {
-    return pokemon.getForm().getWeight() * ItensDeDano.peso(pokemon);
+    // 21/10 (habilidades, lote da conta do dano): Metal Pesado e Metal Leve
+    return pokemon.getForm().getWeight() * ItensDeDano.peso(pokemon) * HabilidadesDaConta.peso(pokemon);
   }
 
   private static double pelaMassa(double massa) {
@@ -131,9 +135,10 @@ public class DanoEspecial {
     return 40;
   }
 
+  // 21/10: a mesma Velocidade da recarga (estágios, paralisia, itens, habilidades, clima, Vento de Cauda, Paradoxo, Começo
+  // Lento); o Truque de Agilidade não mexe no Giro Bola, como nos jogos
   private static double velocidade(Pokemon pokemon) {
-    return Math.max(1, pokemon.getSpeed() * Estagios.multiplicador(pokemon, "spe") * Paralisia.multiplicador(pokemon)
-        * ItensDeDano.velocidade(pokemon));
+    return Math.max(1, Recargas.velocidadeDaRecarga(pokemon));
   }
 
   private static double fracaoDaVida(Pokemon pokemon) {

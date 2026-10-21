@@ -43,10 +43,16 @@ public class CobblemonCombatZAClient implements ClientModInitializer {
     MegaNoCliente.registrar();
     CorridaMontadaNoCliente.registrar();
     TravaDaEscolhaNoCliente.registrar();
+    // 21/10: os golpes desligados pela Provocação e pelo Bis
+    GolpesDesligadosNoCliente.registrar();
     PassivasNaTela.registrar();
     PartyNoCliente.registrar();
     PartyNaTela.registrar();
     TelaDaParty.registrar();
+    // 21/10: a telinha "Tempo real / Por turnos" quando um treinador do RCT quer batalhar
+    TelaDoTreinador.registrar();
+    // 21/10 (PvP): a tela do duelo, "quantos Pokémon cada um usa?", para quem desafia pela roda do Cobblemon
+    TelaDoDuelo.registrar();
     // A party e os waypoints da party no mapa do Xaero: só com ele instalado (sem ele, as classes nem são carregadas)
     if (FabricLoader.getInstance().isModLoaded("xaerominimap")) {
       try {
@@ -61,6 +67,8 @@ public class CobblemonCombatZAClient implements ClientModInitializer {
     Tutorial.registrar();
     // O layout da HUD: o lugar e o tamanho de cada bloco (salvos no seu jogo) e o editor, pelo menu de pausa
     LayoutDaHud.registrar();
+    // As cores da prévia do golpe (salvas no seu jogo)
+    CoresDaPrevia.registrar();
     TelaDoLayout.registrar();
     // O vigia de travamento da tela (VigiaDeTravamento): sem mundo aberto (menus, carregando), parar é normal
     VigiaDeTravamento vigiaDaTela = VigiaDeTravamento.comecar("jogo (tela)", () -> Minecraft.getInstance().level == null);

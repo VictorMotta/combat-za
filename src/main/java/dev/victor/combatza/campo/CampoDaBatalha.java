@@ -25,6 +25,9 @@ public class CampoDaBatalha {
   private Prazo prazoDoTerreno = null;
   private final Map<Barreira, Prazo> doSeuLado = new EnumMap<>(Barreira.class);
   private final Map<Barreira, Prazo> dosSelvagens = new EnumMap<>(Barreira.class);
+  // 21/10 (golpes de status que faltavam): o Truque de Agilidade (Trick Room), que vale para os dois lados (SalaTrick); null =
+  // sem sala
+  private Prazo prazoDaSalaTrick = null;
 
   public Clima clima() {
     return doGolpe != Clima.NENHUM ? doGolpe : doMundo;
@@ -78,6 +81,14 @@ public class CampoDaBatalha {
     prazoDoTerreno = prazo;
   }
 
+  public Prazo getPrazoDaSalaTrick() {
+    return prazoDaSalaTrick;
+  }
+
+  public void mudarASalaTrick(Prazo prazo) {
+    prazoDaSalaTrick = prazo;
+  }
+
   // As barreiras de um lado (true = o seu lado, o dos jogadores)
   public Map<Barreira, Prazo> barreiras(boolean doSeuLado) {
     return doSeuLado ? this.doSeuLado : dosSelvagens;
@@ -86,6 +97,12 @@ public class CampoDaBatalha {
   // P5-10: o que vem de outro campo (o pessoal entrando na batalha, ou a batalha voltando para o pessoal): o clima e o campo
   // dos golpes ficam com quem acaba mais tarde; as barreiras do SEU lado vêm junto (as dos selvagens ficam na batalha)
   public void receber(CampoDaBatalha outro) {
+    receber(outro, true, true);
+  }
+
+  // 21/10 (PvP): no duelo, cada jogador é um lado: as barreiras do lado "deLado" do outro campo vêm para o lado "paraLado"
+  // deste (o pessoal de quem foi desafiado entra no lado dele, e não no de quem desafiou)
+  public void receber(CampoDaBatalha outro, boolean deLado, boolean paraLado) {
     if (outro.doGolpe != Clima.NENHUM && (doGolpe == Clima.NENHUM || outro.prazoDoClima.fim() > prazoDoClima.fim())) {
       chamarClima(outro.doGolpe, outro.prazoDoClima);
     }
@@ -93,12 +110,17 @@ public class CampoDaBatalha {
         && (terreno == Terreno.NENHUM || outro.prazoDoTerreno.fim() > prazoDoTerreno.fim())) {
       mudarOTerreno(outro.terreno, outro.prazoDoTerreno);
     }
-    outro.doSeuLado.forEach((barreira, prazo) -> doSeuLado.merge(barreira, prazo,
+    outro.barreiras(deLado).forEach((barreira, prazo) -> barreiras(paraLado).merge(barreira, prazo,
         (meu, dele) -> meu.fim() >= dele.fim() ? meu : dele));
+    // 21/10: o Truque de Agilidade vai junto, como o campo
+    if (outro.prazoDaSalaTrick != null
+        && (prazoDaSalaTrick == null || outro.prazoDaSalaTrick.fim() > prazoDaSalaTrick.fim())) {
+      prazoDaSalaTrick = outro.prazoDaSalaTrick;
+    }
   }
 
   public boolean temEfeitoDeGolpe() {
-    return doGolpe != Clima.NENHUM || terreno != Terreno.NENHUM || !doSeuLado.isEmpty();
+    return doGolpe != Clima.NENHUM || terreno != Terreno.NENHUM || !doSeuLado.isEmpty() || prazoDaSalaTrick != null;
   }
 
   // Os efeitos dos golpes foram para a batalha: o campo pessoal fica só com o clima do mundo
@@ -107,5 +129,6 @@ public class CampoDaBatalha {
     mudarOTerreno(Terreno.NENHUM, null);
     doSeuLado.clear();
     dosSelvagens.clear();
+    prazoDaSalaTrick = null;
   }
 }

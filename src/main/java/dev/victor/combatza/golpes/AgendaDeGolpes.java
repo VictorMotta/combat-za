@@ -9,6 +9,10 @@ import com.cobblemon.mod.common.api.moves.Move;
 import com.cobblemon.mod.common.pokemon.Pokemon;
 
 import dev.victor.combatza.CobblemonCombatZA;
+import dev.victor.combatza.habilidades.HabilidadesDaBatalha;
+import dev.victor.combatza.habilidades.LacoFamiliar;
+import dev.victor.combatza.habilidades.QuebraMolde;
+import dev.victor.combatza.habilidades.HabilidadesDeForma;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -47,6 +51,8 @@ public class AgendaDeGolpes {
     if (marcador == null) {
       VisualDosGolpes.alinharNoCliente(execucao, agora);
     }
+    // 21/10 (lote das formas): Proteico e Líbero (o tipo), Troca de Postura (a forma), Míssil Glutão (a presa)
+    HabilidadesDeForma.aoComecarGolpe(execucao);
     return execucao;
   }
 
@@ -57,6 +63,7 @@ public class AgendaDeGolpes {
     EM_EXECUCAO.put(pokemon.getUuid(), execucao);
     VisualDosGolpes.alinharNoCliente(execucao, agora);
     AvisoDoGolpeDoSelvagem.comecou(execucao, agora);
+    HabilidadesDeForma.aoComecarGolpe(execucao);
     return execucao;
   }
 
@@ -64,6 +71,8 @@ public class AgendaDeGolpes {
     for (Execucao execucao : new ArrayList<>(EM_EXECUCAO.values())) {
       atualizarExecucao(execucao, agora);
     }
+    // 21/10 (habilidades, lote da conta do dano): a segunda pancada do Laço Familiar
+    LacoFamiliar.atualizar(agora);
   }
 
   public static boolean cancelar(Pokemon pokemon, long agora) {
@@ -106,6 +115,10 @@ public class AgendaDeGolpes {
   }
 
   private static void naoAlcancou(Execucao execucao, long agora) {
+    naoAlcancou(execucao, agora, "nao_alcancou");
+  }
+
+  private static void naoAlcancou(Execucao execucao, long agora, String motivo) {
     execucao.esconderBarra();
     AvisoDoGolpeDoSelvagem.acabou(execucao);
     EM_EXECUCAO.remove(execucao.getPokemon().getUuid());
@@ -115,7 +128,7 @@ public class AgendaDeGolpes {
         execucao.getPokemon().getSpecies().getName(), execucao.getGolpe().getName());
     Feedback.historico(execucao.getJogador(), execucao.getPokemon(),
         Component.translatable("cobblemon.battle.missed").append(" (")
-            .append(Component.translatable("cobblemon_combat_za.golpe.errou.nao_alcancou")).append(")"));
+            .append(Component.translatable("cobblemon_combat_za.golpe.errou." + motivo)).append(")"));
   }
 
   private static void atualizarExecucao(Execucao execucao, long agora) {
@@ -152,13 +165,21 @@ public class AgendaDeGolpes {
         naoAlcancou(execucao, agora);
         return;
       }
+      // 21/10: quem não voa, num alvo de contato a mais de 3 blocos do chão
+      if (Corrida.altoDemais(execucao)) {
+        naoAlcancou(execucao, agora, "alto_demais");
+        return;
+      }
       Corrida.atualizar(execucao, agora);
     }
 
     if (!execucao.jaImpactou() && agora >= execucao.getTickImpacto()) {
       execucao.marcarImpacto();
       AvisoDoGolpeDoSelvagem.acabou(execucao);
-      ControleDeGolpes.aplicarImpacto(execucao);
+      // 21/10 (habilidades, lote da conta do dano): ele agiu (o Analisar de quem bater nele agora) e o impacto acontece
+      // "durante o golpe" (o Quebra-Molde e o Infiltrado valem nele)
+      HabilidadesDaBatalha.agiu(execucao.getPokemon(), agora);
+      QuebraMolde.durante(execucao, () -> ControleDeGolpes.aplicarImpacto(execucao));
       execucao.esconderBarra();
     }
 

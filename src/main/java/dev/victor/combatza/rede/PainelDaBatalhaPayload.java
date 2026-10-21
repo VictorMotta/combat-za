@@ -13,8 +13,15 @@ import net.minecraft.resources.ResourceLocation;
 
 // Do servidor para quem está numa batalha: quem está nela. Cada jogador (o rosto vem da skin, pelo UUID) com o lutador
 // dele, e os selvagens. Vazio = você não está mais em batalha. (O clima, o campo e as barreiras, que a 5b.1 pôs aqui, viraram
-// os ícones das passivas na P5-10: rede.PassivasPayload)
-public record PainelDaBatalhaPayload(List<Lado> jogadores, List<Foto> selvagens) implements CustomPacketPayload {
+// os ícones das passivas na P5-10: rede.PassivasPayload). 21/10 (PvP): no duelo, os "adversarios" (o outro jogador, com o
+// lutador dele) ficam do outro lado, no lugar dos selvagens; fora do duelo, a lista vem vazia
+public record PainelDaBatalhaPayload(List<Lado> jogadores, List<Foto> selvagens, List<Lado> adversarios)
+    implements CustomPacketPayload {
+
+  // A batalha contra selvagens: sem adversários
+  public PainelDaBatalhaPayload(List<Lado> jogadores, List<Foto> selvagens) {
+    this(jogadores, selvagens, List.of());
+  }
 
   // Um Pokémon no painel: a espécie e os aspectos (para a foto), a vida (0 a 1, a do servidor), se a foto é grande (o
   // lutador, os selvagens; os guardas, que eram as pequenas, saíram do painel na 7.8), o número da entidade no mundo (-1 =
@@ -45,6 +52,7 @@ public record PainelDaBatalhaPayload(List<Lado> jogadores, List<Foto> selvagens)
   public static final StreamCodec<ByteBuf, PainelDaBatalhaPayload> STREAM_CODEC = StreamCodec.composite(
       Lado.STREAM_CODEC.apply(ByteBufCodecs.list()), PainelDaBatalhaPayload::jogadores,
       Foto.STREAM_CODEC.apply(ByteBufCodecs.list()), PainelDaBatalhaPayload::selvagens,
+      Lado.STREAM_CODEC.apply(ByteBufCodecs.list()), PainelDaBatalhaPayload::adversarios,
       PainelDaBatalhaPayload::new);
 
   @Override

@@ -19,6 +19,9 @@ import dev.victor.combatza.golpes.AplicarStatus;
 import dev.victor.combatza.golpes.Balanceamento;
 import dev.victor.combatza.golpes.EfeitosDeStatus;
 import dev.victor.combatza.golpes.Execucao;
+import dev.victor.combatza.habilidades.Habilidades;
+import dev.victor.combatza.habilidades.HabilidadesDaBatalha;
+import dev.victor.combatza.habilidades.HabilidadesDeEntrada;
 import dev.victor.combatza.itens.ItensDoCampo;
 import dev.victor.combatza.itens.ItensSegurados;
 import net.minecraft.SharedConstants;
@@ -81,8 +84,12 @@ public class EfeitosDoCampo {
     if (clima == Clima.NENHUM) {
       return clima;
     }
+    // 21/10 (habilidades, lote da entrada e das imunidades): com os ventos fortes da Correnteza Delta, nenhum clima vale
+    if (ClimasFortes.ventosFortes(arena)) {
+      return Clima.NENHUM;
+    }
     for (PokemonEntity entidade : arena.pokemons()) {
-      if (ANULAM_O_CLIMA.contains(entidade.getPokemon().getAbility().getName())) {
+      if (ANULAM_O_CLIMA.contains(Habilidades.atual(entidade.getPokemon()))) {
         return Clima.NENHUM;
       }
     }
@@ -118,6 +125,10 @@ public class EfeitosDoCampo {
 
   // O golpe ou a habilidade (5b.2) chama o clima nesta arena
   public static void chamarClima(Arena arena, Pokemon quem, Clima novo, long agora) {
+    // 21/10 (habilidades, lote da entrada e das imunidades): um clima forte (Terra Desolada...) não deixa outro entrar
+    if (ClimasFortes.barra(arena, quem)) {
+      return;
+    }
     CampoDaBatalha campo = arena.campo();
     if (campo.clima() == novo) {
       CobblemonCombatZA.LOGGER.info("CLIMA: {} já vale, nada aconteceu", novo);
@@ -193,6 +204,10 @@ public class EfeitosDoCampo {
     for (UUID chegou : arena.campo().chegaram(agoraNaArena.keySet())) {
       ClimaNosGolpes.aoEntrar(arena, agoraNaArena.get(chegou), agora);
       CampoEBarreiras.aoEntrar(arena, agoraNaArena.get(chegou), agora);
+      // 21/10 (habilidades, lote da conta do dano): a Vigilância, o Senhor Supremo e as frases de entrada
+      HabilidadesDaBatalha.aoEntrar(arena, agoraNaArena.get(chegou), agora);
+      // 21/10 (habilidades, lote da entrada e das imunidades): os climas fortes, Download, Bisbilhotar, Limpa-Vidro...
+      HabilidadesDeEntrada.aoEntrar(arena, agoraNaArena.get(chegou));
     }
   }
 
@@ -218,7 +233,7 @@ public class EfeitosDoCampo {
       Pokemon pokemon = entidade.getPokemon();
       if (!entidade.isAlive() || pokemon.isFainted() || AplicarStatus.temTipo(pokemon, ElementalTypes.ROCK)
           || AplicarStatus.temTipo(pokemon, ElementalTypes.GROUND) || AplicarStatus.temTipo(pokemon, ElementalTypes.STEEL)
-          || SEM_AREIA.contains(pokemon.getAbility().getName()) || ItensSegurados.tem(pokemon, OCULOS_DE_PROTECAO)) {
+          || SEM_AREIA.contains(Habilidades.atual(pokemon)) || ItensSegurados.tem(pokemon, OCULOS_DE_PROTECAO)) {
         continue;
       }
       float dano = (float) (entidade.getMaxHealth() / AREIA_FERE * Balanceamento.MULTIPLICADOR_DANO_DE_STATUS);

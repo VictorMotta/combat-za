@@ -10,6 +10,7 @@ import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
 import com.cobblemon.mod.common.pokemon.Pokemon;
 
 import dev.victor.combatza.CobblemonCombatZA;
+import dev.victor.combatza.campo.ClimaNosGolpes;
 import dev.victor.combatza.golpes.Balanceamento;
 import dev.victor.combatza.golpes.Vida;
 import net.minecraft.world.entity.Entity;
@@ -53,13 +54,16 @@ public class HabilidadesDeDano {
     if (Habilidades.tem(defensor, PELE_SECA) && golpe.getType() == ElementalTypes.FIRE) {
       resultado *= 1.25;
     }
+    // 21/10 (habilidades, lote das reações): carregado pela Electromorfose ou pela Energia Eólica, o golpe Elétrico ×2
+    resultado *= HabilidadesQueReagem.carga(atacante, golpe);
     return resultado;
   }
 
   // Showdown, onModifyAtk/onModifySpA (de quem bate) e onSourceModifyAtk/onSourceModifySpA (de quem apanha)
   public static double ataque(Pokemon atacante, Pokemon defensor, Move golpe, boolean fisico) {
-    String habilidade = atacante.getAbility().getName();
-    ElementalType tipo = golpe.getType();
+    String habilidade = Habilidades.atual(atacante);
+    // 21/10: o tipo de agora (a Refrigeração faz o golpe Normal virar Gelo, e a Gordura Espessa corta)
+    ElementalType tipo = ClimaNosGolpes.tipo(atacante, golpe);
     double multiplicador = 1.0;
     if (fisico && DOBRAM_O_ATAQUE.contains(habilidade)) {
       multiplicador *= 2;
@@ -76,7 +80,7 @@ public class HabilidadesDeDano {
     if (tipo == ElementalTypes.WATER && BOLHA_DE_AGUA.equals(habilidade)) {
       multiplicador *= 2;
     }
-    Set<ElementalType> resistidos = RESISTEM.get(defensor.getAbility().getName());
+    Set<ElementalType> resistidos = RESISTEM.get(QuebraMolde.queVale(defensor));
     if (resistidos != null && resistidos.contains(tipo)) {
       multiplicador *= 0.5;
     }
@@ -94,7 +98,7 @@ public class HabilidadesDeDano {
 
   // Showdown, onCriticalHit
   public static boolean semCritico(Pokemon defensor) {
-    return SEM_CRITICO.contains(defensor.getAbility().getName());
+    return SEM_CRITICO.contains(QuebraMolde.queVale(defensor));
   }
 
   // Levitação: golpes de Terra não pegam (só os de dano; os de status ignoram imunidade de tipo)
@@ -106,12 +110,12 @@ public class HabilidadesDeDano {
   public static boolean ignoraImunidade(Pokemon atacante, Move golpe, ElementalType tipoDoDefensor) {
     ElementalType tipo = golpe.getType();
     return tipoDoDefensor == ElementalTypes.GHOST && (tipo == ElementalTypes.NORMAL || tipo == ElementalTypes.FIGHTING)
-        && ACERTAM_FANTASMA.contains(atacante.getAbility().getName());
+        && ACERTAM_FANTASMA.contains(Habilidades.atual(atacante));
   }
 
   // Showdown, onSourceModifyDamage: Filtro, Rocha Sólida e Armadura Prisma cortam o super efetivo
   public static double danoFinal(Pokemon defensor, double efetividade) {
-    return efetividade > 1 && FILTRAM.contains(defensor.getAbility().getName()) ? 0.75 : 1.0;
+    return efetividade > 1 && FILTRAM.contains(QuebraMolde.queVale(defensor)) ? 0.75 : 1.0;
   }
 
   // Showdown, onDamage: com a vida cheia, o golpe que derrubaria deixa 1 PV

@@ -15,6 +15,7 @@ import net.fabricmc.fabric.api.client.screen.v1.Screens;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -35,6 +36,8 @@ public class TelaDoLayout extends Screen {
   private static final int Y_DO_BOTAO_DA_PAUSA = 28;
   private static final int LARGURA_DO_BOTAO_DA_PAUSA = 130;
   private static final int ALTURA_DO_BOTAO = 20;
+  // O botãozinho "–" de recolher a barra
+  private static final int PEQUENO = 14;
   // A barra no meio da tela: o título, a dica e os 3 botões
   private static final int LARGURA_DO_BOTAO = 104;
   private static final int ESPACO = 4;
@@ -96,6 +99,13 @@ public class TelaDoLayout extends Screen {
   private long cursorAtual = 0;
   private Button restaurarBloco;
   private Button restaurarTudo;
+  // A barra arrastável e recolhível: os botões dela, o "–" que recolhe, o "☰" que abre, e o arrasto pelo fundo dela
+  private final List<Button> daBarra = new ArrayList<>();
+  private Button recolher;
+  private Button abrir;
+  private boolean arrastandoABarra = false;
+  private double pegouABarraEmX;
+  private double pegouABarraEmY;
   private List<FormattedCharSequence> linhasDaDica = List.of();
 
   private TelaDoLayout(Screen anterior) {
@@ -116,17 +126,48 @@ public class TelaDoLayout extends Screen {
   @Override
   protected void init() {
     int larguraDaBarra = larguraDaBarra();
-    int larguraDoBotao = (larguraDaBarra - 2 * MARGEM - 2 * ESPACO) / 3;
+    int larguraDoBotao = (larguraDaBarra - 2 * MARGEM - ESPACO) / 2;
     linhasDaDica = font.split(Component.translatable(FRASE + "dica"), larguraDaBarra - 2 * MARGEM);
-    int x = (width - larguraDaBarra) / 2 + MARGEM;
-    int y = topoDaBarra() + alturaDaBarra() - MARGEM - ALTURA_DO_BOTAO;
+    daBarra.clear();
     restaurarBloco = addRenderableWidget(Button.builder(Component.translatable(FRASE + "restaurar_bloco"),
-        botao -> restaurarOEscolhido()).bounds(x, y, larguraDoBotao, ALTURA_DO_BOTAO).build());
+        botao -> restaurarOEscolhido()).size(larguraDoBotao, ALTURA_DO_BOTAO).build());
     restaurarTudo = addRenderableWidget(Button.builder(Component.translatable(FRASE + "restaurar_tudo"),
-        botao -> restaurarTudo()).bounds(x + larguraDoBotao + ESPACO, y, larguraDoBotao, ALTURA_DO_BOTAO).build());
-    addRenderableWidget(Button.builder(Component.translatable(FRASE + "concluir"), botao -> onClose())
-        .bounds(x + 2 * (larguraDoBotao + ESPACO), y, larguraDoBotao, ALTURA_DO_BOTAO).build());
+        botao -> restaurarTudo()).size(larguraDoBotao, ALTURA_DO_BOTAO).build());
+    Button cores = addRenderableWidget(Button.builder(Component.translatable(FRASE + "cores"),
+        botao -> minecraft.setScreen(new TelaDasCores(this))).size(larguraDoBotao, ALTURA_DO_BOTAO).build());
+    Button concluir = addRenderableWidget(Button.builder(Component.translatable(FRASE + "concluir"), botao -> onClose())
+        .size(larguraDoBotao, ALTURA_DO_BOTAO).build());
+    daBarra.addAll(List.of(restaurarBloco, restaurarTudo, cores, concluir));
+    recolher = addRenderableWidget(Button.builder(Component.literal("–"), botao -> recolherABarra(true))
+        .size(PEQUENO, PEQUENO).tooltip(Tooltip.create(Component.translatable(FRASE + "recolher"))).build());
+    Component textoDoAbrir = Component.literal("☰ ").append(title);
+    abrir = addRenderableWidget(Button.builder(textoDoAbrir, botao -> recolherABarra(false))
+        .size(font.width(textoDoAbrir) + 2 * MARGEM, ALTURA_DO_BOTAO).build());
+    posicionar();
     atualizarBotoes();
+  }
+
+  // Os botões acompanham a barra (onde ela está, aberta ou recolhida)
+  private void posicionar() {
+    int x = xDaBarra();
+    int y = topoDaBarra();
+    int larguraDoBotao = restaurarBloco.getWidth();
+    int yDosBotoes = y + alturaDaBarra() - MARGEM - 2 * ALTURA_DO_BOTAO - ESPACO;
+    for (int i = 0; i < daBarra.size(); i++) {
+      daBarra.get(i).setPosition(x + MARGEM + (i % 2) * (larguraDoBotao + ESPACO),
+          yDosBotoes + (i / 2) * (ALTURA_DO_BOTAO + ESPACO));
+      daBarra.get(i).visible = !LayoutDaHud.barraRecolhida;
+    }
+    recolher.setPosition(x + larguraDaBarra() - ESPACO - PEQUENO, y + ESPACO);
+    recolher.visible = !LayoutDaHud.barraRecolhida;
+    abrir.setPosition(Math.min(x, width - abrir.getWidth()), y);
+    abrir.visible = LayoutDaHud.barraRecolhida;
+  }
+
+  private void recolherABarra(boolean recolhida) {
+    LayoutDaHud.barraRecolhida = recolhida;
+    LayoutDaHud.salvar();
+    posicionar();
   }
 
   private int larguraDaBarra() {
@@ -134,11 +175,21 @@ public class TelaDoLayout extends Screen {
   }
 
   private int alturaDaBarra() {
-    return MARGEM + font.lineHeight + ESPACO + linhasDaDica.size() * LINHA + ESPACO + ALTURA_DO_BOTAO + MARGEM;
+    return MARGEM + font.lineHeight + ESPACO + linhasDaDica.size() * LINHA + ESPACO + 2 * ALTURA_DO_BOTAO + ESPACO + MARGEM;
+  }
+
+  // Onde a barra está: a fração guardada do espaço livre (0,5 = no meio), para valer em qualquer tamanho de janela
+  private int xDaBarra() {
+    return Math.round(LayoutDaHud.barraX * Math.max(0, width - larguraDaBarra()));
   }
 
   private int topoDaBarra() {
-    return (height - alturaDaBarra()) / 2;
+    return Math.round(LayoutDaHud.barraY * Math.max(0, height - alturaDaBarra()));
+  }
+
+  private boolean naBarra(double x, double y) {
+    return !LayoutDaHud.barraRecolhida && x >= xDaBarra() && x <= xDaBarra() + larguraDaBarra() && y >= topoDaBarra()
+        && y <= topoDaBarra() + alturaDaBarra();
   }
 
   private void atualizarBotoes() {
@@ -184,13 +235,16 @@ public class TelaDoLayout extends Screen {
   }
 
   private void barra(GuiGraphics tela) {
+    if (LayoutDaHud.barraRecolhida) {
+      return;
+    }
     int largura = larguraDaBarra();
-    int x = (width - largura) / 2;
+    int x = xDaBarra();
     int y = topoDaBarra();
     Formas.retangulo(tela, x, y, largura, alturaDaBarra(), CANTOS_DA_BARRA, FUNDO_DA_BARRA, FUNDO_DA_BARRA);
     Formas.borda(tela, x, y, largura, alturaDaBarra(), CANTOS_DA_BARRA, 1f, BORDA_DA_BARRA);
     tela.flush();
-    tela.drawCenteredString(font, title.copy().withStyle(ChatFormatting.BOLD), width / 2, y + MARGEM, BRANCO);
+    tela.drawCenteredString(font, title.copy().withStyle(ChatFormatting.BOLD), x + largura / 2, y + MARGEM, BRANCO);
     int yDaLinha = y + MARGEM + font.lineHeight + ESPACO;
     for (FormattedCharSequence linha : linhasDaDica) {
       tela.drawString(font, linha, x + MARGEM, yDaLinha, CINZA, false);
@@ -289,6 +343,13 @@ public class TelaDoLayout extends Screen {
     if (botao != GLFW.GLFW_MOUSE_BUTTON_LEFT) {
       return false;
     }
+    // O fundo da barra (fora dos botões): pega a barra para arrastar
+    if (naBarra(x, y)) {
+      arrastandoABarra = true;
+      pegouABarraEmX = x - xDaBarra();
+      pegouABarraEmY = y - topoDaBarra();
+      return true;
+    }
     Map<Bloco, Caixa> caixas = caixasNaTela();
     int alcaClicada = escolhido == null ? NENHUMA : alcaEm(caixas.get(escolhido), x, y);
     if (alcaClicada >= 0) {
@@ -314,6 +375,14 @@ public class TelaDoLayout extends Screen {
 
   @Override
   public boolean mouseDragged(double x, double y, int botao, double dx, double dy) {
+    if (arrastandoABarra) {
+      double livreX = Math.max(1, width - larguraDaBarra());
+      double livreY = Math.max(1, height - alturaDaBarra());
+      LayoutDaHud.barraX = (float) Math.clamp((x - pegouABarraEmX) / livreX, 0, 1);
+      LayoutDaHud.barraY = (float) Math.clamp((y - pegouABarraEmY) / livreY, 0, 1);
+      posicionar();
+      return true;
+    }
     if (arrastando == null) {
       return super.mouseDragged(x, y, botao, dx, dy);
     }
@@ -326,6 +395,11 @@ public class TelaDoLayout extends Screen {
   @Override
   public boolean mouseReleased(double x, double y, int botao) {
     boolean dosBotoes = super.mouseReleased(x, y, botao);
+    if (arrastandoABarra) {
+      arrastandoABarra = false;
+      LayoutDaHud.salvar();
+      return true;
+    }
     if (arrastando == null) {
       return dosBotoes;
     }
@@ -453,7 +527,9 @@ public class TelaDoLayout extends Screen {
   // O cursor do sistema: as setas de redimensionar em cima de uma alça, a cruz de mover em cima de um bloco
   private void atualizarCursor(double x, double y) {
     int forma = 0;
-    if (arrastando != null) {
+    if (arrastandoABarra || naBarra(x, y) && children().stream().noneMatch(filho -> filho.isMouseOver(x, y))) {
+      forma = GLFW.GLFW_RESIZE_ALL_CURSOR;
+    } else if (arrastando != null) {
       forma = alca == MOVER ? GLFW.GLFW_RESIZE_ALL_CURSOR : CURSORES_DAS_ALCAS[alca];
     } else if (children().stream().noneMatch(filho -> filho.isMouseOver(x, y))) {
       Map<Bloco, Caixa> caixas = caixasNaTela();

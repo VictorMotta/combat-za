@@ -9,7 +9,12 @@ import com.cobblemon.mod.common.pokemon.Pokemon;
 import dev.victor.combatza.CobblemonCombatZA;
 import dev.victor.combatza.campo.CampoEBarreiras;
 import dev.victor.combatza.campo.ClimaNosGolpes;
+import dev.victor.combatza.combate.Lados;
 import dev.victor.combatza.habilidades.Habilidades;
+import dev.victor.combatza.habilidades.HabilidadesDaConta;
+import dev.victor.combatza.habilidades.QuebraMolde;
+import dev.victor.combatza.habilidades.HabilidadesDeEstagio;
+import dev.victor.combatza.habilidades.HabilidadesDePrioridade;
 import dev.victor.combatza.itens.ItensDeEstagio;
 import dev.victor.combatza.itens.ItensSegurados;
 import net.minecraft.SharedConstants;
@@ -21,11 +26,21 @@ public class AplicarEfeitos {
   }
 
   public static void depoisDeAcertar(Execucao execucao, PokemonEntity atacante, Entity alvo) {
+    // 21/10 (golpes de status que faltavam): Provocação, Bis, Atração, Troca de Habilidades, Descondensar, Giro Rápido...
+    GolpesDeStatus.depoisDeAcertar(execucao, atacante, alvo);
     EfeitosDosGolpes.Efeito efeito = EfeitosDosGolpes.de(execucao.getGolpe());
+    // 21/10 (habilidades, lote da conta do dano): o Fedor dá 10% de hesitar ao golpe de dano que não faz hesitar (até no
+    // golpe sem efeito nenhum, como a Investida); a Força Absoluta corta os efeitos extras (e o "self" do golpe que tem
+    // efeito extra), em troca do poder ×1,3 (HabilidadesDaConta)
+    EfeitosDosGolpes.Secundario fedor = HabilidadesDaConta.fedor(atacante, execucao.getGolpe(), efeito, alvo);
+    if (fedor != null) {
+      aplicarSecundario(execucao, atacante, alvo, fedor);
+    }
 
     if (efeito == null) {
       return;
     }
+    boolean forcaAbsoluta = HabilidadesDaConta.forcaAbsoluta(execucao.getPokemon(), execucao.getGolpe());
 
     Entity quemRecebe = "self".equals(efeito.target()) ? atacante : alvo;
     if (efeito.boosts() != null) {
@@ -43,10 +58,10 @@ public class AplicarEfeitos {
       Preso.prender(execucao, quemRecebe);
     }
 
-    if (efeito.self() != null && efeito.self().boosts() != null) {
+    if (!forcaAbsoluta && efeito.self() != null && efeito.self().boosts() != null) {
       mudarAtributos(execucao, atacante, efeito.self().boosts());
     }
-    if (efeito.secondaries() != null) {
+    if (!forcaAbsoluta && efeito.secondaries() != null) {
       for (EfeitosDosGolpes.Secundario secundario : efeito.secondaries()) {
         aplicarSecundario(execucao, atacante, alvo, secundario);
       }
@@ -105,8 +120,14 @@ public class AplicarEfeitos {
     for (Map.Entry<String, Integer> mudanca : mudancas.entrySet()) {
       String atributo = mudanca.getKey();
       int pedido = mudanca.getValue();
-      if (pedido < 0 && veioDeOutro && Habilidades.naoDeixaCair(pokemon, atributo)) {
+      // 21/10 (habilidades, lote das reações): o golpe de status do Poder do Micélio passa pelo Corpo Claro e parecidas
+      if (pedido < 0 && veioDeOutro && Habilidades.naoDeixaCair(pokemon, atributo)
+          && !HabilidadesDePrioridade.ignoraHabilidade(execucao)) {
         quedaBloqueada(execucao, pokemon, atributo);
+        continue;
+      }
+      // 21/10 (habilidades, lote da entrada e das imunidades): a Armadura Espelhada devolve a queda para quem baixou
+      if (pedido < 0 && veioDeOutro && HabilidadesDeEstagio.espelhou(execucao.getPokemon(), pokemon, atributo, pedido)) {
         continue;
       }
       // Lote 3 dos itens: o Amuleto Purificador (a frase uma vez só, mesmo segurando dois atributos)
@@ -115,7 +136,8 @@ public class AplicarEfeitos {
         continue;
       }
       // 5b.3: a Névoa do lado dele
-      if (pedido < 0 && veioDeOutro && CampoEBarreiras.bloqueiaQueda(pokemon)) {
+      // 21/10: o golpe de quem tem Infiltrado passa pela Névoa
+      if (pedido < 0 && veioDeOutro && CampoEBarreiras.bloqueiaQueda(pokemon) && !QuebraMolde.infiltra(execucao)) {
         CobblemonCombatZA.LOGGER.info("NÉVOA: {} protegido da queda de {}", pokemon.getSpecies().getName(), atributo);
         Feedback.historico(execucao.getJogador(), pokemon,
             Component.translatable("cobblemon.battle.activate.mist", pokemon.getDisplayName(false)));
@@ -134,12 +156,16 @@ public class AplicarEfeitos {
     if (!mudaram.isEmpty()) {
       ItensDeEstagio.mudaram(pokemon, mudaram);
     }
+    // 21/10: o Competitivo e o Desafiador, com a queda que veio de um inimigo
+    if (!Lados.mesmoLado(execucao.getPokemon(), pokemon)) {
+      HabilidadesDeEstagio.desafiar(pokemon, mudaram);
+    }
   }
 
   private static void quedaBloqueada(Execucao execucao, Pokemon pokemon, String atributo) {
     Component nome = Estagios.nomeDoAtributo(atributo, pokemon);
     CobblemonCombatZA.LOGGER.info("ESTÁGIO BLOQUEADO: {} não caiu ({})", nome.getString(),
-        pokemon.getAbility().getName());
+        Habilidades.atual(pokemon));
     Feedback.historico(execucao.getJogador(), pokemon,
         Component.translatable(Estagios.FRASE + "nao_caiu", nome, Habilidades.nome(pokemon)));
   }

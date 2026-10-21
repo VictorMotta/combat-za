@@ -20,6 +20,7 @@ import dev.victor.combatza.golpes.Estagios;
 import dev.victor.combatza.golpes.Recargas;
 import dev.victor.combatza.golpes.Vida;
 import dev.victor.combatza.habilidades.Habilidades;
+import dev.victor.combatza.habilidades.HabilidadesDaConta;
 import net.minecraft.SharedConstants;
 import net.minecraft.network.chat.Component;
 
@@ -35,7 +36,9 @@ import net.minecraft.network.chat.Component;
 //   da vida dele; Kee (físico: Defesa +1) e Maranga (especial: Defesa Especial +1);
 // - Leppa (a baga do PP, que não existe no tempo real): o primeiro golpe que entra em recarga na batalha recarrega 2× mais
 //   rápido por 17,5 s, como o Éter.
-// As de sabor (Razz, Bluk, Nanab...) e as que baixam EV (Pomeg, Kelpsy...) não têm efeito de batalha nem no Showdown
+// As de sabor (Razz, Bluk, Nanab...) e as que baixam EV (Pomeg, Kelpsy...) não têm efeito de batalha nem no Showdown.
+// 21/10 (habilidades, lote da conta do dano): com Amadurecer, o que a baga dá vale o dobro (a cura, os estágios, o dano da
+// Jaboca e da Rowap; a de resistência deixa 1/4); a Lansat, a Micle, a Custap e a Leppa não mudam, como no Showdown
 public class Bagas {
   private static final double METADE = 0.5;
   private static final int APERTO = 4;
@@ -79,7 +82,8 @@ public class Bagas {
     if (daBaga == null || daBaga != tipoDoGolpe || !ItensSegurados.disponivel(defensor, item)) {
       return 1.0;
     }
-    return daBaga == ElementalTypes.NORMAL || efetividade > 1.0 ? METADE : 1.0;
+    return daBaga == ElementalTypes.NORMAL || efetividade > 1.0 ? HabilidadesDaConta.bagaDeResistencia(defensor, METADE)
+        : 1.0;
   }
 
   // O golpe acertou com a baga na conta: ela é comida
@@ -102,7 +106,7 @@ public class Bagas {
     }
     if (DE_APERTO.containsKey(item)) {
       comer(pokemon, item);
-      ItensDeEstagio.mudar(pokemon, DE_APERTO.get(item), 1);
+      ItensDeEstagio.mudar(pokemon, DE_APERTO.get(item), HabilidadesDaConta.amadurecida(pokemon, 1));
     } else if ("starfberry".equals(item)) {
       estrela(entidade, pokemon);
     } else if ("lansatberry".equals(item)) {
@@ -148,14 +152,16 @@ public class Bagas {
     }
     comer(pokemon, "starfberry");
     if (!podem.isEmpty()) {
-      ItensDeEstagio.mudar(pokemon, podem.get(entidade.getRandom().nextInt(podem.size())), ESTRELA);
+      ItensDeEstagio.mudar(pokemon, podem.get(entidade.getRandom().nextInt(podem.size())),
+          HabilidadesDaConta.amadurecida(pokemon, ESTRELA));
     }
   }
 
   // Cura 1/3 da vida; confunde quem tem a natureza que baixa o atributo ligado ao sabor dela
   private static void curaQueConfunde(PokemonEntity entidade, Pokemon pokemon, String item) {
     Component nome = ItensSegurados.gastarComNome(pokemon, item);
-    int curou = Vida.curar(entidade, Math.max(1, pokemon.getMaxHealth() / CURA_QUE_CONFUNDE));
+    int curou = Vida.curar(entidade,
+        HabilidadesDaConta.amadurecida(pokemon, Math.max(1, pokemon.getMaxHealth() / CURA_QUE_CONFUNDE)));
     ItensSegurados.avisar(pokemon, Component.translatable(FRASE + "comeu_cura", pokemon.getDisplayName(false), nome,
         curou));
     long agora = entidade.getServer() == null ? 0 : entidade.getServer().getTickCount();
@@ -178,7 +184,8 @@ public class Bagas {
       case "enigmaberry" -> {
         if (efetividade > 1.0 && atingido.isAlive()) {
           Component nome = ItensSegurados.gastarComNome(pokemon, item);
-          int curou = Vida.curar(atingido, Math.max(1, pokemon.getMaxHealth() / ENIGMA));
+          int curou = Vida.curar(atingido,
+              HabilidadesDaConta.amadurecida(pokemon, Math.max(1, pokemon.getMaxHealth() / ENIGMA)));
           ItensSegurados.avisar(pokemon, Component.translatable(FRASE + "comeu_cura", pokemon.getDisplayName(false), nome,
               curou));
         }
@@ -191,13 +198,13 @@ public class Bagas {
       case "keeberry" -> {
         if (fisico) {
           comer(pokemon, item);
-          ItensDeEstagio.mudar(pokemon, "def", 1);
+          ItensDeEstagio.mudar(pokemon, "def", HabilidadesDaConta.amadurecida(pokemon, 1));
         }
       }
       case "marangaberry" -> {
         if (especial) {
           comer(pokemon, item);
-          ItensDeEstagio.mudar(pokemon, "spd", 1);
+          ItensDeEstagio.mudar(pokemon, "spd", HabilidadesDaConta.amadurecida(pokemon, 1));
         }
       }
       default -> {
@@ -209,7 +216,7 @@ public class Bagas {
   private static void ferirQuemBateu(Pokemon dono, PokemonEntity atacante, String item) {
     Component nome = ItensSegurados.gastarComNome(dono, item);
     Pokemon doAtacante = atacante.getPokemon();
-    int pv = Math.max(1, doAtacante.getMaxHealth() / JABOCA_OU_ROWAP);
+    int pv = HabilidadesDaConta.amadurecida(dono, Math.max(1, doAtacante.getMaxHealth() / JABOCA_OU_ROWAP));
     ItensSegurados.avisar(doAtacante, Component.translatable(FRASE + "baga_feriu", doAtacante.getDisplayName(false), nome,
         dono.getDisplayName(false), pv));
     Vida.ferir(atacante, pv);

@@ -3,6 +3,8 @@ package dev.victor.combatza.golpes;
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
 import com.cobblemon.mod.common.pokemon.Pokemon;
 
+import dev.victor.combatza.captura.Desmaio;
+import dev.victor.combatza.treinadores.BatalhasDeTreinador;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 
@@ -63,6 +65,11 @@ public class Vida {
     Pokemon pokemon = entidade.getPokemon();
     int depois = (int) Math.max(0, pvAtual(pokemon) - Math.round(pv));
     entidade.hurt(Dano.fonte(entidade, entidade), naVida(entidade, pv));
+    // 21/10: o selvagem da nossa batalha que caiu com isso fica caído no chão com 1 PV (Desmaio), para a captura, e o do
+    // treinador volta para a bola (BatalhasDeTreinador): o desmaiar do Cobblemon (PV 0) mataria os dois
+    if (Desmaio.esta(entidade) || BatalhasDeTreinador.desmaiou(entidade)) {
+      return;
+    }
     if (depois == 0) {
       desmaiar(entidade);
     } else if (entidade.isAlive()) {

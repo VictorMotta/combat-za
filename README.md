@@ -1,10 +1,11 @@
 # Cobblemon Combat ZA
 
-**Real-time battles against wild Pokémon for [Cobblemon](https://cobblemon.com/)**, inspired by Pokémon Legends: Z-A. A Fabric
-addon: no more turns. You command your Pokémon with keys, its moves charge up and cool down, and the wild Pokémon fights back.
+**Real-time Pokémon battles for [Cobblemon](https://cobblemon.com/)**, inspired by Pokémon Legends: Z-A. A Fabric addon: no
+more turns. You command your Pokémon with keys, its moves charge up and cool down, and the other side fights back: wild Pokémon,
+trainers from [Radical Cobblemon Trainers](https://modrinth.com/mod/rctmod) and other players.
 
-> ⚠️ **BETA: wild Pokémon battles only (for now).** Battles against trainers (NPCs) and other players still use Cobblemon's normal
-> turn-based battles.
+> ⚠️ **BETA.** Real time against wild Pokémon, RCT trainers (one against one: you choose real time or turn-based) and other
+> players (Singles duels from Cobblemon's own challenge). Double battles still use Cobblemon's normal turn-based battles.
 
 📦 **Download:** [Modrinth](https://modrinth.com/mod/cobblemon-combat-za) · 🐞 **Bugs and ideas:** [Issues](../../issues) (please
 attach your `latest.log`)
@@ -21,7 +22,8 @@ Put the mod in the `mods` folder of **both the game and the server**, together w
 | **Cobblemon 1.7.3** (Fabric) | [Cobblemon 1.7.3](https://modrinth.com/mod/cobblemon/version/kF7CvxTo) ⚠️ not 1.8 (not supported yet) |
 | **Cobblemon Combat ZA** | [Releases](../../releases) or [Modrinth](https://modrinth.com/mod/cobblemon-combat-za) |
 
-Optional: [Cobblemon: Mega Showdown](https://modrinth.com/mod/cobblemon-mega-showdown) (Mega Evolution),
+Optional: [Radical Cobblemon Trainers](https://modrinth.com/mod/rctmod) (real-time trainer battles),
+[Cobblemon: Mega Showdown](https://modrinth.com/mod/cobblemon-mega-showdown) (Mega Evolution),
 [Xaero's Minimap](https://modrinth.com/mod/xaeros-minimap) (party on the map), [Open Parties and Claims](https://modrinth.com/mod/open-parties-and-claims)
 (its party is used). ❌ Not compatible with **Cobblemon Fight or Flight Reborn**.
 

@@ -16,6 +16,7 @@ import dev.victor.combatza.combate.GerenciarCombates;
 import dev.victor.combatza.config.Configuracao;
 import dev.victor.combatza.golpes.StatusNossos;
 import dev.victor.combatza.rede.SinaisPayload;
+import dev.victor.combatza.treinadores.BatalhasDeTreinador;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.SharedConstants;
 import net.minecraft.server.MinecraftServer;
@@ -126,7 +127,7 @@ public class Deteccao {
     double alcance = jogador.level().isDay() ? Configuracao.alcanceDaVisaoDeDia() : Configuracao.alcanceDaVisaoDeNoite();
     for (PokemonEntity selvagem : jogador.level().getEntitiesOfClass(PokemonEntity.class,
         jogador.getBoundingBox().inflate(alcance), e -> e.getPokemon().isWild() && e.isAlive() && !e.isBattling()
-            && !Captura.dentroDaBola(e) && !Desmaio.esta(e)
+            && !Captura.dentroDaBola(e) && !Desmaio.esta(e) && !BatalhasDeTreinador.ehDoTreinador(e)
             && !GerenciarCombates.estaEmCombate(e.getPokemon()) && !semInteresse(e, jogador, agora))) {
       Atencao atencao = ATENCOES.computeIfAbsent(chave(selvagem, jogador), k -> new Atencao(selvagem, jogador));
       double taxa = taxa(selvagem, jogador, alcance);

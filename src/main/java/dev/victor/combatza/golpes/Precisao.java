@@ -9,6 +9,7 @@ import com.cobblemon.mod.common.pokemon.Pokemon;
 import dev.victor.combatza.CobblemonCombatZA;
 import dev.victor.combatza.campo.ClimaNosGolpes;
 import dev.victor.combatza.habilidades.Habilidades;
+import dev.victor.combatza.habilidades.HabilidadesDaConta;
 import dev.victor.combatza.itens.EstadoDosItens;
 import dev.victor.combatza.itens.ItensDePrecisao;
 import dev.victor.combatza.itens.ItensDoAcerto;
@@ -55,10 +56,13 @@ public class Precisao {
       return 1.0;
     }
     double chance = precisao / 100.0 * ClimaNosGolpes.evasao(alvo);
-    chance *= multiplicador(Estagios.de(atacante, "accuracy"));
-    if (!IGNORAM_A_EVASAO.contains(atacante.getAbility().getName())) {
-      chance /= multiplicador(Estagios.de(alvo, "evasion"));
+    // 21/10 (habilidades, lote da conta do dano): a Ignorância de um ignora os estágios do outro
+    chance *= multiplicador(HabilidadesDaConta.estagioQueVale(atacante, alvo, "accuracy"));
+    if (!IGNORAM_A_EVASAO.contains(Habilidades.atual(atacante))) {
+      chance /= multiplicador(HabilidadesDaConta.estagioQueVale(alvo, atacante, "evasion"));
     }
+    // 21/10: Pele Milagrosa, Pés Laçados e Entusiasmo
+    chance = HabilidadesDaConta.precisao(atacante, golpe, alvo, chance);
     if (Habilidades.tem(atacante, COM_OLHOS_COMPOSTOS)) {
       chance *= OLHOS_COMPOSTOS;
     }

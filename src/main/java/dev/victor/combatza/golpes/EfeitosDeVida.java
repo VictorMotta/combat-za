@@ -11,6 +11,7 @@ import dev.victor.combatza.CobblemonCombatZA;
 import dev.victor.combatza.campo.CampoEBarreiras;
 import dev.victor.combatza.campo.ClimaNosGolpes;
 import dev.victor.combatza.habilidades.Habilidades;
+import dev.victor.combatza.habilidades.HabilidadesDeProtecao;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
 
@@ -92,6 +93,10 @@ public class EfeitosDeVida {
   }
 
   private static void drenar(Execucao execucao, PokemonEntity atacante, Entity alvo, double pv) {
+    // 21/10 (habilidades, lote da entrada e das imunidades): o Lodo Líquido fere quem drena
+    if (HabilidadesDeProtecao.lodoLiquido(execucao, atacante, alvo, pv)) {
+      return;
+    }
     int curou = Vida.curar(atacante, pv);
     if (curou <= 0) {
       return;
@@ -153,7 +158,7 @@ public class EfeitosDeVida {
     }
     if (Habilidades.imuneAoStatus(pokemon, "slp")) {
       CobblemonCombatZA.LOGGER.info("DESCANSO FALHOU: {} não dorme ({})", pokemon.getSpecies().getName(),
-          pokemon.getAbility().getName());
+          Habilidades.atual(pokemon));
       Feedback.historico(execucao.getJogador(), pokemon, Component.translatable(FRASE + "nao_consegue_dormir",
           pokemon.getDisplayName(false), Habilidades.nome(pokemon)));
       return;

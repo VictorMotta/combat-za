@@ -53,9 +53,13 @@ public class Intimidacao {
 
   private static void intimidar(Pokemon quem, Pokemon vitima, long agora) {
     ServerPlayer jogador = quem.getOwnerPlayer() != null ? quem.getOwnerPlayer() : vitima.getOwnerPlayer();
+    // 21/10 (habilidades, lote da entrada e das imunidades): o Cão de Guarda (sobe) e a Armadura Espelhada (devolve)
+    if (HabilidadesDeEstagio.reagiuAIntimidacao(quem, vitima)) {
+      return;
+    }
     if (Habilidades.ignoraIntimidacao(vitima) || Habilidades.naoDeixaCair(vitima, "atk")) {
       CobblemonCombatZA.LOGGER.info("INTIMIDAÇÃO BLOQUEADA: {} tem {}", vitima.getSpecies().getName(),
-          vitima.getAbility().getName());
+          Habilidades.atual(vitima));
       avisar(jogador, quem, Component.translatable(FRASE + "intimidou_nao_ligou", quem.getDisplayName(false),
           vitima.getDisplayName(false), Habilidades.nome(vitima)));
       return;
@@ -73,13 +77,22 @@ public class Intimidacao {
     int mudou = Estagios.mudar(vitima, "atk", -1, agora);
     CobblemonCombatZA.LOGGER.info("INTIMIDAÇÃO: {} intimidou {} (Ataque agora {})", quem.getSpecies().getName(),
         vitima.getSpecies().getName(), Estagios.de(vitima, "atk"));
-    avisar(jogador, quem, Component.translatable(FRASE + (mudou < 0 ? "intimidou" : "intimidou_no_minimo"),
-        quem.getDisplayName(false), vitima.getDisplayName(false)));
+    // 21/10: com o Contrário, a Intimidação SOBE o Ataque
+    Component frase = mudou > 0
+        ? Component.translatable(Estagios.FRASE + "subiu", Estagios.nomeDoAtributo("atk", vitima)).append(" (")
+            .append(Habilidades.nome(vitima)).append(")")
+        : Component.translatable(FRASE + (mudou < 0 ? "intimidou" : "intimidou_no_minimo"), quem.getDisplayName(false),
+            vitima.getDisplayName(false));
+    avisar(jogador, quem, frase);
     // Lote 3 dos itens: a Erva Branca e a Mochila Ejetora na queda; o Orbe de Adrenalina sobe a Velocidade
     if (mudou < 0) {
       ItensDeEstagio.mudaram(vitima, Map.of("atk", mudou));
+      // 21/10: o Competitivo e o Desafiador
+      HabilidadesDeEstagio.desafiar(vitima, Map.of("atk", mudou));
     }
     ItensDeEstagio.orbeDeAdrenalina(vitima, mudou);
+    // 21/10 (habilidades, lote das reações): a Covardia sobe a Velocidade de quem foi intimidado
+    HabilidadesQueReagem.intimidado(vitima);
   }
 
   // A frase vai para o histórico da batalha, com o rosto de quem intimidou

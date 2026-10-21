@@ -9,6 +9,7 @@ import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
 import com.cobblemon.mod.common.pokemon.Pokemon;
 
 import dev.victor.combatza.CobblemonCombatZA;
+import dev.victor.combatza.habilidades.HabilidadesDaConta;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -24,7 +25,9 @@ public class Paralisia {
   }
 
   public static double multiplicador(Pokemon pokemon) {
-    return estaParalisado(pokemon) ? Balanceamento.VELOCIDADE_NA_PARALISIA : 1.0;
+    // 21/10 (habilidades, lote da conta do dano): com Pés Rápidos, a paralisia não deixa mais lento
+    return estaParalisado(pokemon) && !HabilidadesDaConta.semLentidaoDaParalisia(pokemon)
+        ? Balanceamento.VELOCIDADE_NA_PARALISIA : 1.0;
   }
 
   public static boolean falhouAoUsarGolpe(PokemonEntity entidade) {

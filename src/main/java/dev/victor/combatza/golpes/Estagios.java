@@ -13,6 +13,7 @@ import com.cobblemon.mod.common.pokemon.Pokemon;
 
 import dev.victor.combatza.CobblemonCombatZA;
 import dev.victor.combatza.combate.GerenciarCombates;
+import dev.victor.combatza.habilidades.HabilidadesDeEstagio;
 import net.minecraft.SharedConstants;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.network.chat.Component;
@@ -72,7 +73,8 @@ public class Estagios {
 
   public static int mudar(Pokemon pokemon, String atributo, int quanto, long acabaNoTick) {
     int antes = de(pokemon, atributo);
-    int depois = Math.clamp((long) antes + quanto, MINIMO, MAXIMO);
+    // 21/10 (habilidades, lote da entrada e das imunidades): o Contrário inverte e o Simplificar dobra toda mudança
+    int depois = Math.clamp((long) antes + HabilidadesDeEstagio.ajustar(pokemon, quanto), MINIMO, MAXIMO);
     Ficha ficha = PLACAR.computeIfAbsent(pokemon.getUuid(), uuid -> new Ficha(pokemon, new HashMap<>()));
     if (depois == 0) {
       ficha.estagios().remove(atributo);

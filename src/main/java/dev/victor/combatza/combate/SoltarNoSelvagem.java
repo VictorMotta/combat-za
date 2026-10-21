@@ -7,6 +7,7 @@ import com.cobblemon.mod.common.pokemon.Pokemon;
 import dev.victor.combatza.CobblemonCombatZA;
 import dev.victor.combatza.golpes.Feedback;
 import dev.victor.combatza.golpes.Mira;
+import dev.victor.combatza.pvp.Duelos;
 import dev.victor.combatza.ia.Parceiro;
 import dev.victor.combatza.rede.SoltarNoSelvagemPayload;
 import kotlin.Unit;
@@ -46,8 +47,9 @@ public class SoltarNoSelvagem {
     }
     Pokemon pokemon = Cobblemon.INSTANCE.getStorage().getParty(jogador).get(pedido.slotPokemon());
     Entity alvo = jogador.serverLevel().getEntity(pedido.selvagem());
+    // 21/10 (PvP): no duelo, o R com o foco no Pokémon do adversário joga o seu na direção dele, como num selvagem
     if (pokemon == null || pokemon.getEntity() != null || !(alvo instanceof PokemonEntity selvagem) || !selvagem.isAlive()
-        || !selvagem.getPokemon().isWild()) {
+        || !selvagem.getPokemon().isWild() && !Duelos.ehDoAdversario(jogador, selvagem.getPokemon())) {
       return;
     }
     if (pokemon.isFainted()) {

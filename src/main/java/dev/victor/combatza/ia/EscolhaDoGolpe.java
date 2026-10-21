@@ -14,8 +14,11 @@ import dev.victor.combatza.golpes.Dano;
 import dev.victor.combatza.golpes.EfeitosDeVida;
 import dev.victor.combatza.golpes.EfeitosDosGolpes;
 import dev.victor.combatza.golpes.FormaDoGolpe;
+import dev.victor.combatza.golpes.GolpesDeStatus;
+import dev.victor.combatza.golpes.GolpesDesligados;
 import dev.victor.combatza.golpes.PrimeiroTurno;
 import dev.victor.combatza.golpes.Recargas;
+import dev.victor.combatza.habilidades.HabilidadesDeProtecao;
 import dev.victor.combatza.itens.TravaDaEscolha;
 import net.minecraft.SharedConstants;
 import net.minecraft.world.entity.Entity;
@@ -60,8 +63,12 @@ public class EscolhaDoGolpe {
     double melhorNota = 0;
     for (int slot = 0; slot < ControleDeGolpes.MAXIMO_DE_GOLPES; slot++) {
       Move golpe = pokemon.getMoveSet().get(slot);
+      // 21/10 (habilidades, lote da entrada e das imunidades): nem o golpe que uma habilidade ou o clima forte segura
       if (golpe == null || Recargas.ticksRestantes(pokemon, slot, agora) > 0
-          || PrimeiroTurno.passouDaHora(pokemon, golpe) || TravaDaEscolha.bloqueia(pokemon, slot, golpe)) {
+          || PrimeiroTurno.passouDaHora(pokemon, golpe) || TravaDaEscolha.bloqueia(pokemon, slot, golpe)
+          // 21/10: provocado, ele não escolhe golpe de status; no Bis, só o golpe preso
+          || GolpesDesligados.bloqueia(pokemon, slot, golpe)
+          || HabilidadesDeProtecao.golpeVaiFalhar(pokemon, golpe, alvo)) {
         continue;
       }
       double nota = nota(atacante, golpe, alvo, jaUsados, comecouNoTick, agora, soComDano)
@@ -104,6 +111,11 @@ public class EscolhaDoGolpe {
     Pokemon pokemon = atacante.getPokemon();
     if (EfeitosDeVida.ehDeCura(golpe)) {
       return pokemon.getCurrentHealth() < pokemon.getMaxHealth() * CURA_ABAIXO_DE ? NOTA_DA_CURA : 0;
+    }
+    // 21/10 (golpes de status que faltavam): a Atração no mesmo gênero, a Provocação em quem já está provocado, o Truque de
+    // Agilidade sendo o mais rápido... não servem (GolpesDeStatus)
+    if (!GolpesDeStatus.serveContra(atacante, golpe, alvo)) {
+      return 0;
     }
     boolean jaUsou = jaUsados.contains(golpe.getName());
     FormaDoGolpe forma = FormaDoGolpe.de(golpe);

@@ -11,6 +11,9 @@ import dev.victor.combatza.CobblemonCombatZA;
 import dev.victor.combatza.campo.CampoEBarreiras;
 import dev.victor.combatza.campo.ClimaNosGolpes;
 import dev.victor.combatza.habilidades.Habilidades;
+import dev.victor.combatza.habilidades.HabilidadesDeProtecao;
+import dev.victor.combatza.habilidades.HabilidadesDePrioridade;
+import dev.victor.combatza.habilidades.TiposNaBatalha;
 import dev.victor.combatza.itens.ItensSegurados;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
@@ -64,8 +67,9 @@ public class AplicarStatus {
     return true;
   }
 
+  // 21/10 (lote das formas): o tipo de agora (Proteico, Troca de Cor, Mimetismo, Multitipo: TiposNaBatalha)
   public static boolean temTipo(Pokemon pokemon, ElementalType tipo) {
-    return pokemon.getPrimaryType() == tipo || pokemon.getSecondaryType() == tipo;
+    return TiposNaBatalha.tem(pokemon, tipo);
   }
 
   // Showdown: imunidade a "powder" (tipo Planta ou a habilidade Invólucro)
@@ -81,7 +85,8 @@ public class AplicarStatus {
     if (imunePeloTipo(pokemon, sigla) || (golpeDePo(execucao) && imuneAoPo(pokemon))) {
       return Component.translatable(FRASE + "nao_e_afetado");
     }
-    if (Habilidades.imuneAoStatus(pokemon, sigla)) {
+    // 21/10 (habilidades, lote das reações): o golpe de status do Poder do Micélio passa pela habilidade do alvo
+    if (Habilidades.imuneAoStatus(pokemon, sigla) && !HabilidadesDePrioridade.ignoraHabilidade(execucao)) {
       return Component.translatable(FRASE + "nao_e_afetado_por", Habilidades.nome(pokemon));
     }
     // 5b.3: o Campo Enevoado, o Elétrico (sono) e a Salvaguarda
@@ -103,6 +108,8 @@ public class AplicarStatus {
         deOnde.getString());
     Feedback.historico(execucao.getJogador(), pokemon,
         Component.translatable(status.getApplyMessage(), pokemon.getDisplayName(false)).append(deOnde));
+    // 21/10 (habilidades, lote da entrada e das imunidades): a Sincronia e a Marionete Venenosa
+    HabilidadesDeProtecao.statusAplicado(execucao, pokemonEntity, sigla);
   }
 
   private static void naoPegou(Execucao execucao, Pokemon pokemon, String sigla, Component motivo) {

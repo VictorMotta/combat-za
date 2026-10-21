@@ -63,6 +63,11 @@ public class DesenhoDaPrevia {
   private static final float FAIXA = 0.35f;
   private static final float ANEL_DE_QUEM_LEVA = 0.6f;
   private static final int CINZA = 0xFF9A9A9A;
+  // 21/10 (dele: "no gelo, a marcação era quase da mesma tonalidade do gelo"): todo anel e toda faixa ganham um contorno duplo,
+  // escuro por fora e claro por dentro (CoresDaPrevia: o claro e a cor de dentro, você escolhe), e aparecem em qualquer chão
+  private static final double BORDA = 0.07;
+  private static final float ALFA_DO_ESCURO = 0.85f;
+  private static final float ALFA_DO_CLARO = 0.9f;
   private static final int BRANCO = 0xFFFFFFFF;
   // O marcador, nas cores do seu lado (azul, como no Z-A); vermelho quando dali ele não vê o alvo
   private static final int MARCADOR = 0xFF5AA0FF;
@@ -94,7 +99,7 @@ public class DesenhoDaPrevia {
     PokemonEntity entidade = fora.getEntity();
     float parcial = contexto.tickCounter().getGameTimeDeltaPartialTick(false);
     int cor = RecargasNoCliente.ticksQueFaltam(pokemon.getUuid(), slot) > 0 ? CINZA
-        : 0xFF000000 | CoresDosTipos.de(golpe.getType());
+        : CoresDaPrevia.dentro(0xFF000000 | CoresDosTipos.de(golpe.getType()));
     Pincel pincel = new Pincel(cliente.level, contexto.consumers().getBuffer(RenderType.debugStructureQuads()),
         contexto.matrixStack().last().pose(), contexto.camera().getPosition());
 
@@ -123,7 +128,7 @@ public class DesenhoDaPrevia {
     boolean semQueda = AreaSemQueda.inclui(golpe) || CampoDeBolhas.ehCampo(golpe);
     switch (FormaDoGolpe.de(golpe)) {
       case AREA_INIMIGOS -> {
-        pincel.faixa(origem, ponto, LARGURA_DO_TRACO, Formas.comAlfa(cor, FAIXA), true);
+        pincel.traco(origem, ponto, Formas.comAlfa(cor, FAIXA));
         pincel.circulo(ponto, Balanceamento.RAIO_NO_IMPACTO, cor, semQueda);
         quemLeva(pincel, entidade, ponto, Balanceamento.RAIO_NO_IMPACTO);
       }
@@ -132,18 +137,18 @@ public class DesenhoDaPrevia {
         quemLeva(pincel, entidade, origem, Balanceamento.RAIO_EM_VOLTA_DO_POKEMON);
       }
       case ARMADILHA -> pincel.circulo(ponto, Armadilhas.RAIO, cor, true);
-      case SEM_ALVO -> pincel.anel(origem, entidade.getBbWidth() / 2 + FOLGA_DO_ANEL,
+      case SEM_ALVO -> pincel.anelComContorno(origem, entidade.getBbWidth() / 2 + FOLGA_DO_ANEL,
           entidade.getBbWidth() / 2 + FOLGA_DO_ANEL + ESPESSURA_DO_ANEL * 2, Formas.comAlfa(cor, CONTORNO));
       default -> {
         if (EfeitosDosGolpes.fazContato(golpe)) {
-          pincel.faixa(origem, ponto, LARGURA_DO_TRACO, Formas.comAlfa(cor, CONTORNO), true);
+          pincel.traco(origem, ponto, Formas.comAlfa(cor, CONTORNO));
         } else {
           double largura = Arquetipo.classificar(golpe) == Arquetipo.CANHAO ? LARGURA_DO_CANHAO : LARGURA_DO_PROJETIL;
-          pincel.faixa(origem, ponto, largura, Formas.comAlfa(cor, FAIXA), false);
+          pincel.faixaComContorno(origem, ponto, largura, Formas.comAlfa(cor, FAIXA));
         }
         if (alvo != null) {
           double raio = alvo.getBbWidth() / 2 + FOLGA_DO_ANEL;
-          pincel.anel(ponto, raio, raio + ESPESSURA_DO_ANEL, Formas.comAlfa(cor, CONTORNO));
+          pincel.anelComContorno(ponto, raio, raio + ESPESSURA_DO_ANEL, Formas.comAlfa(cor, CONTORNO));
         }
       }
     }
@@ -160,8 +165,8 @@ public class DesenhoDaPrevia {
         .getType() == HitResult.Type.MISS;
     int cor = ve ? MARCADOR : MARCADOR_SEM_VISAO;
     double raio = entidade.getBbWidth() / 2 + FOLGA_DO_ANEL;
-    pincel.anel(marcador, raio, raio + ESPESSURA_DO_ANEL * 1.5, Formas.comAlfa(cor, CONTORNO));
-    pincel.faixa(entidade.getPosition(parcial), marcador, LARGURA_DO_TRACO, Formas.comAlfa(cor, FAIXA), true);
+    pincel.anelComContorno(marcador, raio, raio + ESPESSURA_DO_ANEL * 1.5, Formas.comAlfa(cor, CONTORNO));
+    pincel.traco(entidade.getPosition(parcial), marcador, Formas.comAlfa(cor, FAIXA));
   }
 
   // Um anel branco embaixo de cada inimigo dentro da área
@@ -171,13 +176,15 @@ public class DesenhoDaPrevia {
     for (LivingEntity quem : dentro) {
       double r = quem.getBbWidth() / 2 + FOLGA_DO_ANEL;
       pincel.anel(quem.position(), r, r + ESPESSURA_DO_ANEL, Formas.comAlfa(BRANCO, ANEL_DE_QUEM_LEVA));
+      pincel.anel(quem.position(), r + ESPESSURA_DO_ANEL, r + ESPESSURA_DO_ANEL + BORDA,
+          Formas.comAlfa(CoresDaPrevia.contornoDeFora(), ALFA_DO_ESCURO));
     }
   }
 
-  // No seu jogo, inimigo = um Pokémon sem dono (o selvagem: Foco.ehSelvagem) ou um monstro
+  // No seu jogo, inimigo = um Pokémon sem dono (o selvagem; no duelo, o do adversário: Foco.ehAlvo) ou um monstro
   private static boolean inimigo(Entity entidade) {
     if (entidade instanceof PokemonEntity pokemon) {
-      return pokemon.isAlive() && Foco.ehSelvagem(pokemon);
+      return pokemon.isAlive() && Foco.ehAlvo(pokemon);
     }
     return entidade instanceof Enemy && entidade.isAlive();
   }
@@ -196,13 +203,38 @@ public class DesenhoDaPrevia {
       this.camera = camera;
     }
 
-    // O círculo cheio: com queda, 4 faixas do meio (forte) para a borda (fraca); sem queda, uma cor só. E o contorno
+    // O círculo cheio: com queda, 4 faixas do meio (forte) para a borda (fraca); sem queda, uma cor só. E o contorno: a cor dele
+    // e, em volta, o claro por dentro e o escuro por fora
     void circulo(Vec3 centro, double raio, int cor, boolean semQueda) {
       for (int i = 0; i < QUEDA.length; i++) {
         float alfa = semQueda ? SEM_QUEDA : QUEDA[i];
         anel(centro, raio * i / QUEDA.length, raio * (i + 1) / QUEDA.length, Formas.comAlfa(cor, alfa));
       }
-      anel(centro, raio - ESPESSURA_DO_CONTORNO, raio, Formas.comAlfa(cor, CONTORNO));
+      anelComContorno(centro, raio - ESPESSURA_DO_CONTORNO, raio, Formas.comAlfa(cor, CONTORNO));
+    }
+
+    // Um anel com o contorno duplo: o claro na borda de dentro e o escuro na de fora
+    void anelComContorno(Vec3 centro, double dentro, double fora, int cor) {
+      anel(centro, dentro, fora, cor);
+      anel(centro, Math.max(0, dentro - BORDA), dentro, Formas.comAlfa(CoresDaPrevia.contornoDeDentro(), ALFA_DO_CLARO));
+      anel(centro, fora, fora + BORDA, Formas.comAlfa(CoresDaPrevia.contornoDeFora(), ALFA_DO_ESCURO));
+    }
+
+    // A faixa (o caminho do projétil) com o contorno nos dois lados: o claro encostado nela e o escuro por fora
+    void faixaComContorno(Vec3 de, Vec3 ate, double largura, int cor) {
+      faixa(de, ate, largura, cor, false, 0);
+      for (int lado : new int[] { -1, 1 }) {
+        faixa(de, ate, BORDA, Formas.comAlfa(CoresDaPrevia.contornoDeDentro(), ALFA_DO_CLARO), false,
+            lado * (largura / 2 + BORDA / 2));
+        faixa(de, ate, BORDA, Formas.comAlfa(CoresDaPrevia.contornoDeFora(), ALFA_DO_ESCURO), false,
+            lado * (largura / 2 + BORDA * 1.5));
+      }
+    }
+
+    // O traço tracejado (contato, área no alvo, marcador): por baixo, um traço escuro mais largo, que aparece em qualquer chão
+    void traco(Vec3 de, Vec3 ate, int cor) {
+      faixa(de, ate, LARGURA_DO_TRACO + 2 * BORDA, Formas.comAlfa(CoresDaPrevia.contornoDeFora(), ALFA_DO_ESCURO), true, 0);
+      faixa(de, ate, LARGURA_DO_TRACO, cor, true, 0);
     }
 
     // A coroa entre dois raios, em FATIAS pedaços
@@ -215,15 +247,17 @@ public class DesenhoDaPrevia {
       }
     }
 
-    // Uma faixa no chão de "de" até "ate"; tracejada = um pedaço sim, um não
-    void faixa(Vec3 de, Vec3 ate, double largura, int cor, boolean tracejada) {
+    // Uma faixa no chão de "de" até "ate"; tracejada = um pedaço sim, um não; "deslocamento" a empurra para o lado (o contorno)
+    void faixa(Vec3 de, Vec3 ate, double largura, int cor, boolean tracejada, double deslocamento) {
       Vec3 caminho = new Vec3(ate.x - de.x, 0, ate.z - de.z);
       double comprimento = caminho.length();
       if (comprimento < 1.0E-3) {
         return;
       }
       Vec3 frente = caminho.normalize();
-      Vec3 lado = new Vec3(-frente.z, 0, frente.x).scale(largura / 2);
+      Vec3 paraOLado = new Vec3(-frente.z, 0, frente.x);
+      de = de.add(paraOLado.scale(deslocamento));
+      Vec3 lado = paraOLado.scale(largura / 2);
       int pedacos = (int) Math.ceil(comprimento / PASSO_DA_FAIXA);
       for (int i = 0; i < pedacos; i++) {
         if (tracejada && i % 2 == 1) {

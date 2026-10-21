@@ -34,6 +34,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Checkbox;
 import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.gui.screens.ConfirmLinkScreen;
 import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.options.controls.KeyBindsScreen;
@@ -148,8 +149,13 @@ public class Tutorial {
   private record Tecla(String nome, KeyMapping mapeamento) {
   }
 
-  private record Pagina(String titulo, List<Component> paragrafos, List<Tecla> teclas) {
+  // "comWiki": a página tem o botão "Abrir a wiki" no lugar das teclas
+  private record Pagina(String titulo, List<Component> paragrafos, List<Tecla> teclas, boolean comWiki) {
   }
+
+  // A wiki pública, com o texto completo (o tutorial do jogo é o resumo): em português, a página "Início"
+  private static final String WIKI = "https://github.com/VictorMotta/combat-za/wiki";
+  private static final String WIKI_EM_PORTUGUES = WIKI + "/In%C3%ADcio";
 
   // A tela: um painel no meio; em cima, o título e a página; no meio, o texto e os botões das teclas da página; embaixo,
   // Voltar, Todas as teclas e Próximo, e a caixinha, o idioma e Fechar. Esc fecha (ou cancela a troca de uma tecla)
@@ -170,7 +176,14 @@ public class Tutorial {
     private static final int ACIMA_DOS_BOTOES = 8;
     // Com muitas teclas (a página de todas), elas vão em 3 colunas
     private static final int MUITAS_TECLAS = 6;
-    private static final float MENOR_LETRA = 0.7f;
+    // 21/10 (dele: "em telas pequenas, o texto longo tá cortando, talvez tinha que pôr um scroll"): a letra encolhe só até 85%;
+    // se ainda não couber, o texto rola (a rodinha do mouse, ou arrastando a barrinha da direita)
+    private static final float MENOR_LETRA = 0.85f;
+    private static final int BARRA_DE_ROLAGEM = 4;
+    private static final int PASSO_DA_RODINHA = 12;
+    private static final int TRILHO = 0x40FFFFFF;
+    private static final int PEGADOR = 0xC0FFFFFF;
+    private static final int LARGURA_DO_BOTAO_DA_WIKI = 140;
     private static final float[] CANTOS = Formas.raios(6f);
     private static final int FUNDO_DE_CIMA = 0xF01A2432;
     private static final int FUNDO_DE_BAIXO = 0xF0101418;
@@ -185,6 +198,11 @@ public class Tutorial {
     // A tecla esperando você apertar a nova (null = nenhuma)
     private KeyMapping ouvindo = null;
     private int topoDasTeclas;
+    // A rolagem do texto: quanto desceu, o máximo, a área do texto (x, y, largura, altura) e se a barrinha está sendo arrastada
+    private int rolagem = 0;
+    private int rolagemMaxima = 0;
+    private int[] areaDoTexto = { 0, 0, 0, 0 };
+    private boolean arrastandoARolagem = false;
 
     private Tela(Screen anterior) {
       super(Component.literal(frase("botao_da_pausa")));
@@ -227,7 +245,15 @@ public class Tutorial {
           .build());
       addRenderableWidget(Button.builder(Component.literal(frase("fechar")), botao -> onClose())
           .bounds(x + largura - MARGEM - LARGURA_DO_FECHAR, yDeBaixo, LARGURA_DO_FECHAR, ALTURA_DO_BOTAO).build());
-      botoesDasTeclas(paginas.get(pagina).teclas(), x, yDeCima, largura);
+      if (paginas.get(pagina).comWiki()) {
+        topoDasTeclas = yDeCima - ACIMA_DOS_BOTOES - ALTURA_DA_TECLA;
+        addRenderableWidget(Button.builder(Component.literal(frase("abrir_wiki")),
+            ConfirmLinkScreen.confirmLink(this, emPortugues() ? WIKI_EM_PORTUGUES : WIKI))
+            .bounds(x + (largura - LARGURA_DO_BOTAO_DA_WIKI) / 2, topoDasTeclas, LARGURA_DO_BOTAO_DA_WIKI, ALTURA_DA_TECLA)
+            .build());
+      } else {
+        botoesDasTeclas(paginas.get(pagina).teclas(), x, yDeCima, largura);
+      }
     }
 
     // Os botões das teclas da página, em colunas, logo acima de Voltar / Próximo. Clicar = esperar a tecla nova
@@ -291,6 +317,11 @@ public class Tutorial {
     // Esperando a tecla: o botão do meio e os laterais do mouse também valem; o esquerdo e o direito cancelam
     @Override
     public boolean mouseClicked(double x, double y, int botao) {
+      if (ouvindo == null && botao == GLFW.GLFW_MOUSE_BUTTON_LEFT && naBarraDeRolagem(x, y)) {
+        arrastandoARolagem = true;
+        rolarAte(y);
+        return true;
+      }
       if (ouvindo != null) {
         if (botao > GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
           gravar(InputConstants.Type.MOUSE.getOrCreate(botao));
@@ -338,8 +369,47 @@ public class Tutorial {
       return Math.min(ALTURA_MAXIMA, height - 2 * BORDA_DA_TELA);
     }
 
+    // A rodinha do mouse em cima do texto: rola
+    @Override
+    public boolean mouseScrolled(double x, double y, double paraOLado, double paraCima) {
+      if (rolagemMaxima > 0 && x >= areaDoTexto[0] && x <= areaDoTexto[0] + areaDoTexto[2] && y >= areaDoTexto[1]
+          && y <= areaDoTexto[1] + areaDoTexto[3]) {
+        rolagem = Math.clamp(rolagem - (int) Math.round(paraCima * PASSO_DA_RODINHA), 0, rolagemMaxima);
+        return true;
+      }
+      return super.mouseScrolled(x, y, paraOLado, paraCima);
+    }
+
+    @Override
+    public boolean mouseDragged(double x, double y, int botao, double dx, double dy) {
+      if (arrastandoARolagem) {
+        rolarAte(y);
+        return true;
+      }
+      return super.mouseDragged(x, y, botao, dx, dy);
+    }
+
+    @Override
+    public boolean mouseReleased(double x, double y, int botao) {
+      arrastandoARolagem = false;
+      return super.mouseReleased(x, y, botao);
+    }
+
+    private boolean naBarraDeRolagem(double x, double y) {
+      int xDaBarra = areaDoTexto[0] + areaDoTexto[2] - BARRA_DE_ROLAGEM;
+      return rolagemMaxima > 0 && x >= xDaBarra - 2 && x <= xDaBarra + BARRA_DE_ROLAGEM + 2 && y >= areaDoTexto[1]
+          && y <= areaDoTexto[1] + areaDoTexto[3];
+    }
+
+    // A barrinha vai para onde o mouse está (o meio dela no mouse)
+    private void rolarAte(double y) {
+      double fracao = (y - areaDoTexto[1]) / Math.max(1, areaDoTexto[3]);
+      rolagem = (int) Math.round(Math.clamp(fracao, 0, 1) * rolagemMaxima);
+    }
+
     private void mudar(int nova) {
       pagina = Math.clamp(nova, 0, paginas.size() - 1);
+      rolagem = 0;
       ouvindo = null;
       rebuildWidgets();
     }
@@ -374,13 +444,14 @@ public class Tutorial {
       tela.drawCenteredString(font, String.format(frase("pagina"), pagina + 1, paginas.size()), width / 2,
           y + TOPO_DO_TITULO + font.lineHeight + 4, CINZA);
       int topo = y + TOPO_DO_TEXTO;
-      int fundo = atual.teclas().isEmpty()
+      int fundo = atual.teclas().isEmpty() && !atual.comWiki()
           ? y + altura - MARGEM - 2 * ALTURA_DO_BOTAO - ESPACO - ACIMA_DOS_BOTOES
           : topoDasTeclas - ACIMA_DOS_BOTOES;
       paragrafos(tela, atual.paragrafos(), x + MARGEM, topo, largura - 2 * MARGEM, fundo - topo);
     }
 
-    // O texto quebrado na largura do painel; se não couber na altura, ele encolhe (até 70%) e quebra de novo
+    // O texto quebrado na largura do painel; se não couber na altura, ele encolhe (até 85%) e quebra de novo; se ainda não
+    // couber, ele rola: recortado na área do texto, com a barrinha de rolagem na direita
     private void paragrafos(GuiGraphics tela, List<Component> paragrafos, int x, int y, int largura, int altura) {
       List<List<FormattedCharSequence>> linhas = quebrar(paragrafos, largura);
       float escala = 1f;
@@ -388,9 +459,19 @@ public class Tutorial {
       if (total > altura) {
         escala = Math.max(MENOR_LETRA, altura / total);
         linhas = quebrar(paragrafos, (int) (largura / escala));
+        total = alturaDe(linhas) * escala;
       }
+      boolean rola = total > altura;
+      if (rola) {
+        linhas = quebrar(paragrafos, (int) ((largura - BARRA_DE_ROLAGEM - ESPACO) / escala));
+        total = alturaDe(linhas) * escala;
+      }
+      areaDoTexto = new int[] { x, y, largura, altura };
+      rolagemMaxima = rola ? (int) Math.ceil(total - altura) : 0;
+      rolagem = Math.clamp(rolagem, 0, rolagemMaxima);
+      tela.enableScissor(x, y, x + largura, y + altura);
       tela.pose().pushPose();
-      tela.pose().translate(x, y, 0);
+      tela.pose().translate(x, y - rolagem, 0);
       tela.pose().scale(escala, escala, 1f);
       int cursor = 0;
       for (List<FormattedCharSequence> paragrafo : linhas) {
@@ -401,6 +482,14 @@ public class Tutorial {
         cursor += ESPACO_ENTRE_PARAGRAFOS;
       }
       tela.pose().popPose();
+      tela.disableScissor();
+      if (rola) {
+        int xDaBarra = x + largura - BARRA_DE_ROLAGEM;
+        int alturaDoPegador = Math.max(10, Math.round(altura * altura / total));
+        int yDoPegador = y + Math.round((altura - alturaDoPegador) * rolagem / (float) rolagemMaxima);
+        tela.fill(xDaBarra, y, xDaBarra + BARRA_DE_ROLAGEM, y + altura, TRILHO);
+        tela.fill(xDaBarra, yDoPegador, xDaBarra + BARRA_DE_ROLAGEM, yDoPegador + alturaDoPegador, PEGADOR);
+      }
     }
 
     private List<List<FormattedCharSequence>> quebrar(List<Component> paragrafos, int largura) {
@@ -450,57 +539,55 @@ public class Tutorial {
       todas.addAll(comMega ? List.of(oFoco, aRolar, osGuardas, aMega, oZoom, aParty) : List.of(oFoco, aRolar, osGuardas, oZoom, aParty));
 
       List<Pagina> paginas = new ArrayList<>();
-      paginas.add(pagina(1, List.of(), texto("1.1"), texto("1.2")));
-      paginas.add(pagina(2, List.of(anterior, proximo, aSoltar, oLado),
-          texto("2.1", TeclasDoTime.anterior(), TeclasDoTime.proximo(), soltar), texto("2.2"),
-          lado.isUnbound() ? texto("2.3_sem_tecla") : texto("2.3", lado)));
-      paginas.add(pagina(3, List.of(aSoltar), texto("3.1", soltar), texto("3.2"), texto("3.3")));
-      paginas.add(pagina(4, golpes, texto("4.1", TeclasDeGolpe.tecla(0), TeclasDeGolpe.tecla(1), TeclasDeGolpe.tecla(2),
-          TeclasDeGolpe.tecla(3)), texto("4.2"), texto("4.3"), texto("4.4"),
-          texto("4.5", cliente.options.keyUse)));
-      paginas.add(pagina(5, List.of(oFoco, aRolar), texto("5.1"), texto("5.2", Foco.tecla(), Foco.tecla()),
-          rolar.isUnbound() ? texto("5.3_sem_tecla", cliente.options.keyShift)
-              : texto("5.3", cliente.options.keyShift, rolar),
-          texto("5.4", Foco.tecla())));
-      paginas.add(pagina(6, List.of(aSoltar), texto("6.1", soltar), texto("6.2"), texto("6.3", soltar)));
-      paginas.add(pagina(7, List.of(osGuardas), texto("7.1"), texto("7.2", guardas), texto("7.3", guardas)));
-      // 8.2: a página do XP (as chaves vão pelo número, não pela posição: a 10 vem antes da 8)
-      paginas.add(pagina(10, List.of(), texto("10.1"), texto("10.2"), texto("10.3")));
-      // 8.4: a Mega Evolução (a 11 vem depois da 10, antes da 8)
+      // 21/10 (dele: "deveríamos resumir esse tutorial, 22 páginas tá ruim"; escolheu "umas 12 páginas curtas + wiki"): no jogo,
+      // o resumo (as chaves "tutorial.c.*"); o texto completo de cada assunto (as chaves "tutorial.<número>.*", de antes) fica na
+      // wiki (ferramentas/gerar-wiki.py), e a primeira página tem o botão da wiki. Ao mudar uma regra ou criar algo novo, mudar
+      // o resumo (aqui e nas chaves "c.") e o texto completo (as chaves numeradas, que vão para a wiki)
+      paginas.add(curta(1, List.of(), true, texto("c.1.1"), texto("c.1.2")));
+      paginas.add(curta(2, List.of(anterior, proximo, aSoltar, oLado), false,
+          texto("c.2.1", TeclasDoTime.anterior(), TeclasDoTime.proximo(), soltar), texto("c.2.2", soltar),
+          lado.isUnbound() ? texto("c.2.3_sem_tecla") : texto("c.2.3", lado)));
+      paginas.add(curta(3, List.of(aSoltar), false, texto("c.3.1", soltar), texto("c.3.2"), texto("c.3.3"),
+          texto("c.3.4"), texto("c.3.5")));
+      paginas.add(curta(4, golpes, false, texto("c.4.1", TeclasDeGolpe.tecla(0), TeclasDeGolpe.tecla(1),
+          TeclasDeGolpe.tecla(2), TeclasDeGolpe.tecla(3)), texto("c.4.2", cliente.options.keyUse), texto("c.4.3"),
+          texto("c.4.4"), texto("c.4.5")));
+      paginas.add(curta(5, List.of(oFoco, aRolar, oZoom), false, texto("c.5.1", Foco.tecla(), Foco.tecla()),
+          rolar.isUnbound() ? texto("c.5.2_sem_tecla", cliente.options.keyShift)
+              : texto("c.5.2", cliente.options.keyShift, rolar),
+          texto("c.5.3", ZoomDaCamera.tecla())));
+      paginas.add(curta(6, List.of(osGuardas), false, texto("c.6.1"), texto("c.6.2", guardas)));
+      paginas.add(curta(7, List.of(), false, texto("c.7.1"), texto("c.7.2")));
+      paginas.add(curta(8, List.of(), false, texto("c.8.1"), texto("c.8.2")));
+      paginas.add(curta(9, List.of(), false, texto("c.9.1"), texto("c.9.2"), texto("c.9.3")));
       if (comMega) {
-        paginas.add(pagina(11, List.of(aMega), texto("11.1"),
-            mega.isUnbound() ? texto("11.2_sem_tecla") : texto("11.2", mega), texto("11.3")));
+        paginas.add(curta(10, List.of(aMega), false, mega.isUnbound() ? texto("c.10.1_sem_tecla") : texto("c.10.1", mega),
+            texto("c.10.2")));
       }
-      // 8.7 e 8.8: as bolas especiais e a mochila na batalha
-      paginas.add(pagina(12, List.of(), texto("12.1"), texto("12.2"), texto("12.3"), texto("12.4")));
-      paginas.add(pagina(13, List.of(), texto("13.1"), texto("13.2"), texto("13.3"), texto("13.4")));
-      // Lotes 2 e 3 dos itens segurados (dele, 20/10: "preciso que termine os lotes 2 e 3")
-      paginas.add(pagina(19, List.of(), texto("19.1"), texto("19.2"), texto("19.3")));
-      paginas.add(pagina(20, List.of(), texto("20.1"), texto("20.2"), texto("20.3")));
-      paginas.add(pagina(21, List.of(), texto("21.1"), texto("21.2"), texto("21.3")));
-      paginas.add(pagina(14, List.of(), texto("14.1"), texto("14.2"), texto("14.3")));
-      paginas.add(pagina(15, List.of(), texto("15.1"), texto("15.2"), texto("15.3")));
-      paginas.add(pagina(16, List.of(), texto("16.1"), texto("16.2")));
-      // A frase do Open Parties and Claims só aparece quando a party do servidor é a dele (dele: "pra não trazer confusão")
-      List<Component> daParty = new ArrayList<>(List.of(texto("17.1"),
-          party.isUnbound() ? texto("17.4_sem_tecla") : texto("17.4", party), texto("17.2"), texto("17.3")));
+      List<Component> daParty = new ArrayList<>(List.of(party.isUnbound() ? texto("c.11.1_sem_tecla")
+          : texto("c.11.1", party), texto("c.11.2")));
+      if (FabricLoader.getInstance().isModLoaded("xaerominimap")) {
+        daParty.add(texto("c.11.3_xaero"));
+      }
       if (PartyNoCliente.doOpac()) {
         daParty.add(texto("17.5_opac"));
       }
-      paginas.add(pagina(17, List.of(aParty), daParty.toArray(new Component[0])));
-      // Os waypoints da party: só com o mapa do Xaero (sem ele, não há conjunto "Party" para dividir)
-      if (FabricLoader.getInstance().isModLoaded("xaerominimap")) {
-        paginas.add(pagina(18, List.of(), texto("18.1"), texto("18.2"), texto("18.3")));
-      }
-      // O layout da HUD (dele, 20/10: "uma forma dele redimensionar cada bloco (...) e ficar sempre salvo")
-      paginas.add(pagina(22, List.of(), texto("22.1"), texto("22.2"), texto("22.3")));
-      paginas.add(pagina(8, List.of(oZoom), texto("8.1"), texto("8.2", ZoomDaCamera.tecla()), texto("8.3")));
+      paginas.add(curta(11, List.of(aParty), false, daParty.toArray(new Component[0])));
+      // 21/10 (PvP): o duelo em tempo real pelo desafio do Cobblemon
+      paginas.add(curta(13, List.of(aSoltar), false, texto("c.13.1", soltar), texto("c.13.2", soltar),
+          texto("c.13.3")));
+      paginas.add(curta(12, List.of(), false, texto("c.12.1"), texto("c.12.2")));
       paginas.add(pagina(9, todas, texto("9.1")));
       return paginas;
     }
 
     private static Pagina pagina(int numero, List<Tecla> teclas, Component... paragrafos) {
-      return new Pagina(frase(numero + ".titulo"), List.of(paragrafos), teclas);
+      return new Pagina(frase(numero + ".titulo"), List.of(paragrafos), teclas, false);
+    }
+
+    // Uma página do resumo (as chaves "tutorial.c.<número>")
+    private static Pagina curta(int numero, List<Tecla> teclas, boolean comWiki, Component... paragrafos) {
+      return new Pagina(frase("c." + numero + ".titulo"), List.of(paragrafos), teclas, comWiki);
     }
 
     // Um parágrafo: a frase da tradução, e cada "%s" dela vira a próxima tecla, em amarelo, com o nome que está nos Controles

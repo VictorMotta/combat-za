@@ -44,14 +44,16 @@ public class PassivasNaTela {
       Map.entry("eletrico", "⚡"), Map.entry("plantas", "✿"), Map.entry("enevoado", "☁"), Map.entry("psiquico", "✦"),
       Map.entry("refletir", "◈"), Map.entry("tela_de_luz", "◇"), Map.entry("veu_de_aurora", "✧"),
       Map.entry("vento_de_cauda", "➶"), Map.entry("salvaguarda", "✚"), Map.entry("nevoa", "≋"),
-      Map.entry("cantico", "✪"), Map.entry("eter", "⟳"), Map.entry("elixir", "⟳"));
+      Map.entry("cantico", "✪"), Map.entry("eter", "⟳"), Map.entry("elixir", "⟳"),
+      // 21/10: o Truque de Agilidade (a ordem da velocidade virada)
+      Map.entry("sala_trick", "⇅"));
   private static final Map<String, Integer> CORES = Map.ofEntries(
       Map.entry("chuva", 0xFF6AAEFF), Map.entry("sol", 0xFFFFB347), Map.entry("areia", 0xFFD9B26F),
       Map.entry("neve", 0xFFBDE8FF), Map.entry("eletrico", 0xFFF7D02C), Map.entry("plantas", 0xFF7AC74C),
       Map.entry("enevoado", 0xFFF4A6D7), Map.entry("psiquico", 0xFFF95587), Map.entry("refletir", 0xFFFFD27A),
       Map.entry("tela_de_luz", 0xFFFFF59A), Map.entry("veu_de_aurora", 0xFFA8E6FF), Map.entry("vento_de_cauda", 0xFFB8F0C8),
       Map.entry("salvaguarda", 0xFFFFB8D0), Map.entry("nevoa", 0xFFD0D8E8), Map.entry("cantico", 0xFFFFE08A),
-      Map.entry("eter", 0xFF7FE0D0), Map.entry("elixir", 0xFFA0E8B8));
+      Map.entry("eter", 0xFF7FE0D0), Map.entry("elixir", 0xFFA0E8B8), Map.entry("sala_trick", 0xFFC9A0FF));
 
   private static List<Passiva> passivas = List.of();
   // O último efeito que apareceu (o nome fica ao lado dos ícones por 3 s)

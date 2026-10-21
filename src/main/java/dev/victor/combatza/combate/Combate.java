@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.cobblemon.mod.common.Cobblemon;
+import com.cobblemon.mod.common.api.events.CobblemonEvents;
+import com.cobblemon.mod.common.api.events.pokemon.PokemonSeenEvent;
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
 import com.cobblemon.mod.common.pokemon.Pokemon;
 
@@ -12,14 +14,17 @@ import dev.victor.combatza.campo.Arenas;
 import dev.victor.combatza.captura.Desmaio;
 import dev.victor.combatza.campo.CampoDaBatalha;
 import dev.victor.combatza.golpes.Estagios;
+import dev.victor.combatza.golpes.GolpesDeStatus;
 import dev.victor.combatza.golpes.PrimeiroTurno;
 import dev.victor.combatza.golpes.StatusNossos;
+import dev.victor.combatza.habilidades.HabilidadesDeFuga;
 import dev.victor.combatza.habilidades.Intimidacao;
 import dev.victor.combatza.ia.Deteccao;
 import dev.victor.combatza.itens.ItensSegurados;
 import dev.victor.combatza.itens.ItensDoCampo;
 import dev.victor.combatza.mega.Mega;
 import dev.victor.combatza.party.Parties;
+import dev.victor.combatza.treinadores.BatalhasDeTreinador;
 import net.minecraft.server.level.ServerPlayer;
 
 public class Combate {
@@ -44,16 +49,26 @@ public class Combate {
     Intimidacao.doTime(primeiroJogador, selvagens);
   }
 
+  // 21/10 (PvP): a batalha sem selvagem, o duelo entre dois jogadores (pvp.Duelo). Quem entra nela, o duelo mesmo põe
+  protected Combate(long comecouNoTick) {
+    this.comecouNoTick = comecouNoTick;
+  }
+
   // true se ele entrou agora (o aviso de começo é para quem entrou)
   public boolean adicionarJogador(ServerPlayer jogador) {
     if (jogadores.contains(jogador)) {
       return false;
     }
     jogadores.add(jogador);
+    for (PokemonEntity selvagem : selvagens) {
+      viu(jogador, selvagem);
+    }
     // P5-10: o que vale no campo pessoal dele (o Vento de Cauda de antes de atacar) entra na batalha
     Arenas.entrouNaBatalha(jogador, this);
     zerarEstagiosDoTime(jogador);
     PrimeiroTurno.esquecerTime(jogador);
+    // 21/10: a Provocação, o Bis, a paixão e a habilidade trocada de uma luta antiga não vêm junto
+    GolpesDeStatus.esquecerTime(jogador);
     // Lotes 2 e 3 dos itens: a batalha começa com os itens de uma vez valendo e sem nada guardado (o Metrônomo do zero)
     ItensSegurados.fimDaBatalha(jogador);
     Intimidacao.doTime(jogador, selvagens);
@@ -65,12 +80,24 @@ public class Combate {
       return false;
     }
     selvagens.add(selvagem);
+    for (ServerPlayer jogador : jogadores) {
+      viu(jogador, selvagem);
+    }
     Estagios.zerar(selvagem.getPokemon());
     StatusNossos.acordarSeDormeDeCansaco(selvagem);
     PrimeiroTurno.esquecer(selvagem.getPokemon());
     ItensSegurados.esquecer(selvagem.getPokemon());
+    GolpesDeStatus.esquecer(selvagem.getPokemon());
     Intimidacao.doSelvagem(selvagem, jogadores);
     return true;
+  }
+
+  // A Pokédex (dele, 21/10: "um selvagem, quando lutamos com ele no Cobblemon, libera o Pokémon na Pokédex; na nossa luta não
+  // acontece, fica com ??? em cima"): como na batalha do Cobblemon, quem está na batalha VIU cada selvagem dela. O evento é o
+  // do próprio Cobblemon (POKEMON_SEEN): a Pokédex dele marca o Pokémon como encontrado (PokedexHandler.onPokemonSeen →
+  // PokedexManager.encounter), e quem mais escuta esse evento também fica sabendo
+  private static void viu(ServerPlayer jogador, PokemonEntity selvagem) {
+    CobblemonEvents.POKEMON_SEEN.emit(new PokemonSeenEvent(jogador.getUUID(), selvagem.getPokemon()));
   }
 
   public List<ServerPlayer> getJogadores() {
@@ -81,6 +108,11 @@ public class Combate {
     return selvagens;
   }
 
+  // Quem está do outro lado para este jogador: os selvagens. 21/10 (PvP): no duelo, o lutador do adversário (pvp.Duelo)
+  public List<PokemonEntity> inimigosDe(ServerPlayer jogador) {
+    return List.copyOf(selvagens);
+  }
+
   public long getComecouNoTick() {
     return comecouNoTick;
   }
@@ -89,14 +121,15 @@ public class Combate {
     return campo;
   }
 
+  // 21/10 (treinadores): contra um treinador do RCT, entre um Pokémon dele e o próximo a batalha continua
   public boolean terminou() {
-    return selvagens.isEmpty() || jogadores.isEmpty();
+    return (selvagens.isEmpty() && !BatalhasDeTreinador.aindaVemPokemon(this)) || jogadores.isEmpty();
   }
 
   public void removerSelvagensForaDeCombate() {
     selvagens.removeIf(selvagem -> {
-      // Etapa 8: o que desmaiou e ficou caído no chão (Desmaio) sai como derrotado
-      boolean caido = Desmaio.esta(selvagem);
+      // Etapa 8: o que desmaiou e ficou caído no chão (Desmaio) sai como derrotado. 21/10: o do treinador que caiu também
+      boolean caido = Desmaio.esta(selvagem) || BatalhasDeTreinador.desmaiou(selvagem);
       boolean sai = !selvagem.isAlive() || selvagem.isRemoved() || caido || selvagemFicouParaTras(selvagem);
       if (sai) {
         (selvagem.isAlive() && !selvagem.isRemoved() && !caido ? fugiram : derrotados).add(selvagem.getPokemon());
@@ -131,6 +164,10 @@ public class Combate {
   // Por que a batalha acabou para ele. Sem selvagens, quem decide são eles (todos derrotados = venceu); com selvagens
   // ainda na luta, foi ele que saiu: desmaiou ou fugiu (saiu do jogo: sem aviso)
   private void avisarOFim(ServerPlayer jogador) {
+    // 21/10 (treinadores): contra um treinador, o aviso é o da batalha de treinador (venceu, perdeu ou desistiu)
+    if (BatalhasDeTreinador.avisarOFim(this, jogador)) {
+      return;
+    }
     if (!jogador.isAlive()) {
       AvisoDaBatalha.terminou(jogador, AvisoDaBatalha.Fim.DESMAIOU, pokemonsNaLuta());
     } else if (timeTodoDesmaiado(jogador)) {
@@ -173,6 +210,10 @@ public class Combate {
   }
 
   private boolean jogadorFugiu(ServerPlayer jogador) {
+    // 21/10 (treinadores): contra um treinador, você sai quando a batalha se decide ou quando se afasta 24 blocos dele
+    if (BatalhasDeTreinador.ehDeTreinador(this)) {
+      return BatalhasDeTreinador.saiu(this, jogador);
+    }
     if (pertoDeAlgumSelvagem(jogador)) {
       return false;
     }
@@ -188,8 +229,10 @@ public class Combate {
 
   // Lote 3 dos itens: com a Bola de Fumaça no time e todos na bola, a distância para fugir cai para 8 blocos (só a sua fuga;
   // o selvagem sai da batalha na distância de sempre)
+  // 21/10 (habilidades, lote da entrada e das imunidades): preso pela Armadilharia, Fio de Sombra ou Magnetismo, 24 blocos
   private boolean pertoDeAlgumSelvagem(ServerPlayer jogador) {
-    float distancia = ItensDoCampo.distanciaDeFuga(jogador, DISTANCIA_FUGA);
+    float distancia = HabilidadesDeFuga.distanciaDeFuga(jogador, this,
+        ItensDoCampo.distanciaDeFuga(jogador, DISTANCIA_FUGA));
     for (PokemonEntity selvagem : selvagens) {
       if (estaoPerto(jogador, selvagem, distancia)) {
         return true;
@@ -198,9 +241,15 @@ public class Combate {
     return false;
   }
 
+  // 21/10: o selvagem que prende o lutador de alguém só fica para trás a 24 blocos (a mesma distância de quem ele prende)
   private boolean selvagemFicouParaTras(PokemonEntity selvagem) {
+    // 21/10 (treinadores): o Pokémon do treinador não "fica para trás" (quem se afasta é você, e aí desiste)
+    if (BatalhasDeTreinador.ehDoTreinador(selvagem)) {
+      return false;
+    }
+    float distancia = HabilidadesDeFuga.distanciaDoSelvagem(selvagem, this, DISTANCIA_FUGA);
     for (ServerPlayer jogador : jogadores) {
-      if (estaoPerto(jogador, selvagem, DISTANCIA_FUGA)) {
+      if (estaoPerto(jogador, selvagem, distancia)) {
         return false;
       }
     }

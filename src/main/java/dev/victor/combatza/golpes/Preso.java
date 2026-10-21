@@ -134,6 +134,20 @@ public class Preso {
     PRESOS.clear();
   }
 
+  // 21/10 (golpes de status que faltavam): o Giro Rápido e a Rotação Mortal livram quem girou (parado ou só levando o dano).
+  // Devolve o golpe que prendia (para a frase), ou null se ele não estava preso
+  public static Move livrar(Entity quem) {
+    Prisao prisao = PRESOS.remove(quem.getUUID());
+    if (prisao == null) {
+      return null;
+    }
+    if (prisao.travado) {
+      soltar(prisao);
+    }
+    CobblemonCombatZA.LOGGER.info("PRESO: {} se livrou de {} girando", quem.getName().getString(), prisao.golpe.getName());
+    return prisao.golpe;
+  }
+
   // 1/8 da vida, com a fonte do status (sem atacante: o rolamento não desvia, como da queimadura)
   private static void turnoDeDano(Prisao prisao, long agora) {
     LivingEntity alvo = prisao.alvo;

@@ -55,6 +55,8 @@ import dev.victor.combatza.golpes.TempoRealDoStatus;
 import dev.victor.combatza.golpes.Vida;
 import dev.victor.combatza.habilidades.Absorcao;
 import dev.victor.combatza.habilidades.Habilidades;
+import dev.victor.combatza.habilidades.HabilidadesDeEntrada;
+import dev.victor.combatza.habilidades.HabilidadesDeForma;
 import dev.victor.combatza.habilidades.Intimidacao;
 import dev.victor.combatza.ia.Deteccao;
 import dev.victor.combatza.ia.Guardas;
@@ -98,12 +100,15 @@ import dev.victor.combatza.itens.ItensSegurados;
 import dev.victor.combatza.itens.TravaDaEscolha;
 import dev.victor.combatza.rede.TravaDaEscolhaPayload;
 import dev.victor.combatza.golpes.CorridaMontada;
+import dev.victor.combatza.golpes.GolpesDeStatus;
 import dev.victor.combatza.rede.CorridaMontadaPayload;
 import dev.victor.combatza.party.PontosDaParty;
+import dev.victor.combatza.pvp.Duelos;
 import dev.victor.combatza.itens.EstadoDosItens;
 import dev.victor.combatza.rede.MeusPontosPayload;
 import dev.victor.combatza.rede.PontosDaPartyPayload;
 import dev.victor.combatza.rede.UsarGolpePayload;
+import dev.victor.combatza.treinadores.BatalhasDeTreinador;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -157,6 +162,8 @@ public class CobblemonCombatZA implements ModInitializer {
       Cobblemon.INSTANCE.getConfig().setPlayerDamagePokemon(true);
       LOGGER.info("Dano do jogador em Pokémon LIBERADO (playerDamagePokemon = true)");
       vigiaDoServidor = VigiaDeTravamento.comecar("servidor", servidor::isPaused);
+      // A party guardada no mundo volta (quem sai do jogo continua nela)
+      Parties.carregar(servidor);
     });
     // Salvar o mundo ao sair pode demorar: o vigia desliga antes
     ServerLifecycleEvents.SERVER_STOPPING.register(servidor -> {
@@ -196,6 +203,8 @@ public class CobblemonCombatZA implements ModInitializer {
       Irritados.atualizar(servidor.getTickCount());
       ItensDeVida.atualizar(servidor.getTickCount());
       EfeitosDoCampo.atualizar(servidor, servidor.getTickCount());
+      // 21/10 (habilidades, lote da entrada e das imunidades): climas fortes, Paradoxo, Ruminante, Fuga Automática...
+      HabilidadesDeEntrada.atualizar(servidor, servidor.getTickCount());
       Passivas.atualizar(servidor);
     });
     ServerLifecycleEvents.SERVER_STOPPED.register(servidor -> {
@@ -232,6 +241,7 @@ public class CobblemonCombatZA implements ModInitializer {
       PrimeiroTurno.limpar();
       Confusao.limpar();
       Absorcao.limpar();
+      HabilidadesDeEntrada.limpar();
       Recargas.limpar();
       PlacasDosSelvagens.limpar();
       Rolamento.limpar();
@@ -291,6 +301,15 @@ public class CobblemonCombatZA implements ModInitializer {
     Guardas.registrar();
     Parceiro.registrar();
     Mega.registrar();
+    // 21/10 (golpes de status que faltavam): Provocação, Bis, Atração, Troca de Habilidades (o relógio, a volta para a bola
+    // e o pacote dos golpes riscados)
+    GolpesDeStatus.registrar();
+    // 21/10 (habilidades, lote das formas): as que mudam a forma, o tipo ou a habilidade na batalha
+    HabilidadesDeForma.registrar();
+    // 21/10: a batalha em tempo real contra os treinadores do RCT (a escolha, os payloads, o tick e o fim)
+    BatalhasDeTreinador.registrar();
+    // 21/10 (PvP): o duelo em tempo real pelo desafio de batalha do Cobblemon (pvp.Duelos)
+    Duelos.registrar();
   }
 
   private void aoIniciarBatalha(BattleStartedEvent.Pre event) {
@@ -429,6 +448,8 @@ public class CobblemonCombatZA implements ModInitializer {
     TravaDaEscolha.esquecer(pokemon);
     // Lotes 2 e 3 dos itens: o que estava guardado (Lansat, Micle, Custap, Metrônomo) acaba, como nos jogos
     EstadoDosItens.esquecer(pokemon);
+    // 21/10 (habilidades, lote da entrada e das imunidades): a Regeneração (1/3 da vida para quem lutou nesta batalha)
+    HabilidadesDeEntrada.aoRecolher(pokemon);
     Lutadores.saiu(pokemon);
     if (Habilidades.tem(pokemon, Habilidades.CURA_NATURAL) && pokemon.getStatus() != null) {
       pokemon.setStatus(null);

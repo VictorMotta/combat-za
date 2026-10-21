@@ -2,6 +2,10 @@ package dev.victor.combatza.golpes;
 
 import dev.victor.combatza.campo.CampoEBarreiras;
 import dev.victor.combatza.campo.ClimaNosGolpes;
+import dev.victor.combatza.campo.SalaTrick;
+import dev.victor.combatza.habilidades.HabilidadesDaConta;
+import dev.victor.combatza.habilidades.HabilidadesDeForma;
+import dev.victor.combatza.habilidades.Paradoxo;
 import dev.victor.combatza.itens.Bagas;
 import dev.victor.combatza.itens.ItensDeDano;
 
@@ -65,9 +69,9 @@ public class Recargas {
       return 0f;
     }
 
-    int velocidade = (int) Math.round(pokemon.getSpeed() * Estagios.multiplicador(pokemon, "spe")
-        * Paralisia.multiplicador(pokemon) * ItensDeDano.velocidade(pokemon) * ClimaNosGolpes.velocidade(pokemon)
-        * CampoEBarreiras.velocidade(pokemon));
+    // 21/10: no Truque de Agilidade, a velocidade vira do avesso (SalaTrick)
+    int velocidade = (int) Math.round(SalaTrick.velocidade(pokemon, velocidadeDaRecarga(pokemon),
+        Recargas::velocidadeDaRecarga));
     float segundos = EfeitosDeVida.ehDeCura(golpe) ? RECARGA_DA_CURA : calcularRecarga(golpe, velocidade);
     // Lote 2 dos itens: a Baga Leppa acelera esta recarga (como o Éter)
     Bagas.leppa(pokemon, slot, golpe, agora);
@@ -78,6 +82,8 @@ public class Recargas {
     }
     prontos[slot] = agora + ticks;
     avisarODono(pokemon, slot, ticks);
+    // 21/10 (lote das formas): a Preguiça vadia um turno depois de cada golpe
+    HabilidadesDeForma.depoisDoGolpe(pokemon, agora);
     return segundos;
   }
 
@@ -85,9 +91,14 @@ public class Recargas {
   // perdida na troca dos jogos. É a mesma recarga, nos 4 golpes, e a HUD mostra o relógio de sempre. Golpe que já tinha
   // recarga maior (ela continua contando enquanto o Pokémon está na bola) fica como está
   public static void esperarAoEntrar(Pokemon pokemon, long agora) {
+    esperar(pokemon, agora, Math.round(Balanceamento.SEGUNDOS_DA_TROCA * TICKS_POR_SEGUNDO));
+  }
+
+  // 21/10 (lote das formas): os 4 golpes esperam pelo menos "ticks" a partir de agora (a troca acima; a Preguiça, 1 turno)
+  public static void esperar(Pokemon pokemon, long agora, long ticks) {
     long[] prontos = PRONTO_NO_TICK.computeIfAbsent(pokemon.getUuid(),
         uuid -> new long[ControleDeGolpes.MAXIMO_DE_GOLPES]);
-    long fimDaEspera = agora + Math.round(Balanceamento.SEGUNDOS_DA_TROCA * TICKS_POR_SEGUNDO);
+    long fimDaEspera = agora + ticks;
     for (int slot = 0; slot < prontos.length; slot++) {
       if (prontos[slot] < fimDaEspera) {
         prontos[slot] = fimDaEspera;
@@ -129,6 +140,15 @@ public class Recargas {
     if (dono != null && ServerPlayNetworking.canSend(dono, RecargaPayload.TIPO)) {
       ServerPlayNetworking.send(dono, new RecargaPayload(pokemon.getUuid(), slot, ticks));
     }
+  }
+
+  // A Velocidade de verdade (o atributo), com os estágios, a paralisia, os itens, o clima e o Vento de Cauda
+  // A Velocidade de verdade na batalha (todos os fatores, sem o Truque de Agilidade); também a do Giro Bola (DanoEspecial)
+  static double velocidadeDaRecarga(Pokemon pokemon) {
+    return pokemon.getSpeed() * Estagios.multiplicador(pokemon, "spe") * Paralisia.multiplicador(pokemon)
+        * ItensDeDano.velocidade(pokemon) * ClimaNosGolpes.velocidade(pokemon) * CampoEBarreiras.velocidade(pokemon)
+        * HabilidadesDaConta.velocidade(pokemon) * Paradoxo.atributo(pokemon, "spe")
+        * HabilidadesDeForma.velocidade(pokemon);
   }
 
   private static float calcularRecarga(Move golpe, int velocidade) {

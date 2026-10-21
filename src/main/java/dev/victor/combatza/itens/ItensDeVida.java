@@ -12,11 +12,14 @@ import dev.victor.combatza.CobblemonCombatZA;
 import dev.victor.combatza.combate.Combate;
 import dev.victor.combatza.combate.GerenciarCombates;
 import dev.victor.combatza.combate.Lutadores;
+import dev.victor.combatza.golpes.AplicarStatus;
 import dev.victor.combatza.golpes.Confusao;
 import dev.victor.combatza.golpes.EfeitosDeStatus;
 import dev.victor.combatza.golpes.Execucao;
 import dev.victor.combatza.golpes.Feedback;
 import dev.victor.combatza.golpes.Vida;
+import dev.victor.combatza.habilidades.HabilidadesDaConta;
+import dev.victor.combatza.habilidades.HabilidadesDoTurno;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 
@@ -64,6 +67,8 @@ public class ItensDeVida {
         }
       }
     }
+    // 21/10 (habilidades, lote das reações): as habilidades de cada turno (Acelerador, Mau-Humor...) andam junto
+    HabilidadesDoTurno.atualizar(agora);
   }
 
   // Os selvagens e o lutador de cada jogador
@@ -85,10 +90,12 @@ public class ItensDeVida {
       return;
     }
     boolean naMetade = Vida.pvAtual(pokemon) * METADE <= pokemon.getMaxHealth();
+    // 21/10 (habilidades, lote da conta do dano): com Amadurecer, as bagas curam o dobro (o Suco de Baga não é baga)
     if (ItensSegurados.ORAN.equals(item) && naMetade) {
-      comerParaCurar(combate, entidade, item, ORAN);
+      comerParaCurar(combate, entidade, item, HabilidadesDaConta.amadurecida(pokemon, ORAN));
     } else if (ItensSegurados.SITRUS.equals(item) && naMetade) {
-      comerParaCurar(combate, entidade, item, Math.max(1, pokemon.getMaxHealth() / SITRUS));
+      comerParaCurar(combate, entidade, item,
+          HabilidadesDaConta.amadurecida(pokemon, Math.max(1, pokemon.getMaxHealth() / SITRUS)));
     } else if (ItensSegurados.SUCO_DE_BAGA.equals(item) && naMetade) {
       beberOSuco(combate, entidade);
     } else if (CURAM.containsKey(item) && CURAM.get(item).contains(EfeitosDeStatus.siglaDoStatus(pokemon))) {
@@ -120,8 +127,9 @@ public class ItensDeVida {
         Vida.pvAtual(pokemon), pokemon.getMaxHealth());
   }
 
-  // O Suco de Baga não é baga (a etiqueta do Cobblemon só tem as bagas): numa batalha contra selvagem ele não some, vale uma
-  // vez por batalha, como a Cinta de Foco. A frase é a do Cobblemon ("bebeu o seu Suco de Baga!")
+  // O Suco de Baga não é baga (a etiqueta do Cobblemon, consumed_in_wild_battle, só tem bagas, ervas e a bola de neve), mas é
+  // bebido e some, como nos jogos (dele, 21/10: "não tá recuperando a vida se ficar abaixo da metade em uma luta, e consumindo").
+  // A frase é a do Cobblemon ("bebeu o seu Suco de Baga!")
   private static void beberOSuco(Combate combate, PokemonEntity entidade) {
     Pokemon pokemon = entidade.getPokemon();
     if (ItensSegurados.usadoNestaBatalha(pokemon, ItensSegurados.SUCO_DE_BAGA)) {
@@ -129,6 +137,7 @@ public class ItensDeVida {
     }
     int curou = Vida.curar(entidade, SUCO_DE_BAGA);
     ItensSegurados.gastar(pokemon, ItensSegurados.SUCO_DE_BAGA);
+    pokemon.removeHeldItem();
     avisar(combate, pokemon, Component.translatable("cobblemon.battle.enditem.berryjuice", pokemon.getDisplayName(false))
         .append(Component.translatable("cobblemon_combat_za.pv.ganhou", curou)));
     CobblemonCombatZA.LOGGER.info("ITEM: {} bebeu o Suco de Baga: +{} PV ({}/{})", pokemon.getSpecies().getName(), curou,
@@ -143,8 +152,8 @@ public class ItensDeVida {
     if (!sobras && !lodo) {
       return;
     }
-    boolean venenoso = pokemon.getPrimaryType() == ElementalTypes.POISON
-        || pokemon.getSecondaryType() == ElementalTypes.POISON;
+    // 21/10 (lote das formas): o tipo de agora (um Proteico que virou Venenoso)
+    boolean venenoso = AplicarStatus.temTipo(pokemon, ElementalTypes.POISON);
     if (sobras || venenoso) {
       if (Vida.pvAtual(pokemon) >= pokemon.getMaxHealth()) {
         return;
@@ -165,8 +174,9 @@ public class ItensDeVida {
   // O recuo do Orbe da Vida, depois que o golpe tirou vida de alguém (uma vez por golpe: o jato e a área acertam várias)
   public static void orbeDaVida(Execucao execucao, PokemonEntity atacante, double pvTirados) {
     Pokemon pokemon = atacante.getPokemon();
+    // 21/10 (habilidades, lote da conta do dano): no golpe que a Força Absoluta fortaleceu, sem recuo (como nos jogos)
     if (pvTirados <= 0 || !atacante.isAlive() || !ItensSegurados.tem(pokemon, ItensSegurados.ORBE_DA_VIDA)
-        || !execucao.primeiroRecuoDoOrbe()) {
+        || HabilidadesDaConta.forcaAbsoluta(pokemon, execucao.getGolpe()) || !execucao.primeiroRecuoDoOrbe()) {
       return;
     }
     int pv = Math.max(1, pokemon.getMaxHealth() / ORBE);

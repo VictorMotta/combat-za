@@ -17,7 +17,11 @@ import dev.victor.combatza.golpes.Execucao;
 import dev.victor.combatza.golpes.Feedback;
 import dev.victor.combatza.golpes.Vida;
 import dev.victor.combatza.habilidades.Habilidades;
+import dev.victor.combatza.habilidades.QuebraMolde;
+import dev.victor.combatza.habilidades.HabilidadesDePrioridade;
+import dev.victor.combatza.habilidades.HabilidadesQueReagem;
 import dev.victor.combatza.itens.ItensSegurados;
+import dev.victor.combatza.pvp.Duelos;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
@@ -45,8 +49,10 @@ import org.joml.Vector3f;
 public class CampoEBarreiras {
   private static final Map<String, Terreno> TERRENO_DO_GOLPE = Map.of("electricterrain", Terreno.ELETRICO,
       "grassyterrain", Terreno.PLANTAS, "mistyterrain", Terreno.ENEVOADO, "psychicterrain", Terreno.PSIQUICO);
+  // (21/10, habilidades, lote da conta do dano: o Motor Hádron chama o Campo Elétrico, como a Eletrogênese)
   private static final Map<String, Terreno> TERRENO_AO_ENTRAR = Map.of("electricsurge", Terreno.ELETRICO,
-      "grassysurge", Terreno.PLANTAS, "mistysurge", Terreno.ENEVOADO, "psychicsurge", Terreno.PSIQUICO);
+      "grassysurge", Terreno.PLANTAS, "mistysurge", Terreno.ENEVOADO, "psychicsurge", Terreno.PSIQUICO,
+      "hadronengine", Terreno.ELETRICO);
   private static final Map<String, Barreira> BARREIRA_DO_GOLPE = Map.of("reflect", Barreira.REFLETIR,
       "lightscreen", Barreira.TELA_DE_LUZ, "auroraveil", Barreira.VEU_DE_AURORA, "tailwind", Barreira.VENTO_DE_CAUDA,
       "safeguard", Barreira.SALVAGUARDA, "mist", Barreira.NEVOA, "luckychant", Barreira.CANTICO_DA_SORTE);
@@ -68,8 +74,11 @@ public class CampoEBarreiras {
   private CampoEBarreiras() {
   }
 
-  private static boolean doSeuLado(Pokemon pokemon) {
-    return !pokemon.isWild();
+  // 21/10 (PvP): no duelo, cada jogador é um lado: o de quem desafiou fica no "seu", o de quem aceitou no outro (pvp.Duelos)
+  // O lado do campo de "pokemon": true = o dos jogadores (no duelo, o de quem desafiou: pvp.Duelos)
+  public static boolean doSeuLado(Pokemon pokemon) {
+    Boolean noDuelo = Duelos.ladoNoDuelo(pokemon);
+    return noDuelo != null ? noDuelo : !pokemon.isWild();
   }
 
   private static boolean noChao(Pokemon pokemon) {
@@ -138,12 +147,18 @@ public class CampoEBarreiras {
     CobblemonCombatZA.LOGGER.info("BARREIRA: {} levantou {} ({} lado, {}) por {} turnos", quem.getSpecies().getName(),
         barreira, lado ? "seu" : "dos selvagens", arena.naBatalha() ? "na batalha" : "fora da batalha", turnos);
     arena.avisar(quem, barreira.comecou(lado));
+    // 21/10 (habilidades, lote das reações): o Vento de Cauda deixa carregado quem tem Energia Eólica do mesmo lado
+    if (barreira == Barreira.VENTO_DE_CAUDA) {
+      HabilidadesQueReagem.ventoDeCauda(arena.pokemons(), lado);
+    }
   }
 
   // A cada tick (EfeitosDoCampo.atualizar): o fim do campo e das barreiras, as partículas (a cada segundo) e a cura do
   // Campo de Plantas (a cada turno)
   public static void atualizar(Arena arena, long agora, boolean virouSegundo, boolean virouTurno) {
     acabarOsQueVenceram(arena, agora);
+    // 21/10: o Truque de Agilidade (o fim e as partículas)
+    SalaTrick.atualizar(arena, agora, virouSegundo);
     CampoDaBatalha campo = arena.campo();
     if (virouSegundo && campo.getTerreno() != Terreno.NENHUM) {
       for (ServerPlayer jogador : arena.jogadores()) {
@@ -195,10 +210,10 @@ public class CampoEBarreiras {
 
   // Entrou na arena: as -Gêneses chamam o campo
   public static void aoEntrar(Arena arena, PokemonEntity entidade, long agora) {
-    Terreno chama = TERRENO_AO_ENTRAR.get(entidade.getPokemon().getAbility().getName());
+    Terreno chama = TERRENO_AO_ENTRAR.get(Habilidades.atual(entidade.getPokemon()));
     if (chama != null && arena.campo().getTerreno() != chama) {
       CobblemonCombatZA.LOGGER.info("CAMPO: {} entrou com {}", entidade.getPokemon().getSpecies().getName(),
-          entidade.getPokemon().getAbility().getName());
+          Habilidades.atual(entidade.getPokemon()));
       chamarTerreno(arena, entidade.getPokemon(), chama, agora);
     }
   }
@@ -237,7 +252,8 @@ public class CampoEBarreiras {
   // O dano final (Dano): Refletir, Tela de Luz e Véu de Aurora do lado de quem apanha (o crítico passa)
   public static double barreira(Pokemon defensor, boolean fisico, boolean critico) {
     Arena arena = Arenas.de(defensor);
-    if (critico || arena == null) {
+    // 21/10 (habilidades, lote da conta do dano): o golpe de quem tem Infiltrado passa pelas barreiras
+    if (critico || arena == null || QuebraMolde.infiltrando()) {
       return 1.0;
     }
     return protecao(arena, doSeuLado(defensor), fisico);
@@ -272,7 +288,10 @@ public class CampoEBarreiras {
 
   // O Campo Psíquico: o golpe rápido de um inimigo não pega em quem está no chão (true = bloqueou, já avisou)
   public static boolean bloqueiaPrioridade(Execucao execucao, Entity alvo) {
-    if (execucao.getGolpe().getTemplate().getPriority() <= 0 || !(alvo instanceof PokemonEntity entidade)) {
+    // 21/10 (habilidades, lote das reações): a prioridade que vem da habilidade (Asas de Vendaval, Triagem) também conta
+    boolean rapido = execucao.getGolpe().getTemplate().getPriority() > 0
+        || HabilidadesDePrioridade.ganhaPrioridade(execucao.getPokemon(), execucao.getGolpe());
+    if (!rapido || !(alvo instanceof PokemonEntity entidade)) {
       return false;
     }
     Pokemon pokemon = entidade.getPokemon();
@@ -296,8 +315,7 @@ public class CampoEBarreiras {
     if (terreno == Terreno.ELETRICO && noChao(pokemon) && "slp".equals(sigla)) {
       return Component.translatable("cobblemon_combat_za.campo.sem_sono");
     }
-    return veioDoOutroLado(execucao, pokemon) && temBarreira(pokemon, Barreira.SALVAGUARDA)
-        ? Component.translatable("cobblemon_combat_za.campo.protegido_salvaguarda") : null;
+    return salvaguarda(execucao, pokemon) ? Component.translatable("cobblemon_combat_za.campo.protegido_salvaguarda") : null;
   }
 
   // A confusão: o Campo Enevoado e a Salvaguarda também protegem
@@ -305,8 +323,13 @@ public class CampoEBarreiras {
     if (terreno(pokemon) == Terreno.ENEVOADO && noChao(pokemon)) {
       return Component.translatable("cobblemon_combat_za.campo.protegido_enevoado");
     }
-    return veioDoOutroLado(execucao, pokemon) && temBarreira(pokemon, Barreira.SALVAGUARDA)
-        ? Component.translatable("cobblemon_combat_za.campo.protegido_salvaguarda") : null;
+    return salvaguarda(execucao, pokemon) ? Component.translatable("cobblemon_combat_za.campo.protegido_salvaguarda") : null;
+  }
+
+  // A Salvaguarda segura o que vem do outro lado; 21/10: o golpe de quem tem Infiltrado passa
+  private static boolean salvaguarda(Execucao execucao, Pokemon pokemon) {
+    return veioDoOutroLado(execucao, pokemon) && !QuebraMolde.infiltra(execucao)
+        && temBarreira(pokemon, Barreira.SALVAGUARDA);
   }
 
   // A Névoa: a queda de atributo vinda de outro não pega

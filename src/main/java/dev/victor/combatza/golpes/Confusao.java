@@ -39,7 +39,7 @@ public class Confusao {
     if (Habilidades.tem(pokemon, Habilidades.RITMO_PROPRIO)) {
       Feedback.historico(execucao.getJogador(), pokemon, Component.translatable(
           "cobblemon_combat_za.status.nao_ficou_confuso", pokemon.getDisplayName(false),
-          Component.translatable(pokemon.getAbility().getDisplayName())));
+          Habilidades.nome(pokemon)));
       CobblemonCombatZA.LOGGER.info("CONFUSÃO BLOQUEADA: {} tem Ritmo Próprio", pokemon.getSpecies().getName());
       return;
     }

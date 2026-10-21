@@ -32,13 +32,18 @@ import dev.victor.combatza.golpes.Mira;
 import dev.victor.combatza.golpes.Preso;
 import dev.victor.combatza.golpes.Projetil;
 import dev.victor.combatza.golpes.SonoECongelado;
+import dev.victor.combatza.habilidades.HabilidadesDeFuga;
+import dev.victor.combatza.treinadores.BatalhasDeTreinador;
 import net.minecraft.SharedConstants;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.ai.Brain;
+import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.schedule.Activity;
 import net.minecraft.world.phys.Vec3;
 
 // 7.2a (decisões dele, 19/10): o selvagem LUTA com os 4 golpes dele, pelo mesmo caminho do seu Pokémon (a carga, a
@@ -133,12 +138,15 @@ public class IaDoSelvagem {
     }
     // O Fight or Flight (e o "se defender" do Cobblemon) mandam pelo alvo do Minecraft: na nossa luta, quem escolhe é aqui
     selvagem.setTarget(null);
+    segurarOCerebroDoCobblemon(selvagem);
     Bandos.largarOLider(selvagem);
     ServerPlayer adversario = maisPerto(selvagem, jogadores);
     if (adversario == null) {
       return;
     }
-    if (cerebro.fugindo || comecouAFugir(selvagem, jogadores, cerebro)) {
+    // 21/10 (treinadores): o Pokémon de um treinador nunca foge (nem o arisco, nem pelo Cartão Vermelho)
+    boolean doTreinador = BatalhasDeTreinador.ehDoTreinador(selvagem);
+    if (!doTreinador && (cerebro.fugindo || comecouAFugir(selvagem, jogadores, cerebro))) {
       if (agora >= cerebro.seMexerNoTick) {
         cerebro.seMexerNoTick = agora + SharedConstants.TICKS_PER_SECOND;
         Andar.longeDe(selvagem, adversario, DISTANCIA_DA_FUGA, VELOCIDADE_DA_FUGA);
@@ -156,6 +164,11 @@ public class IaDoSelvagem {
     }
     desviarDeProjeteis(selvagem);
     Entity principal = principal(adversario, selvagem);
+    // 21/10 (treinadores): ele só luta com os seus Pokémon; sem nenhum seu fora, espera (nunca vai em você)
+    if (doTreinador && principal == adversario) {
+      BatalhasDeTreinador.esperar(selvagem, adversario);
+      return;
+    }
     selvagem.getLookControl().setLookAt(principal, GIRO_DA_CABECA, GIRO_DA_CABECA);
     if (agora >= cerebro.pensarNoTick && atacar(selvagem, principal, adversario, cerebro, agora)) {
       return;
@@ -209,7 +222,8 @@ public class IaDoSelvagem {
     FormaDoGolpe forma = FormaDoGolpe.de(golpe);
     if (principal != adversario && golpe.getDamageCategory() != DamageCategories.INSTANCE.getSTATUS()
         && !EfeitosDosGolpes.fazContato(golpe) && (forma == FormaDoGolpe.UNICO || forma == FormaDoGolpe.AREA_INIMIGOS)
-        && selvagem.getRandom().nextDouble() < Configuracao.chanceDeMirarEmVoce()) {
+        && selvagem.getRandom().nextDouble() < Configuracao.chanceDeMirarEmVoce()
+        && !BatalhasDeTreinador.ehDoTreinador(selvagem)) {
       alvo = adversario;
     }
     // 7.2d: outro selvagem está com a vez em você: este vai no seu Pokémon; sem Pokémon seu fora, espera
@@ -275,12 +289,36 @@ public class IaDoSelvagem {
     return deLonge > deContato;
   }
 
+  // Dele, 21/10: "o combate tá muito curto, eles estão fugindo muito fácil da batalha". Quase metade das espécies (444) tem, no
+  // Cobblemon, o padrão "foge e não se defende" (willFlee sim, willDefendSelf não): ao levar dano, o cérebro do Cobblemon entra
+  // em PÂNICO (o comportamento "panics": foge de quem bateu) por cima da nossa IA, e a 16 blocos de você a batalha acabava. As
+  // outras têm o "retaliates" (fica bravo com quem bateu e vai atacar). Na nossa luta, quem manda é a nossa IA: a cada tick, as
+  // memórias do pânico e do revide somem e ele volta à atividade de sempre (o arisco continua fugindo, pela nossa regra)
+  private static void segurarOCerebroDoCobblemon(PokemonEntity selvagem) {
+    Brain<?> cerebro = selvagem.getBrain();
+    cerebro.eraseMemory(MemoryModuleType.HURT_BY);
+    cerebro.eraseMemory(MemoryModuleType.HURT_BY_ENTITY);
+    cerebro.eraseMemory(MemoryModuleType.AVOID_TARGET);
+    cerebro.eraseMemory(MemoryModuleType.ANGRY_AT);
+    cerebro.eraseMemory(MemoryModuleType.ATTACK_TARGET);
+    if (cerebro.isActive(Activity.PANIC) || cerebro.isActive(Activity.FIGHT)) {
+      cerebro.eraseMemory(MemoryModuleType.WALK_TARGET);
+      cerebro.setActiveActivityIfPossible(Activity.IDLE);
+    }
+  }
+
   // Lote 3 dos itens (o Cartão Vermelho): o selvagem sai correndo, como o arisco que foge (Combate tira da luta quem se afasta)
   public static void fazerFugir(PokemonEntity selvagem) {
+    fazerFugir(selvagem, "Cartão Vermelho");
+  }
+
+  // 21/10 (habilidades, lote da entrada e das imunidades): também a Fuga Automática e o Amarelar ("porque", para o log)
+  public static void fazerFugir(PokemonEntity selvagem, String porque) {
     Cerebro cerebro = CEREBROS.get(selvagem.getUUID());
     if (cerebro != null) {
       cerebro.fugindo = true;
-      CobblemonCombatZA.LOGGER.info("IA: {} foi expulso da batalha (Cartão Vermelho)", selvagem.getPokemon().getSpecies().getName());
+      CobblemonCombatZA.LOGGER.info("IA: {} foi expulso da batalha ({})", selvagem.getPokemon().getSpecies().getName(),
+          porque);
     }
   }
 
@@ -289,6 +327,10 @@ public class IaDoSelvagem {
     Pokemon pokemon = selvagem.getPokemon();
     if (cerebro.temperamento != Temperamento.Tipo.ARISCO
         || pokemon.getCurrentHealth() >= pokemon.getMaxHealth() * FUGA_ABAIXO_DE) {
+      return false;
+    }
+    // 21/10 (habilidades, lote da entrada e das imunidades): preso pelo Fio de Sombra (ou outra) do seu lutador
+    if (HabilidadesDeFuga.selvagemPreso(selvagem, jogadores)) {
       return false;
     }
     cerebro.fugindo = true;

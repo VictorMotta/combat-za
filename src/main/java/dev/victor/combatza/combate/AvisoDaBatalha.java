@@ -65,6 +65,19 @@ public class AvisoDaBatalha {
     enviar(jogador, titulo, texto, "venceu", List.of(selvagem), ganhos);
   }
 
+  // 21/10 (treinadores): o fim da batalha contra um treinador do RCT ("Você venceu Líder Brock!"), com os rostos do time
+  // dele e o XP de cada um (treinadores.BatalhaDeTreinador)
+  public static void doTreinador(ServerPlayer jogador, Component texto, String tipo, List<Pokemon> rostos) {
+    enviar(jogador, Component.translatable(FRASE + "fim"), texto, tipo, rostos, Experiencia.tirarOsGanhos(jogador));
+  }
+
+  // 21/10 (PvP): o fim do duelo (pvp.Duelo), com a frase pronta. "tipo": "venceu", "perdeu" ou "acabou" (a cor do aviso).
+  // Embaixo, o XP que cada Pokémon ganhou no duelo
+  public static void doDuelo(ServerPlayer jogador, Component texto, String tipo, List<Pokemon> rostos) {
+    enviar(jogador, Component.translatable("cobblemon_combat_za.duelo.fim"), texto, tipo, rostos,
+        Experiencia.tirarOsGanhos(jogador));
+  }
+
   // "Watchog", "Watchog e Mudbray", "Watchog, Mudbray e Zigzagoon"
   private static Component nomes(List<Pokemon> pokemons) {
     MutableComponent nomes = Component.empty();

@@ -17,6 +17,8 @@ import dev.victor.combatza.ia.Bandos;
 import dev.victor.combatza.ia.Parceiro;
 import dev.victor.combatza.itens.ItensSegurados;
 import dev.victor.combatza.mega.Mega;
+import dev.victor.combatza.treinadores.BatalhasDeTreinador;
+import dev.victor.combatza.pvp.Duelos;
 import net.minecraft.server.level.ServerPlayer;
 
 public class GerenciarCombates {
@@ -38,8 +40,13 @@ public class GerenciarCombates {
 
   // quemComecou: o Pokémon do jogador que acertou o selvagem ou que ele atacou (null se foi o jogador): vira o lutador
   public static void entrarEmCombate(ServerPlayer jogador, PokemonEntity selvagem, Pokemon quemComecou) {
-    // Etapa 8: caído no chão, ele não volta para batalha nenhuma (só espera a bola)
-    if (Desmaio.esta(selvagem)) {
+    // Etapa 8: caído no chão, ele não volta para batalha nenhuma (só espera a bola). 21/10 (PvP): quem está num duelo também
+    // não entra em batalha com selvagem até o duelo acabar (pvp.Duelos)
+    if (Desmaio.esta(selvagem) || Duelos.estaEmDuelo(jogador)) {
+      return;
+    }
+    // 21/10 (treinadores): a batalha contra um treinador do RCT é só sua e dele (ninguém entra, nenhum selvagem se mistura)
+    if (BatalhasDeTreinador.foraDoDuelo(jogador, selvagem)) {
       return;
     }
     Combate combate = encontrarCombate(jogador, selvagem);
@@ -140,6 +147,12 @@ public class GerenciarCombates {
     });
   }
 
+  // 21/10 (PvP): o duelo aceito pelo desafio do Cobblemon entra na lista das batalhas (pvp.Duelos)
+  public static void adicionar(Combate combate) {
+    combates.add(combate);
+    CobblemonCombatZA.LOGGER.info("Novo combate! combates ativos: {}", combates.size());
+  }
+
   // As batalhas que estão valendo (o PainelDaBatalha monta o painel de cada uma); só para ler
   public static List<Combate> todos() {
     return Collections.unmodifiableList(combates);
@@ -225,10 +238,11 @@ public class GerenciarCombates {
     return null;
   }
 
+  // Quem está do outro lado para o jogador. 21/10 (PvP): no duelo, o lutador do adversário (Combate.inimigosDe)
   public static List<PokemonEntity> selvagensNoCombateDe(ServerPlayer jogador) {
     for (Combate combate : combates) {
       if (combate.getJogadores().contains(jogador)) {
-        return List.copyOf(combate.getSelvagens());
+        return combate.inimigosDe(jogador);
       }
     }
     return List.of();

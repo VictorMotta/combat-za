@@ -8,6 +8,7 @@ import com.cobblemon.mod.common.pokemon.Pokemon;
 
 import dev.victor.combatza.CobblemonCombatZA;
 import dev.victor.combatza.golpes.AplicarStatus;
+import dev.victor.combatza.golpes.Atracao;
 import dev.victor.combatza.golpes.Execucao;
 import dev.victor.combatza.golpes.Feedback;
 import dev.victor.combatza.golpes.Vida;
@@ -35,7 +36,7 @@ public class HabilidadesDeContato {
       return;
     }
     Pokemon defensor = atingido.getPokemon();
-    String habilidade = defensor.getAbility().getName();
+    String habilidade = Habilidades.atual(defensor);
     Component deOnde = Component.translatable(FRASE + "de", Habilidades.nome(defensor),
         defensor.getDisplayName(false));
 
@@ -49,6 +50,8 @@ public class HabilidadesDeContato {
     if (FEREM_NO_CONTATO.contains(habilidade)) {
       ferir(execucao, atacante, deOnde);
     }
+    // 21/10 (golpes de status que faltavam): o Charme Fofo (30% de quem encostou se apaixonar)
+    Atracao.charmeFofo(atacante, defensor);
   }
 
   // 11% sono, 10% paralisia, 9% veneno; tipo Planta e Invólucro não pegam esporo

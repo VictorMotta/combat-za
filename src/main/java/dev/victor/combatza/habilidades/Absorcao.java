@@ -12,6 +12,7 @@ import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
 import com.cobblemon.mod.common.pokemon.Pokemon;
 
 import dev.victor.combatza.CobblemonCombatZA;
+import dev.victor.combatza.campo.ClimaNosGolpes;
 import dev.victor.combatza.golpes.AplicarEfeitos;
 import dev.victor.combatza.golpes.Estagios;
 import dev.victor.combatza.golpes.Execucao;
@@ -44,17 +45,23 @@ public class Absorcao {
 
   // Showdown, onTryHit: o golpe do tipo certo não faz nada (nem dano, nem efeito) e vira cura ou estágio
   public static boolean absorveu(Execucao execucao, PokemonEntity atacante, Entity alvo) {
-    if (!(alvo instanceof PokemonEntity entidade) || entidade == atacante) {
+    // 21/10 (habilidades, lote das reações): o golpe de status do Poder do Micélio passa pela habilidade (o Esporo pega no
+    // Suga-Seiva)
+    if (!(alvo instanceof PokemonEntity entidade) || entidade == atacante
+        || HabilidadesDePrioridade.ignoraHabilidade(execucao)) {
       return false;
     }
     Pokemon pokemon = entidade.getPokemon();
     Move golpe = execucao.getGolpe();
-    if (Habilidades.tem(pokemon, FOGO_BRILHANTE) && golpe.getType() == ElementalTypes.FIRE) {
+    // 21/10 (habilidades, lote da conta do dano): o tipo de agora (a Crosta Elétrica faz o golpe Normal virar Elétrico, e o
+    // Absorve Volts absorve) e a habilidade que vale (o Quebra-Molde de quem bate ignora as absorções)
+    ElementalType tipo = ClimaNosGolpes.tipo(execucao.getPokemon(), golpe);
+    if (Habilidades.tem(pokemon, FOGO_BRILHANTE) && tipo == ElementalTypes.FIRE) {
       acenderFogo(execucao, pokemon);
       return true;
     }
-    Absorve absorve = ABSORVEM.get(pokemon.getAbility().getName());
-    if (absorve == null || golpe.getType() != absorve.tipo()) {
+    Absorve absorve = ABSORVEM.get(QuebraMolde.queVale(pokemon));
+    if (absorve == null || tipo != absorve.tipo()) {
       return false;
     }
     MutableComponent aviso = Component.translatable("cobblemon_combat_za.habilidade.absorveu",
@@ -68,7 +75,7 @@ public class Absorcao {
           Estagios.nomeDoAtributo(absorve.atributo())));
     }
     CobblemonCombatZA.LOGGER.info("ABSORVEU: {} absorveu {} ({})", pokemon.getSpecies().getName(), golpe.getName(),
-        pokemon.getAbility().getName());
+        Habilidades.atual(pokemon));
     Feedback.historico(execucao.getJogador(), pokemon, aviso);
     return true;
   }

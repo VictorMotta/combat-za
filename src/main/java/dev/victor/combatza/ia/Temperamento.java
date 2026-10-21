@@ -72,7 +72,9 @@ public class Temperamento {
   // 7.1e: as listas do Fight or Flight (never_aggro, always_flee e always_aggro) ficam no arquivo de configuração desde a
   // 7.3 (Configuracao), com o nome da espécie em minúsculas, como ele compara
   private static final String ALFA = "alpha";
-  private static final Set<String> ACALMAM = Set.of("intimidate", "unnerve", "pressure");
+  // 21/10 (lote das formas): a Sinergia Equina (As One) tem o Nervosismo dentro
+  private static final Set<String> ACALMAM = Set.of("intimidate", "unnerve", "pressure", "asoneglastrier",
+      "asonespectrier");
 
   private Temperamento() {
   }

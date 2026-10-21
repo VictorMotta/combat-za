@@ -169,7 +169,7 @@ public class PlacasNaTela {
     PokemonEntity focado = Foco.alvo();
     PokemonEntity candidato = focado == null ? Foco.candidato(cliente) : null;
     for (PokemonEntity selvagem : cliente.level.getEntitiesOfClass(PokemonEntity.class,
-        cliente.player.getBoundingBox().inflate(DISTANCIA), Foco::ehSelvagem)) {
+        cliente.player.getBoundingBox().inflate(DISTANCIA), Foco::ehAlvo)) {
       esconderORotuloDoCobblemon(selvagem);
       Vec3 cabeca = selvagem.getPosition(parcial).add(0, selvagem.getBbHeight() + ACIMA_DA_CABECA, 0);
       float[] naTela = projetar(cabeca.subtract(camera), tela, NA_TELA);

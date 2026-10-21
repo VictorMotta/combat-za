@@ -36,7 +36,12 @@ public class Configuracao {
   private static final int MAIOR_NIVEL_PARA_ATACAR = 1000;
   // As opções que o arquivo precisa ter: faltando alguma (um arquivo de uma versão antiga), ele é gravado de novo com elas,
   // mantendo os valores que já tinha
-  private static final List<String> OPCOES = List.of("danoDoSelvagem", "danoDosSeusPokemon", "alcanceDaVisaoDeDia",
+  // O 0.5 da 0.2.0-beta.3 (o padrão de então, "fraco demais") vira o padrão novo, uma vez, nos arquivos daquela versão (os que
+  // ainda não têm "versaoDoArquivo"). Um valor escolhido depois fica
+  private static final String VERSAO_DO_ARQUIVO = "versaoDoArquivo";
+  private static final int VERSAO = 2;
+  private static final double DANO_DO_SELVAGEM_DA_BETA_3 = 0.5;
+  private static final List<String> OPCOES = List.of(VERSAO_DO_ARQUIVO, "danoDoSelvagem", "danoDosSeusPokemon", "alcanceDaVisaoDeDia",
       "alcanceDaVisaoDeNoite", "segundosParaNotar", "raivaParaAtacar", "nivelParaAtacarSozinho");
 
   // O que fica no arquivo. Os nomes dos campos são os nomes no JSON
@@ -53,8 +58,9 @@ public class Configuracao {
     private int segundosEntreItens = 5;
     // O equilíbrio da batalha (dele, 20/10: "vamos nerfar um pouco o dano dos selvagens, isso tá muito caótico, um lvl 20 mata
     // muito fácil um lvl 10, e tá muito fácil do selvagem te ver"; "cada server pode colocar do jeito que quiser"; "e o dano do
-    // nosso Pokémon também"). Escolheu: os golpes do selvagem nos seus Pokémon tiram 50%; os dos seus nos selvagens, 100%
-    private double danoDoSelvagem = 0.5;
+    // nosso Pokémon também"). Escolheu: os golpes do selvagem nos seus Pokémon tiram 50%; os dos seus nos selvagens, 100%.
+    // 21/10 (dele, testando: "deixamos fraco demais os selvagens"): 75%
+    private double danoDoSelvagem = 0.75;
     private double danoDosSeusPokemon = 1.0;
     // A visão do selvagem (escolheu "bem mais difícil"; era 16 e 10 blocos e 1,5 s)
     private double alcanceDaVisaoDeDia = 10;
@@ -87,6 +93,12 @@ public class Configuracao {
     try {
       String texto = Files.readString(caminho, StandardCharsets.UTF_8);
       Dados lidos = new Gson().fromJson(texto, Dados.class);
+      if (lidos != null && !texto.contains("\"" + VERSAO_DO_ARQUIVO + "\"")
+          && lidos.danoDoSelvagem == DANO_DO_SELVAGEM_DA_BETA_3) {
+        lidos.danoDoSelvagem = new Dados().danoDoSelvagem;
+        CobblemonCombatZA.LOGGER.info("CONFIGURAÇÃO: o dano do selvagem da 0.2.0-beta.3 (0.5) virou o padrão novo ({})",
+            lidos.danoDoSelvagem);
+      }
       usar(lidos == null ? new Dados() : lidos);
       arquivoComErro = false;
       // 6.10 desfeita (dele, 19/10: "volta o chat ao normal, deixa a pessoa configurar o chat dela"): um arquivo com as
@@ -231,6 +243,8 @@ public class Configuracao {
     }
     Gson gson = new Gson();
     String texto = "{\n"
+        + "  // A versão deste arquivo (o mod usa para atualizar os padrões antigos; não mude)\n"
+        + "  \"" + VERSAO_DO_ARQUIVO + "\": " + VERSAO + ",\n"
         + "  // Dano dos golpes dos selvagens em você: \"pouco\" (metade) ou \"monstro\" (como um monstro do Minecraft do nível\n"
         + "  // dele). Muda também no jogo: /combatza dano pouco | /combatza dano monstro\n"
         + "  \"danoNoJogador\": " + gson.toJson(atual.danoNoJogador) + ",\n"
@@ -241,7 +255,7 @@ public class Configuracao {
         + "  \"segundosEntreItens\": " + atual.segundosEntreItens + ",\n"
         + "  // O EQUILÍBRIO DA BATALHA. Depois de editar: /combatza recarregar\n"
         + "  // A parte do dano normal (o dos jogos) que os golpes dos selvagens tiram dos Pokémon dos jogadores: 1 = o normal,\n"
-        + "  // 0.5 = a metade (de 0 a 5). Não muda o dano neles em você (danoNoJogador) nem o que tira por turno (queimadura...)\n"
+        + "  // 0.75 = três quartos (de 0 a 5). Não muda o dano neles em você (danoNoJogador) nem o que tira por turno (queimadura...)\n"
         + "  \"danoDoSelvagem\": " + atual.danoDoSelvagem + ",\n"
         + "  // O mesmo para os golpes dos Pokémon dos jogadores nos selvagens: 1 = o normal, 1.5 = 50% a mais (de 0 a 5)\n"
         + "  \"danoDosSeusPokemon\": " + atual.danoDosSeusPokemon + ",\n"

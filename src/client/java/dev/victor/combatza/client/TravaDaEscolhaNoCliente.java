@@ -33,6 +33,10 @@ public class TravaDaEscolhaNoCliente {
   }
 
   public static boolean desligado(Pokemon pokemon, int slot, Move golpe) {
+    // 21/10: a Provocação e o Bis também riscam (GolpesDesligadosNoCliente)
+    if (GolpesDesligadosNoCliente.desligado(pokemon.getUuid(), slot)) {
+      return true;
+    }
     if (ItensSegurados.COLETE_DE_ATAQUE.equals(ItensSegurados.idNoCliente(pokemon.heldItem()))
         && golpe.getDamageCategory() == DamageCategories.INSTANCE.getSTATUS()) {
       return true;

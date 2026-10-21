@@ -28,10 +28,11 @@ public class Mira {
 
   // Com o foco (lock-on) do cliente, a mira é o alvo travado, se ele existe, está vivo, a até 24 blocos e não é aliado.
   // Senão, a mira de sempre: o que está no meio da visão do jogador. Em batalha, a mira passa pelos monstros
-  // (Lados.entraNaLuta)
+  // (Lados.entraNaLuta). E sempre passa pelos NPCs treinadores (Lados.ehNpc). 21/10 (PvP): no duelo, só o Pokémon do
+  // adversário fica na mira (Lados.miraAtravessa)
   public static HitResult mirar(ServerPlayer jogador, int alvoTravado, boolean emBatalha) {
     Entity alvo = alvoTravado < 0 ? null : jogador.serverLevel().getEntity(alvoTravado);
-    if (alvo instanceof LivingEntity vivo && vivo.isAlive() && !Lados.ehAliado(vivo)
+    if (alvo instanceof LivingEntity vivo && vivo.isAlive() && !Lados.miraAtravessa(jogador, vivo) && !Lados.ehNpc(vivo)
         && Lados.entraNaLuta(vivo, emBatalha) && jogador.distanceTo(vivo) <= ALCANCE) {
       return new EntityHitResult(vivo, vivo.getBoundingBox().getCenter());
     }
@@ -42,7 +43,7 @@ public class Mira {
     Vec3 olho = jogador.getEyePosition();
     Vec3 fim = olho.add(jogador.getViewVector(1.0f).scale(ALCANCE));
     return primeiroNoCaminho(jogador, olho, fim, RAIO_ASSISTENCIA_MIRA,
-        e -> !Lados.ehAliado(e) && Lados.entraNaLuta(e, emBatalha));
+        e -> !Lados.miraAtravessa(jogador, e) && !Lados.ehNpc(e) && Lados.entraNaLuta(e, emBatalha));
   }
 
   // 6.11: a mesma mira, de qualquer olho e olhar: a prévia do seu jogo (DesenhoDaPrevia) mira igual ao servidor

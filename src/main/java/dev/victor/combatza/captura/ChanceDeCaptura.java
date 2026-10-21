@@ -22,6 +22,7 @@ import dev.victor.combatza.golpes.EfeitosDeStatus;
 import dev.victor.combatza.golpes.Mira;
 import dev.victor.combatza.golpes.Vida;
 import dev.victor.combatza.ia.Deteccao;
+import dev.victor.combatza.treinadores.BatalhasDeTreinador;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
@@ -119,6 +120,12 @@ public class ChanceDeCaptura {
       evento.setCaptureResult(new CaptureContext(0, false, false));
       devolverABola(quemJogou, evento.getPokeBallEntity().getPokeBall());
       Irritados.avisar(quemJogou, alvo.getPokemon(), Component.translatable("cobblemon_combat_za.party.batalha_de_outro"));
+    } else if (BatalhasDeTreinador.ehDoTreinador(alvo)) {
+      // 21/10 (treinadores): o Pokémon de um treinador não se captura: a bola falha e volta, como a do irritado
+      evento.setCaptureResult(new CaptureContext(0, false, false));
+      devolverABola(quemJogou, evento.getPokeBallEntity().getPokeBall());
+      Irritados.avisar(quemJogou, alvo.getPokemon(), Component.translatable("cobblemon_combat_za.treinador.nao_captura",
+          alvo.getPokemon().getDisplayName(false)));
     } else if (Desmaio.esta(alvo)) {
       // Etapa 8: o caído no chão tem UMA tentativa; o sorteio do Cobblemon vale, e se falhar ele some (Desmaio)
       Desmaio.tentou(alvo);
@@ -129,8 +136,9 @@ public class ChanceDeCaptura {
       Irritados.avisar(quemJogou, alvo.getPokemon(), Component.translatable("cobblemon_combat_za.captura.ainda_irritado",
           alvo.getPokemon().getDisplayName(false)));
     } else if (!evento.getCaptureResult().isSuccessfulCapture() && alvo.getServer() != null) {
-      // A bola falhou: ele fica irritado
+      // A bola falhou: ele fica irritado e, quando sair da bola, acorda e luta com quem jogou
       Irritados.irritar(alvo, quemJogou, alvo.getServer().getTickCount());
+      Irritados.lutarAoSair(alvo, quemJogou, alvo.getServer().getTickCount());
     }
     CaptureContext resultado = evento.getCaptureResult();
     CobblemonCombatZA.LOGGER.info("CAPTURA (resultado): {} com {}: {} balanço(s), capturou? {}, crítica? {}",
@@ -154,8 +162,10 @@ public class ChanceDeCaptura {
     Pokemon pokemon = selvagem.getPokemon();
     PokeBall bola = bolaDaMao(jogador);
     double extras = extras(jogador, selvagem, bola);
-    // Etapa 8: irritado, não dá para capturar (nenhuma seta)
-    double chance = Irritados.esta(pokemon) ? 0 : chanceCom(jogador, selvagem, bola, extras);
+    // Etapa 8: irritado, não dá para capturar (nenhuma seta). 21/10: nem o Pokémon de um treinador, nem o do adversário no
+    // duelo (tem dono)
+    double chance = Irritados.esta(pokemon) || BatalhasDeTreinador.ehDoTreinador(selvagem) || !pokemon.isWild() ? 0
+        : chanceCom(jogador, selvagem, bola, extras);
     double puro = chanceCom(jogador, selvagem, bola, SEM_EXTRAS);
     return new Conta(chance, puro, setasDe(chance), chance >= BRILHA, bola.getName().getPath(), Vida.pvAtual(pokemon),
         pokemon.getMaxHealth(), status(pokemon), extras, pelasCostas(jogador, selvagem));

@@ -1,13 +1,16 @@
 package dev.victor.combatza.golpes;
 
 import com.cobblemon.mod.common.api.moves.Move;
+import com.cobblemon.mod.common.api.riding.RidingStyle;
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
+import com.cobblemon.mod.common.pokemon.FormData;
 
 import dev.victor.combatza.CobblemonCombatZA;
 import dev.victor.combatza.ia.Andar;
 import net.minecraft.SharedConstants;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
@@ -26,6 +29,13 @@ public class Corrida {
   // 6.11c: chegou ao marcador a até 1 bloco; com o caminho acabado, a até 2; e no máximo 3 s indo (depois, solta de onde parou)
   private static final double CHEGOU_AO_MARCADOR = 1.0;
   private static final double PERTO_DO_MARCADOR = 2.0;
+  // Dele, 21/10 ("o Gyarados voa; por que não tá indo no Castform voando atacar ele?"; escolheu "pula até 3 blocos" para quem não
+  // voa): o golpe de contato num alvo NO AR (fora do chão e da água, mais de 1 bloco acima do chão). Quem voa (o Cobblemon diz que
+  // voa, ou ele tem montaria pelo ar, como o Gyarados) vai reto pelo ar até ele; quem não voa corre até embaixo e dá o bote para
+  // cima (VisualDosGolpes), se o alvo está a até 3 blocos do chão; mais alto, o golpe não sai ("alto demais")
+  private static final double NO_AR = 1.0;
+  public static final double PULO_MAXIMO = 3.0;
+  private static final double OLHAR_O_CHAO_ATE = 8.0;
 
   private Corrida() {
   }
@@ -63,14 +73,21 @@ public class Corrida {
       chegar(execucao, atacante, agora);
       return;
     }
-    if (montada && CorridaMontada.voando(atacante)) {
+    boolean noAr = noAr(alvo);
+    if (montada && CorridaMontada.voando(atacante) || !montada && noAr && voa(atacante)) {
       CorridaMontada.voarAte(atacante, alvo);
     } else if (agora % TICKS_ENTRE_CAMINHOS == 0) {
       float velocidade = (float) Balanceamento.VELOCIDADE_DA_CORRIDA;
       if (alvo instanceof Player jogador && execucao.getPokemon().isWild()) {
         velocidade = Andar.contraVoce(atacante, jogador, velocidade);
       }
-      atacante.getNavigation().moveTo(alvo, velocidade);
+      if (noAr) {
+        // Quem não voa vai até o chão embaixo do alvo, para dar o bote para cima
+        Vec3 embaixo = chaoEmbaixo(alvo);
+        atacante.getNavigation().moveTo(embaixo.x, embaixo.y, embaixo.z, velocidade);
+      } else {
+        atacante.getNavigation().moveTo(alvo, velocidade);
+      }
     }
     if (agora >= execucao.getTickImpacto()) {
       execucao.adiar(1);
@@ -116,13 +133,51 @@ public class Corrida {
         Math.max(0, agora - execucao.getTickImpactoMarcado()));
   }
 
-  // Contato: a distância entre as "cascas" dos dois (a largura de cada um conta). De longe: 2 blocos dentro do alcance
+  // Contato: a distância entre as "cascas" dos dois (a largura de cada um conta). De longe: 2 blocos dentro do alcance. Com o alvo
+  // no ar e quem não voa: embaixo dele (só a distância no chão), e o bote sobe até ele
   private static boolean estaNoAlcance(Execucao execucao, PokemonEntity atacante, Entity alvo) {
     if (!EfeitosDosGolpes.fazContato(execucao.getGolpe())) {
       return atacante.distanceTo(alvo) <= Mira.alcanceDo(execucao.getGolpe()) - FOLGA_DO_ALCANCE;
     }
     double larguras = (atacante.getBbWidth() + alvo.getBbWidth()) / 2;
+    if (noAr(alvo) && !voa(atacante) && !atacante.isVehicle()) {
+      double noChao = Math.hypot(alvo.getX() - atacante.getX(), alvo.getZ() - atacante.getZ());
+      return noChao - larguras <= Balanceamento.ALCANCE_DO_CONTATO && alturaAcima(atacante, alvo) <= PULO_MAXIMO;
+    }
     return atacante.distanceTo(alvo) - larguras <= Balanceamento.ALCANCE_DO_CONTATO;
+  }
+
+  // Quem voa: o Cobblemon diz que ele voa, ou ele tem montaria pelo ar (o Gyarados)
+  public static boolean voa(PokemonEntity entidade) {
+    FormData forma = entidade.getPokemon().getForm();
+    return forma.getBehaviour().getMoving().getFly().getCanFly()
+        || forma.getRiding().getBehaviours().containsKey(RidingStyle.AIR);
+  }
+
+  // No ar: fora do chão e da água, e mais de 1 bloco acima do chão embaixo dele
+  static boolean noAr(Entity alvo) {
+    return !alvo.onGround() && !alvo.isInWater() && !alvo.isPassenger()
+        && alvo.getBoundingBox().minY - chaoEmbaixo(alvo).y > NO_AR;
+  }
+
+  // O golpe de contato de quem não voa num alvo a mais de 3 blocos do chão: não sai (AgendaDeGolpes: "alto demais")
+  public static boolean altoDemais(Execucao execucao) {
+    PokemonEntity atacante = execucao.getEntidade();
+    Entity alvo = alvo(execucao);
+    return atacante != null && alvo != null && EfeitosDosGolpes.fazContato(execucao.getGolpe()) && !atacante.isVehicle()
+        && noAr(alvo) && !voa(atacante) && alvo.getBoundingBox().minY - chaoEmbaixo(alvo).y > PULO_MAXIMO;
+  }
+
+  static double alturaAcima(PokemonEntity atacante, Entity alvo) {
+    return alvo.getBoundingBox().minY - atacante.getY();
+  }
+
+  // O chão embaixo do alvo (até 8 blocos abaixo; sem chão, 8 blocos abaixo)
+  private static Vec3 chaoEmbaixo(Entity alvo) {
+    Vec3 pes = alvo.position();
+    HitResult chao = alvo.level().clip(new ClipContext(pes, pes.subtract(0, OLHAR_O_CHAO_ATE, 0),
+        ClipContext.Block.COLLIDER, ClipContext.Fluid.ANY, alvo));
+    return chao.getType() == HitResult.Type.MISS ? pes.subtract(0, OLHAR_O_CHAO_ATE, 0) : chao.getLocation();
   }
 
   private static Entity alvo(Execucao execucao) {

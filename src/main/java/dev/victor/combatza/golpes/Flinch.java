@@ -24,7 +24,7 @@ public class Flinch {
     if (vivo instanceof PokemonEntity comHabilidade
         && Habilidades.tem(comHabilidade.getPokemon(), Habilidades.FORCA_INTERIOR)) {
       Feedback.historico(execucao.getJogador(), vivo, Component.translatable(FRASE + "nao_hesitou", vivo.getName(),
-          Component.translatable(comHabilidade.getPokemon().getAbility().getDisplayName())));
+          Habilidades.nome(comHabilidade.getPokemon())));
       CobblemonCombatZA.LOGGER.info("FLINCH BLOQUEADO: {} tem Força Interior", vivo.getName().getString());
       return;
     }

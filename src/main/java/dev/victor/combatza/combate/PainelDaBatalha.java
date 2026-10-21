@@ -12,6 +12,7 @@ import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
 import com.cobblemon.mod.common.pokemon.Pokemon;
 
 import dev.victor.combatza.golpes.Vida;
+import dev.victor.combatza.pvp.Duelo;
 import dev.victor.combatza.rede.PainelDaBatalhaPayload;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.server.MinecraftServer;
@@ -36,9 +37,10 @@ public class PainelDaBatalha {
     }
     Set<UUID> emBatalha = new HashSet<>();
     for (Combate combate : GerenciarCombates.todos()) {
-      PainelDaBatalhaPayload painel = montar(combate);
+      PainelDaBatalhaPayload doCombate = montar(combate);
       for (ServerPlayer jogador : combate.getJogadores()) {
         emBatalha.add(jogador.getUUID());
+        PainelDaBatalhaPayload painel = combate instanceof Duelo duelo ? doDuelo(duelo, jogador) : doCombate;
         if (!painel.equals(ULTIMO_ENVIO.get(jogador.getUUID()))
             && ServerPlayNetworking.canSend(jogador, PainelDaBatalhaPayload.TIPO)) {
           ULTIMO_ENVIO.put(jogador.getUUID(), painel);
@@ -72,6 +74,18 @@ public class PainelDaBatalha {
       selvagens.add(foto(selvagem.getPokemon(), true));
     }
     return new PainelDaBatalhaPayload(lados, selvagens);
+  }
+
+  // 21/10 (PvP): no duelo, cada um vê o próprio lado na esquerda e o adversário, com o lutador dele, na direita (onde ficam
+  // os selvagens)
+  private static PainelDaBatalhaPayload doDuelo(Duelo duelo, ServerPlayer jogador) {
+    return new PainelDaBatalhaPayload(List.of(lado(jogador)), List.of(), List.of(lado(duelo.outro(jogador))));
+  }
+
+  private static PainelDaBatalhaPayload.Lado lado(ServerPlayer jogador) {
+    Pokemon lutador = Lutadores.de(jogador);
+    return new PainelDaBatalhaPayload.Lado(jogador.getUUID(), jogador.getGameProfile().getName(),
+        lutador == null ? List.of() : List.of(foto(lutador, true)));
   }
 
   private static PainelDaBatalhaPayload.Foto foto(Pokemon pokemon, boolean grande) {

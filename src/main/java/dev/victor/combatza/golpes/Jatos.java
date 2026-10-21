@@ -16,6 +16,7 @@ import com.cobblemon.mod.common.pokemon.Pokemon;
 import dev.victor.combatza.CobblemonCombatZA;
 import dev.victor.combatza.combate.GerenciarCombates;
 import dev.victor.combatza.combate.Lados;
+import dev.victor.combatza.habilidades.QuebraMolde;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
@@ -142,8 +143,9 @@ public class Jatos {
       }
       boolean primeiro = jato.jaAcertados.add(alvo);
       boolean comVisual = primeiro || (pedaco - 1) % VISUAL_A_CADA == 0;
-      boolean pegou = ControleDeGolpes.acertarPedaco(jato.execucao, jato.atacante, alvo,
-          jato.multiplicador / jato.pedacos, primeiro, comVisual);
+      // 21/10 (habilidades, lote da conta do dano): cada pedaço "durante o golpe" (o Quebra-Molde e o Infiltrado valem)
+      boolean pegou = QuebraMolde.duranteOAcerto(jato.execucao, () -> ControleDeGolpes.acertarPedaco(jato.execucao,
+          jato.atacante, alvo, jato.multiplicador / jato.pedacos, primeiro, comVisual));
       if (primeiro && !pegou) {
         jato.alvos.remove(alvo);
         continue;

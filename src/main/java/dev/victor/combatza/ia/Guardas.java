@@ -223,9 +223,9 @@ public class Guardas {
     return alvo;
   }
 
-  // Qualquer bicho vivo que não é Pokémon (os jogadores nem são "Mob")
+  // Qualquer bicho vivo que não é Pokémon nem NPC treinador (os jogadores nem são "Mob")
   private static boolean podeSerAlvo(LivingEntity bicho) {
-    return bicho instanceof Mob && bicho.isAlive() && !(bicho instanceof PokemonEntity);
+    return bicho instanceof Mob && bicho.isAlive() && !(bicho instanceof PokemonEntity) && !Lados.ehNpc(bicho);
   }
 
   // O lobo, o gato, o cavalo... domados por alguém

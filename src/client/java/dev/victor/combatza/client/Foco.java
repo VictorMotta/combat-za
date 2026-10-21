@@ -99,6 +99,13 @@ public class Foco {
     return entidade.getOwnerUUID() == null;
   }
 
+  // Quem o foco, a placa e a prévia tratam como inimigo: o selvagem. 21/10 (PvP): no duelo, só o Pokémon do adversário (o
+  // dono dele está do outro lado do painel da batalha: HistoricoDaBatalha.ehDoAdversario); os selvagens ficam de fora
+  public static boolean ehAlvo(PokemonEntity entidade) {
+    return HistoricoDaBatalha.emDuelo() ? HistoricoDaBatalha.ehDoAdversario(entidade.getOwnerUUID())
+        : ehSelvagem(entidade);
+  }
+
   // O selvagem perto (até 16 blocos de você), à vista, mais perto do MEIO DA TELA (no máximo 30 graus de lado). O meio da
   // tela é o olhar da câmera: na 3ª pessoa (ainda mais com o Better Third Person) o personagem pode estar virado para outro lado
   public static PokemonEntity candidato(Minecraft cliente) {
@@ -111,7 +118,7 @@ public class Foco {
     PokemonEntity melhor = null;
     double menorAngulo = ANGULO_MAXIMO;
     for (PokemonEntity pokemon : cliente.level.getEntitiesOfClass(PokemonEntity.class,
-        cliente.player.getBoundingBox().inflate(ALCANCE), Foco::ehSelvagem)) {
+        cliente.player.getBoundingBox().inflate(ALCANCE), Foco::ehAlvo)) {
       Vec3 direcao = pokemon.getBoundingBox().getCenter().subtract(olhos);
       double distancia = cliente.player.distanceTo(pokemon);
       if (!pokemon.isAlive() || Captura.dentroDaBola(pokemon) || distancia > ALCANCE || direcao.lengthSqr() < 0.0001) {
@@ -196,7 +203,7 @@ public class Foco {
     PokemonEntity melhor = null;
     double menor = LADO_MAXIMO;
     for (PokemonEntity pokemon : cliente.level.getEntitiesOfClass(PokemonEntity.class,
-        cliente.player.getBoundingBox().inflate(ALCANCE), Foco::ehSelvagem)) {
+        cliente.player.getBoundingBox().inflate(ALCANCE), Foco::ehAlvo)) {
       if (pokemon == atual || !pokemon.isAlive() || Captura.dentroDaBola(pokemon)
           || cliente.player.distanceTo(pokemon) > ALCANCE) {
         continue;
@@ -255,7 +262,7 @@ public class Foco {
       return;
     }
     PokemonEntity pokemon = alvo();
-    if (pokemon == null || !pokemon.isAlive() || !ehSelvagem(pokemon) || Captura.dentroDaBola(pokemon)
+    if (pokemon == null || !pokemon.isAlive() || !ehAlvo(pokemon) || Captura.dentroDaBola(pokemon)
         || cliente.player == null
         || cliente.player.distanceTo(pokemon) > ALCANCE_TRAVADO) {
       soltar();

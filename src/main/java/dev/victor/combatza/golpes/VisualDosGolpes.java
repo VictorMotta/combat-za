@@ -149,6 +149,16 @@ public class VisualDosGolpes {
 
   // A velocidade é a distância dividida por quanto o Pokémon anda com velocidade 1 (o ar e o chão freiam).
   // Colado no alvo: o avanço não acontece, mas o bote sim (um pulinho no lugar, batendo a cabeça)
+  // 21/10: o alvo no alto (até 3 blocos, Corrida.PULO_MAXIMO): o pulo sobe até ele (v = raiz de 2 × gravidade × altura, com meio
+  // bloco de folga), no máximo o pulo de 3 blocos
+  private static final double GRAVIDADE = 0.08;
+  private static final double FOLGA_DO_PULO = 0.5;
+
+  private static double subidaAte(PokemonEntity atacante, Vec3 destino) {
+    double altura = Math.min(destino.y - atacante.getY(), Corrida.PULO_MAXIMO);
+    return altura <= 0 ? 0 : Math.sqrt(2 * GRAVIDADE * (altura + FOLGA_DO_PULO));
+  }
+
   private static void lancar(Execucao execucao, PokemonEntity atacante, double paraAntes, double altura,
       double blocosPorVelocidade, boolean puloMesmoColado) {
     Vec3 destino = execucao.getMirada() instanceof EntityHitResult acerto ? acerto.getEntity().position()
@@ -161,7 +171,7 @@ public class VisualDosGolpes {
     double velocidade = Math.clamp(distancia, 0, DISTANCIA_MAXIMA) / blocosPorVelocidade;
     Vec3 impulso = caminho.lengthSqr() > 0 ? caminho.normalize().scale(velocidade) : Vec3.ZERO;
     atacante.getNavigation().stop();
-    atacante.setDeltaMovement(impulso.x, altura, impulso.z);
+    atacante.setDeltaMovement(impulso.x, Math.max(altura, subidaAte(atacante, destino)), impulso.z);
     atacante.hurtMarked = true;
   }
 }

@@ -100,6 +100,12 @@ public class LayoutDaHud {
   private static final Path ARQUIVO = FabricLoader.getInstance().getConfigDir().resolve("cobblemon_combat_za_hud.json");
 
   private static final Map<Bloco, Ajuste> AJUSTES = new EnumMap<>(Bloco.class);
+  // A barra do editor (TelaDoLayout; dele, 21/10: "o confirmar/redefinir está atrapalhando mudar as posições"; escolheu "arrastar
+  // e recolher"): onde ela fica (de 0 a 1 do espaço livre da tela, 0,5 = no meio) e se está recolhida no botãozinho
+  private static final String EDITOR = "editor";
+  static float barraX = 0.5f;
+  static float barraY = 0.5f;
+  static boolean barraRecolhida = false;
 
   private LayoutDaHud() {
   }
@@ -289,6 +295,12 @@ public class LayoutDaHud {
     }
     try {
       JsonObject json = JsonParser.parseString(Files.readString(ARQUIVO)).getAsJsonObject();
+      if (json.has(EDITOR)) {
+        JsonObject editor = json.getAsJsonObject(EDITOR);
+        barraX = Math.clamp(editor.get("x").getAsFloat(), 0f, 1f);
+        barraY = Math.clamp(editor.get("y").getAsFloat(), 0f, 1f);
+        barraRecolhida = editor.get("recolhida").getAsBoolean();
+      }
       for (Bloco bloco : Bloco.values()) {
         if (json.has(bloco.nome)) {
           JsonObject ajuste = json.getAsJsonObject(bloco.nome);
@@ -315,6 +327,11 @@ public class LayoutDaHud {
       deste.addProperty("escala", ajuste.escala());
       json.add(bloco.nome, deste);
     });
+    JsonObject editor = new JsonObject();
+    editor.addProperty("x", barraX);
+    editor.addProperty("y", barraY);
+    editor.addProperty("recolhida", barraRecolhida);
+    json.add(EDITOR, editor);
     try {
       Files.writeString(ARQUIVO, new GsonBuilder().setPrettyPrinting().create().toJson(json));
     } catch (IOException erro) {

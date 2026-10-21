@@ -16,6 +16,8 @@ import dev.victor.combatza.golpes.Execucao;
 import dev.victor.combatza.golpes.Feedback;
 import dev.victor.combatza.golpes.Vida;
 import dev.victor.combatza.habilidades.Habilidades;
+import dev.victor.combatza.habilidades.HabilidadesDaConta;
+import dev.victor.combatza.habilidades.HabilidadesDeForma;
 import dev.victor.combatza.itens.ItensDeDano;
 import net.minecraft.SharedConstants;
 import net.minecraft.network.chat.Component;
@@ -61,9 +63,10 @@ public class ClimaNosGolpes {
   // A habilidade que corre ×2 em cada clima
   private static final Map<String, Clima> RAPIDOS = Map.of("swiftswim", Clima.CHUVA, "chlorophyll", Clima.SOL,
       "sandrush", Clima.AREIA, "slushrush", Clima.NEVE);
-  // E as que chamam o clima ao entrar
+  // E as que chamam o clima ao entrar (21/10, habilidades, lote da conta do dano: o Pulso de Oricalco chama o Sol, como a
+  // Seca)
   private static final Map<String, Clima> CHAMAM_AO_ENTRAR = Map.of("drizzle", Clima.CHUVA, "drought", Clima.SOL,
-      "sandstream", Clima.AREIA, "snowwarning", Clima.NEVE);
+      "sandstream", Clima.AREIA, "snowwarning", Clima.NEVE, "orichalcumpulse", Clima.SOL);
   private static final String LANCAREIA = "sandspit";
   private static final String FORCA_DA_AREIA_HAB = "sandforce";
   private static final String PODER_SOLAR_HAB = "solarpower";
@@ -91,9 +94,20 @@ public class ClimaNosGolpes {
 
   // O tipo do golpe agora (a Esfera Climática muda com o clima; o Julgamento, o Multiataque e a Tecno-Explosão, com o item)
   public static ElementalType tipo(Pokemon atacante, Move golpe) {
+    // 21/10 (lote das formas): a Roda Áurea do Morpeko muda com a forma dele (Mudapetite)
+    ElementalType daForma = HabilidadesDeForma.tipoDoGolpe(atacante, golpe);
+    if (daForma != null) {
+      return daForma;
+    }
     ElementalType doItem = ItensDeDano.tipoDoGolpe(atacante, golpe);
     if (doItem != null) {
       return doItem;
+    }
+    // 21/10 (habilidades, lote da conta do dano): Aeração, Mãos de Fada, Refrigeração, Crosta Elétrica, Normalidade, Voz
+    // Líquida
+    ElementalType daHabilidade = HabilidadesDaConta.tipoDoGolpe(atacante, golpe);
+    if (daHabilidade != null) {
+      return daHabilidade;
     }
     if (!ESFERA_CLIMATICA.equals(golpe.getName())) {
       return golpe.getType();
@@ -133,7 +147,7 @@ public class ClimaNosGolpes {
 
   // Nado Rápido, Clorofila, Ímpeto de Areia e da Neve: Velocidade ×2 (na recarga e na carga, como o Lenço)
   public static double velocidade(Pokemon pokemon) {
-    Clima doRapido = RAPIDOS.get(pokemon.getAbility().getName());
+    Clima doRapido = RAPIDOS.get(Habilidades.atual(pokemon));
     return doRapido != null && EfeitosDoCampo.clima(pokemon) == doRapido ? RAPIDO_NO_CLIMA : 1.0;
   }
 
@@ -194,7 +208,7 @@ public class ClimaNosGolpes {
   // A cada turno de 3,5 s, nos Pokémon da batalha: Prato de Chuva, Corpo Gélido, Pele Seca, Poder Solar e Hidratação
   public static void porTurno(Arena arena, PokemonEntity entidade, Clima clima) {
     Pokemon pokemon = entidade.getPokemon();
-    String habilidade = pokemon.getAbility().getName();
+    String habilidade = Habilidades.atual(pokemon);
     int cura = 0;
     int fere = 0;
     switch (habilidade) {
@@ -236,10 +250,10 @@ public class ClimaNosGolpes {
   // Entrou na arena (EfeitosDoCampo confere quem chegou; fora da batalha, quem saiu da bola): Chuvisco, Seca, Fluxo de
   // Areia e Alerta de Neve
   public static void aoEntrar(Arena arena, PokemonEntity entidade, long agora) {
-    Clima chama = CHAMAM_AO_ENTRAR.get(entidade.getPokemon().getAbility().getName());
+    Clima chama = CHAMAM_AO_ENTRAR.get(Habilidades.atual(entidade.getPokemon()));
     if (chama != null && arena.campo().clima() != chama) {
       CobblemonCombatZA.LOGGER.info("CLIMA: {} entrou com {}", entidade.getPokemon().getSpecies().getName(),
-          entidade.getPokemon().getAbility().getName());
+          Habilidades.atual(entidade.getPokemon()));
       EfeitosDoCampo.chamarClima(arena, entidade.getPokemon(), chama, agora);
     }
   }

@@ -12,6 +12,12 @@ import com.cobblemon.mod.common.pokemon.Pokemon;
 import dev.victor.combatza.combate.GerenciarCombates;
 import dev.victor.combatza.campo.CampoEBarreiras;
 import dev.victor.combatza.campo.ClimaNosGolpes;
+import dev.victor.combatza.campo.SalaTrick;
+import dev.victor.combatza.habilidades.HabilidadesDaConta;
+import dev.victor.combatza.habilidades.Paradoxo;
+import dev.victor.combatza.habilidades.HabilidadesDePrioridade;
+import dev.victor.combatza.habilidades.HabilidadesQueReagem;
+import dev.victor.combatza.habilidades.HabilidadesDeForma;
 import dev.victor.combatza.itens.ItensDeDano;
 import dev.victor.combatza.itens.EstadoDosItens;
 import dev.victor.combatza.itens.ItensDeCarga;
@@ -79,13 +85,20 @@ public class Execucao {
     this.arquetipo = Arquetipo.classificar(golpe);
     // Lote 3 dos itens: a Cauda Pesada deixa a carga mais lenta; a Garra Rápida e a Baga Custap pulam a carga; a Erva do Poder
     // tira a carga a mais; o Metrônomo conta o golpe seguido
-    double ritmo = ritmoDoCasting(pokemon) * ItensDeCarga.ritmo(pokemon);
-    int pulados = semCarga || ItensDeCarga.pulaACarga(pokemon) ? arquetipo.ticksDeCarga() : 0;
+    // 21/10 (habilidades, lote das reações): a prioridade das habilidades (Travessura, Asas de Vendaval, Triagem, Reação
+    // Rápida) também pula a carga, antes do item (a Custap não é gasta à toa); o Poder do Micélio carrega mais devagar.
+    // 21/10 (lote das formas): o Adiar, como a Cauda Pesada
+    double ritmo = ritmoDoCasting(pokemon) * ItensDeCarga.ritmo(pokemon) * HabilidadesDePrioridade.ritmo(pokemon, golpe)
+        * HabilidadesDeForma.ritmoDaCarga(pokemon);
+    int pulados = semCarga || HabilidadesDePrioridade.pulaACarga(pokemon, golpe) || ItensDeCarga.pulaACarga(pokemon)
+        ? arquetipo.ticksDeCarga() : 0;
     // 5b.2: o Raio Solar fora do Sol carrega 2 s a mais
     long cargaDoClima = semCarga ? 0 : ItensDeCarga.ervaDoPoder(pokemon, ClimaNosGolpes.cargaExtra(pokemon, golpe));
     // (o Metrônomo conta a vez do golpe, não cada acerto de um golpe de vários acertos)
     if (!semCarga) {
       EstadoDosItens.comecouGolpe(pokemon, golpe);
+      // 21/10 (habilidades, lote das reações): carregado (Electromorfose, Energia Eólica), o golpe Elétrico gasta a carga
+      HabilidadesQueReagem.comecouGolpe(pokemon, golpe);
     }
     // 7.2d: no selvagem, só a parte até o impacto fica mais longa; o resto do golpe é igual
     long aMaisDoSelvagem = pokemon.isWild()
@@ -254,11 +267,19 @@ public class Execucao {
   }
 
   public static double ritmoDoCasting(Pokemon pokemon) {
-    double velocidadeBase = pokemon.getForm().getBaseStats().getOrDefault(Stats.SPEED, 80);
-    double velocidade = velocidadeBase * Estagios.multiplicador(pokemon, "spe") * Paralisia.multiplicador(pokemon)
-        * ItensDeDano.velocidade(pokemon) * ClimaNosGolpes.velocidade(pokemon) * CampoEBarreiras.velocidade(pokemon);
+    // 21/10: no Truque de Agilidade, a velocidade vira do avesso (SalaTrick)
+    double velocidade = SalaTrick.velocidade(pokemon, velocidadeDaCarga(pokemon), Execucao::velocidadeDaCarga);
     double ritmo = 1.0 - Balanceamento.LIMITE_DO_CASTING * (velocidade - Balanceamento.VELOCIDADE_DE_REFERENCIA)
         / Balanceamento.FAIXA_DE_VELOCIDADE;
     return Math.clamp(ritmo, 1.0 - Balanceamento.LIMITE_DO_CASTING, 1.0 + Balanceamento.LIMITE_DO_CASTING);
+  }
+
+  // A Velocidade base da espécie, com os estágios, a paralisia, os itens, o clima e o Vento de Cauda
+  private static double velocidadeDaCarga(Pokemon pokemon) {
+    double velocidadeBase = pokemon.getForm().getBaseStats().getOrDefault(Stats.SPEED, 80);
+    return velocidadeBase * Estagios.multiplicador(pokemon, "spe") * Paralisia.multiplicador(pokemon)
+        * ItensDeDano.velocidade(pokemon) * ClimaNosGolpes.velocidade(pokemon) * CampoEBarreiras.velocidade(pokemon)
+        * HabilidadesDaConta.velocidade(pokemon) * Paradoxo.atributo(pokemon, "spe")
+        * HabilidadesDeForma.velocidade(pokemon);
   }
 }

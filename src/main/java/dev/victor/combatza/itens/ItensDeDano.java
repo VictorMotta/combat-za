@@ -16,6 +16,7 @@ import dev.victor.combatza.golpes.DanoEspecial;
 import dev.victor.combatza.golpes.EfeitosDosGolpes;
 import dev.victor.combatza.golpes.Execucao;
 import dev.victor.combatza.golpes.Vida;
+import dev.victor.combatza.habilidades.HabilidadesDosItens;
 import dev.victor.combatza.combate.GerenciarCombates;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
@@ -148,6 +149,16 @@ public class ItensDeDano {
     };
   }
 
+  // 21/10 (lote das formas): o tipo da Placa / da Memória que ele segura (null = nenhuma), para o Multitipo do Arceus e o
+  // Sistema Alfa do Silvally (TiposNaBatalha)
+  public static ElementalType tipoDaPlaca(Pokemon pokemon) {
+    return PLACAS.get(ItensSegurados.id(pokemon));
+  }
+
+  public static ElementalType tipoDaMemoria(Pokemon pokemon) {
+    return MEMORIAS.get(ItensSegurados.id(pokemon));
+  }
+
   // O poder do golpe (ao lado do HabilidadesDeDano.poder)
   public static double poder(Pokemon atacante, Move golpe, double poder) {
     String item = ItensSegurados.id(atacante);
@@ -249,6 +260,10 @@ public class ItensDeDano {
   // A Velocidade, na recarga e no ritmo da carga (como um estágio de Velocidade): o Lenço da Escolha ×1,5; a Bola de Ferro e
   // os itens "Power" ×0,5; o Pó Rápido no Ditto ×2
   public static double velocidade(Pokemon pokemon) {
+    // 21/10 (habilidades, lote das reações): o Alígero dobra a Velocidade depois que o item foi gasto (ou roubado)
+    if (HabilidadesDosItens.aligero(pokemon)) {
+      return DOBRO;
+    }
     String item = ItensSegurados.id(pokemon);
     if (ItensSegurados.LENCO_DA_ESCOLHA.equals(item)) {
       return ESCOLHA;

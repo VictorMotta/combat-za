@@ -17,8 +17,11 @@ import dev.victor.combatza.golpes.Execucao;
 import dev.victor.combatza.golpes.Flinch;
 import dev.victor.combatza.golpes.Vida;
 import dev.victor.combatza.habilidades.Habilidades;
+import dev.victor.combatza.habilidades.HabilidadesDaConta;
+import dev.victor.combatza.habilidades.HabilidadesDeFuga;
 import dev.victor.combatza.ia.IaDoSelvagem;
 import dev.victor.combatza.combate.GerenciarCombates;
+import dev.victor.combatza.treinadores.BatalhasDeTreinador;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
@@ -64,10 +67,12 @@ public class ItensDoAcerto {
     if (primeiro && resultado.gema()) {
       ItensDeDano.gastarGema(execucao);
     }
-    if (pvTirados > 0) {
+    // 21/10 (habilidades, lote da conta do dano): no golpe que a Força Absoluta fortaleceu, nem o Sino nem a Pedra do Rei
+    boolean forcaAbsoluta = HabilidadesDaConta.forcaAbsoluta(doAtacante, golpe);
+    if (pvTirados > 0 && !forcaAbsoluta) {
       sinoDeConcha(atacante, doAtacante, pvTirados, primeiro);
     }
-    if (primeiro && pvTirados > 0) {
+    if (primeiro && pvTirados > 0 && !forcaAbsoluta) {
       pedraDoRei(execucao, atacante, alvo);
     }
     if (primeiro && atacante.isAlive()) {
@@ -112,7 +117,8 @@ public class ItensDoAcerto {
     Pokemon pokemon = execucao.getPokemon();
     String item = ItensSegurados.id(pokemon);
     Move golpe = execucao.getGolpe();
-    if (!"kingsrock".equals(item) && !"razorfang".equals(item)
+    // 21/10: com o Fedor, a Pedra do Rei não soma outra chance (Showdown: um só "hesitar" de 10%)
+    if (!"kingsrock".equals(item) && !"razorfang".equals(item) || Habilidades.tem(pokemon, "stench")
         || golpe.getDamageCategory() == DamageCategories.INSTANCE.getSTATUS() || jaFazHesitar(golpe)
         || alvo instanceof PokemonEntity protegido && (Habilidades.tem(protegido.getPokemon(), Habilidades.ESCUDO_DE_POEIRA)
             || ItensSegurados.tem(protegido.getPokemon(), ItensSegurados.CAPA_FURTIVA))) {
@@ -196,13 +202,18 @@ public class ItensDoAcerto {
   // Cartão Vermelho: quem bateu sai da batalha (o selvagem foge; o seu volta para a bola). Devolve se agiu
   private static boolean cartaoVermelho(Pokemon dono, PokemonEntity atacante) {
     Pokemon doAtacante = atacante.getPokemon();
+    // 21/10: o Pokémon do treinador nunca sai da luta (BatalhasDeTreinador): o cartão fica guardado
     if (!ItensSegurados.disponivel(dono, "redcard") || !atacante.isAlive() || doAtacante == dono
-        || !doAtacante.isWild() && !ItensDeEstagio.podeVoltar(doAtacante)) {
+        || !doAtacante.isWild() && !ItensDeEstagio.podeVoltar(doAtacante) || BatalhasDeTreinador.ehDoTreinador(atacante)) {
       return false;
     }
     Component nome = ItensSegurados.gastarComNome(dono, "redcard");
     ItensSegurados.avisar(dono, Component.translatable("cobblemon.battle.enditem.redcard", dono.getDisplayName(false), nome,
         doAtacante.getDisplayName(false)));
+    // 21/10 (habilidades, lote da entrada e das imunidades): Ventosas e Cão de Guarda não saem à força (o cartão foi gasto)
+    if (HabilidadesDeFuga.naoSaiAForca(doAtacante)) {
+      return true;
+    }
     if (doAtacante.isWild()) {
       IaDoSelvagem.fazerFugir(atacante);
     } else {

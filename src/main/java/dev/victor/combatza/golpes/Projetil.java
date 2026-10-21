@@ -14,6 +14,7 @@ import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
 import dev.victor.combatza.CobblemonCombatZA;
 import dev.victor.combatza.combate.GerenciarCombates;
 import dev.victor.combatza.combate.Lados;
+import dev.victor.combatza.habilidades.QuebraMolde;
 import net.minecraft.core.Registry;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleOptions;
@@ -244,7 +245,8 @@ public class Projetil extends Entity {
       }
       return;
     }
-    voar();
+    // 21/10 (habilidades, lote da conta do dano): o projétil chega "durante o golpe" (o Quebra-Molde e o Infiltrado valem)
+    QuebraMolde.durante(execucao, this::voar);
   }
 
   // Um passo de 1 bloco: primeiro o bloco no caminho (clip), depois quem cruza o pedaço até ele. O primeiro que conta

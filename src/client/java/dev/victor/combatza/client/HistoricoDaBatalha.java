@@ -67,7 +67,8 @@ public class HistoricoDaBatalha {
   private record LadoNoPainel(UUID jogador, String nome, List<FotoNoPainel> fotos) {
   }
 
-  private record Painel(List<LadoNoPainel> jogadores, List<FotoNoPainel> selvagens) {
+  // 21/10 (PvP): "adversarios" = no duelo, o outro jogador (com o lutador dele), do lado direito no lugar dos selvagens
+  private record Painel(List<LadoNoPainel> jogadores, List<FotoNoPainel> selvagens, List<LadoNoPainel> adversarios) {
   }
 
   // Uma foto já posicionada na tela (o painel desenha em três passadas: fundos, retratos e textos)
@@ -263,6 +264,24 @@ public class HistoricoDaBatalha {
     return painel != null && !painelAcabou;
   }
 
+  // 21/10 (PvP): você está num duelo agora (o painel tem um adversário do outro lado)
+  public static boolean emDuelo() {
+    return emBatalha() && !painel.adversarios().isEmpty();
+  }
+
+  // 21/10 (PvP): o dono do Pokémon é o seu adversário no duelo de agora (Foco.ehAlvo: o foco, a placa e a prévia)
+  public static boolean ehDoAdversario(UUID dono) {
+    if (dono == null || !emDuelo()) {
+      return false;
+    }
+    for (LadoNoPainel lado : painel.adversarios()) {
+      if (dono.equals(lado.jogador())) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   private static void chegouPainel(PainelDaBatalhaPayload pacote) {
     if (pacote.jogadores().isEmpty()) {
       if (aviso == null) {
@@ -277,9 +296,11 @@ public class HistoricoDaBatalha {
       painelAcabou = false;
       aviso = null;
     }
-    List<LadoNoPainel> jogadores = pacote.jogadores().stream()
-        .map(lado -> new LadoNoPainel(lado.jogador(), lado.nome(), fotos(lado.pokemons()))).toList();
-    painel = new Painel(jogadores, fotos(pacote.selvagens()));
+    painel = new Painel(lados(pacote.jogadores()), fotos(pacote.selvagens()), lados(pacote.adversarios()));
+  }
+
+  private static List<LadoNoPainel> lados(List<PainelDaBatalhaPayload.Lado> lados) {
+    return lados.stream().map(lado -> new LadoNoPainel(lado.jogador(), lado.nome(), fotos(lado.pokemons()))).toList();
   }
 
   private static List<FotoNoPainel> fotos(List<PainelDaBatalhaPayload.Foto> fotos) {
@@ -489,8 +510,12 @@ public class HistoricoDaBatalha {
     Component rotuloDosSelvagens = Component.translatable("cobblemon_combat_za.batalha.selvagens");
     Component resultado = aviso != null ? aviso.texto() : null;
     float[] larguras = new float[painel.jogadores().size()];
-    float esquerda = medirJogadores(painel, fonte, larguras);
-    float direita = Math.max(larguraDasFotos(painel.selvagens()), fonte.width(rotuloDosSelvagens) * LETRA_PEQUENA);
+    float esquerda = medirJogadores(painel.jogadores(), fonte, larguras);
+    // 21/10 (PvP): no duelo, a direita é do adversário, desenhado como os jogadores (o rosto, o nome e o lutador)
+    boolean duelo = !painel.adversarios().isEmpty();
+    float[] largurasDoOutroLado = new float[painel.adversarios().size()];
+    float direita = duelo ? medirJogadores(painel.adversarios(), fonte, largurasDoOutroLado)
+        : Math.max(larguraDasFotos(painel.selvagens()), fonte.width(rotuloDosSelvagens) * LETRA_PEQUENA);
     float larguraDoVs = fonte.width(vs) * LETRA_DO_VS + 2 * ESPACO_DO_VS;
     float largura = BORDA_DO_PAINEL + esquerda + larguraDoVs + direita + BORDA_DO_PAINEL;
     if (resultado != null) {
@@ -521,6 +546,13 @@ public class HistoricoDaBatalha {
     float xDoVs = x + (BORDA_DO_PAINEL + esquerda) * k;
     float xDosSelvagens = xDoVs + larguraDoVs * k;
     colocar(colocadas, painel.selvagens(), xDosSelvagens, yDasFotos, k, false);
+    float[] xDosAdversarios = new float[largurasDoOutroLado.length];
+    cursor = xDosSelvagens;
+    for (int i = 0; i < largurasDoOutroLado.length; i++) {
+      xDosAdversarios[i] = cursor;
+      colocar(colocadas, painel.adversarios().get(i).fotos(), cursor, yDasFotos, k, false);
+      cursor += (largurasDoOutroLado[i] + ENTRE_JOGADORES) * k;
+    }
 
     // 1) o fundo, a faixa de cima, as caixinhas das fotos e as barrinhas de vida
     Formas.retangulo(tela, x, y, w, h, naEsquerda ? CANTOS_NA_ESQUERDA : CANTOS_NA_DIREITA,
@@ -541,9 +573,13 @@ public class HistoricoDaBatalha {
       return y + h;
     }
     // 3) os rostos das skins, os nomes, o VS e o resultado
-    nomesDosJogadores(tela, cliente, painel, xDosJogadores, yDosNomes, k, alfa);
-    escrever(tela, fonte, rotuloDosSelvagens, xDosSelvagens, yDosNomes + (CABECA - ALTURA_DA_LETRA * LETRA_PEQUENA) / 2 * k,
-        LETRA_PEQUENA * k, Formas.comAlfa(ROTULO, alfa));
+    nomesDosJogadores(tela, cliente, painel.jogadores(), xDosJogadores, yDosNomes, k, alfa);
+    if (duelo) {
+      nomesDosJogadores(tela, cliente, painel.adversarios(), xDosAdversarios, yDosNomes, k, alfa);
+    } else {
+      escrever(tela, fonte, rotuloDosSelvagens, xDosSelvagens,
+          yDosNomes + (CABECA - ALTURA_DA_LETRA * LETRA_PEQUENA) / 2 * k, LETRA_PEQUENA * k, Formas.comAlfa(ROTULO, alfa));
+    }
     escrever(tela, fonte, vs, xDoVs + ESPACO_DO_VS * k, yDasFotos + (FOTO_GRANDE - ALTURA_DA_LETRA * LETRA_DO_VS) / 2 * k,
         LETRA_DO_VS * k, Formas.comAlfa(COMECOU, alfa));
     if (resultado != null) {
@@ -564,10 +600,10 @@ public class HistoricoDaBatalha {
   }
 
   // A largura de cada jogador (o maior entre as fotos e o rosto com o nome) vai em "larguras"; devolve o lado inteiro
-  private static float medirJogadores(Painel painel, Font fonte, float[] larguras) {
+  private static float medirJogadores(List<LadoNoPainel> lados, Font fonte, float[] larguras) {
     float esquerda = 0;
     for (int i = 0; i < larguras.length; i++) {
-      LadoNoPainel lado = painel.jogadores().get(i);
+      LadoNoPainel lado = lados.get(i);
       larguras[i] = Math.max(larguraDasFotos(lado.fotos()), CABECA + 3 + fonte.width(lado.nome()) * LETRA_PEQUENA);
       esquerda += larguras[i] + (i > 0 ? ENTRE_JOGADORES : 0);
     }
@@ -598,10 +634,10 @@ public class HistoricoDaBatalha {
   }
 
   // O rosto da skin e o nome de cada jogador, em cima das fotos dele
-  private static void nomesDosJogadores(GuiGraphics tela, Minecraft cliente, Painel painel, float[] xDosJogadores,
-      float yDosNomes, float k, float alfa) {
+  private static void nomesDosJogadores(GuiGraphics tela, Minecraft cliente, List<LadoNoPainel> lados,
+      float[] xDosJogadores, float yDosNomes, float k, float alfa) {
     for (int i = 0; i < xDosJogadores.length; i++) {
-      LadoNoPainel lado = painel.jogadores().get(i);
+      LadoNoPainel lado = lados.get(i);
       RenderSystem.setShaderColor(1f, 1f, 1f, alfa);
       PlayerFaceRenderer.draw(tela, pele(cliente, lado.jogador()), Math.round(xDosJogadores[i]), Math.round(yDosNomes),
           Math.round(CABECA * k));

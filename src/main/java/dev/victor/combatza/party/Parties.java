@@ -23,7 +23,9 @@ import net.minecraft.world.entity.player.Player;
 // A PARTY (dele, 20/10: "uma funcionalidade nossa, de party simples, igual um MMO"; os comandos primeiro e a tela depois; "a
 // party luta junta"). Uma party só: com o Open Parties and Claims no servidor, ela é a DELE (a mesma que divide o terreno
 // protegido; PonteDoOpac); sem ele, é a nossa, aqui: até 4, quem convida vira o líder (só ele tira alguém; saiu, o próximo
-// vira), sair do servidor = sair da party, fica só na memória. O convite vale 60 s nos dois casos.
+// vira). 21/10 (dele: "a party não deveria ser desfeita saindo do jogo, deveria continuar mesmo em servidor dedicado"): ela fica
+// guardada no mundo (PartiesSalvas); quem sai do jogo continua nela, aparece offline, e volta para ela ao entrar. O convite vale
+// 60 s nos dois casos.
 // Na party: quem está perto entra na sua batalha e o XP é dividido (GerenciarCombates, Experiencia); estranhos não entram na
 // sua batalha e os golpes não pegam neles nem nos Pokémon deles (Lados). O seu jogo recebe a lista (PartyPayload) para o
 // quadrinho da party, o brilho através da parede, a tela P e o mapa do Xaero
@@ -52,6 +54,8 @@ public class Parties {
   }
 
   private static final Map<UUID, Party> DE = new HashMap<>();
+  // O último nome de cada membro (para quem está offline), guardado junto com a party
+  private static final Map<UUID, String> NOMES = new HashMap<>();
   // Pelo UUID de quem foi convidado
   private static final Map<UUID, Convite> CONVITES = new HashMap<>();
   private static final Map<UUID, PartyPayload> ULTIMO_ENVIO = new HashMap<>();
@@ -167,6 +171,12 @@ public class Parties {
     }
     party.membros.add(quem.getUUID());
     DE.put(quem.getUUID(), party);
+    NOMES.put(quem.getUUID(), quem.getGameProfile().getName());
+    ServerPlayer quemConvidou = quem.server.getPlayerList().getPlayer(convite.quemConvidou());
+    if (quemConvidou != null) {
+      NOMES.put(quemConvidou.getUUID(), quemConvidou.getGameProfile().getName());
+    }
+    salvar(quem.server);
     avisarTodos(quem.server, party, Component.translatable(FRASE + "entrou", quem.getDisplayName()));
     CobblemonCombatZA.LOGGER.info("PARTY: {} entrou ({} na party)", quem.getName().getString(), party.membros.size());
     return 1;
@@ -248,18 +258,27 @@ public class Parties {
     for (UUID membro : party.membros) {
       ServerPlayer online = quem.server.getPlayerList().getPlayer(membro);
       lista.append(Component.literal("\n " + (membro.equals(party.lider) ? "♛ " : "• ")))
-          .append(online != null ? online.getDisplayName() : Component.literal(membro.toString().substring(0, 8)));
+          .append(online != null ? online.getDisplayName() : Component.literal(nome(membro)).append(" (")
+              .append(Component.translatable(FRASE + "offline")).append(")").withStyle(ChatFormatting.GRAY));
     }
     quem.sendSystemMessage(lista);
     return 1;
   }
 
-  // Sai da party nossa (saiu por conta, foi tirado, saiu do servidor). Sobrou um: a party acaba. Era o líder: o próximo vira
+  // Sai da party nossa (saiu por conta, foi tirado). Sobrou um: a party acaba. Era o líder: o próximo vira
   private static void tirar(MinecraftServer servidor, UUID quem, Component aviso) {
     Party party = DE.remove(quem);
     if (party == null) {
       return;
     }
+    try {
+      tirarDa(servidor, party, quem, aviso);
+    } finally {
+      salvar(servidor);
+    }
+  }
+
+  private static void tirarDa(MinecraftServer servidor, Party party, UUID quem, Component aviso) {
     party.membros.remove(quem);
     avisarTodos(servidor, party, aviso);
     if (party.membros.size() <= 1) {
@@ -282,13 +301,53 @@ public class Parties {
     CobblemonCombatZA.LOGGER.info("PARTY: {} saiu ({} na party)", quem, party.membros.size());
   }
 
-  // Saiu do servidor: na nossa, sai da party; na do OPAC, ela fica (o OPAC guarda)
+  // Saiu do servidor: ele continua na party (na nossa, guardada no mundo; na do OPAC, o OPAC guarda) e aparece offline
   public static void aoDesconectar(ServerPlayer jogador) {
     CONVITES.remove(jogador.getUUID());
     ULTIMO_ENVIO.remove(jogador.getUUID());
-    if (!comOpac && DE.containsKey(jogador.getUUID())) {
-      tirar(jogador.server, jogador.getUUID(), Component.translatable(FRASE + "saiu", jogador.getDisplayName()));
+  }
+
+  // O mundo abriu: as parties guardadas voltam (com o OPAC, a party é a dele)
+  public static void carregar(MinecraftServer servidor) {
+    DE.clear();
+    NOMES.clear();
+    if (comOpac) {
+      return;
     }
+    PartiesSalvas salvas = salvas(servidor);
+    for (PartiesSalvas.Salva salva : salvas.parties()) {
+      Party party = new Party();
+      party.lider = salva.lider();
+      party.membros.addAll(salva.membros());
+      party.membros.forEach(membro -> DE.put(membro, party));
+    }
+    NOMES.putAll(salvas.nomes());
+    CobblemonCombatZA.LOGGER.info("PARTY: {} party(s) guardada(s) voltaram", salvas.parties().size());
+  }
+
+  // Guarda as parties de 2 ou mais (a de 1, esperando o primeiro aceitar, não) e os nomes dos membros
+  private static void salvar(MinecraftServer servidor) {
+    if (comOpac) {
+      return;
+    }
+    List<PartiesSalvas.Salva> parties = new ArrayList<>();
+    Map<UUID, String> nomes = new HashMap<>();
+    for (Party party : new java.util.LinkedHashSet<>(DE.values())) {
+      if (party.membros.size() >= 2) {
+        parties.add(new PartiesSalvas.Salva(party.lider, List.copyOf(party.membros)));
+        party.membros.forEach(membro -> nomes.put(membro, nome(membro)));
+      }
+    }
+    salvas(servidor).trocar(parties, nomes);
+  }
+
+  private static PartiesSalvas salvas(MinecraftServer servidor) {
+    return servidor.overworld().getDataStorage().computeIfAbsent(PartiesSalvas.FABRICA, PartiesSalvas.ARQUIVO);
+  }
+
+  // O nome que ficou guardado (para quem está offline)
+  private static String nome(UUID jogador) {
+    return NOMES.getOrDefault(jogador, jogador.toString().substring(0, 8));
   }
 
   // A cada 10 ticks: a lista da party vai para o jogo de cada um (só quando muda); os convites velhos somem
@@ -298,6 +357,17 @@ public class Parties {
       return;
     }
     CONVITES.values().removeIf(convite -> agora > convite.ate());
+    // Quem trocou de nome desde a última vez: o nome guardado acompanha
+    boolean mudouNome = false;
+    for (ServerPlayer jogador : servidor.getPlayerList().getPlayers()) {
+      String nome = jogador.getGameProfile().getName();
+      if (DE.containsKey(jogador.getUUID()) && !nome.equals(NOMES.put(jogador.getUUID(), nome))) {
+        mudouNome = true;
+      }
+    }
+    if (mudouNome) {
+      salvar(servidor);
+    }
     for (ServerPlayer jogador : servidor.getPlayerList().getPlayers()) {
       PartyPayload pacote = montar(jogador);
       if (!pacote.equals(ULTIMO_ENVIO.get(jogador.getUUID())) && ServerPlayNetworking.canSend(jogador, PartyPayload.TIPO)) {
@@ -342,7 +412,8 @@ public class Parties {
       for (UUID membro : party.membros) {
         if (!membro.equals(jogador.getUUID())) {
           ServerPlayer online = jogador.server.getPlayerList().getPlayer(membro);
-          outros.add(new Membro(membro, online == null ? "?" : online.getGameProfile().getName(), membro.equals(party.lider)));
+          outros.add(new Membro(membro, online == null ? nome(membro) : online.getGameProfile().getName(),
+              membro.equals(party.lider)));
         }
       }
     }
@@ -390,6 +461,7 @@ public class Parties {
 
   public static void limpar() {
     DE.clear();
+    NOMES.clear();
     CONVITES.clear();
     ULTIMO_ENVIO.clear();
   }

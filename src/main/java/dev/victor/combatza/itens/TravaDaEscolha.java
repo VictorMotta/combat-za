@@ -10,6 +10,9 @@ import com.cobblemon.mod.common.pokemon.Pokemon;
 
 import dev.victor.combatza.CobblemonCombatZA;
 import dev.victor.combatza.combate.GerenciarCombates;
+import dev.victor.combatza.habilidades.Habilidades;
+import dev.victor.combatza.habilidades.HabilidadesDaConta;
+import dev.victor.combatza.habilidades.HabilidadesQueReagem;
 import dev.victor.combatza.rede.TravaDaEscolhaPayload;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.server.level.ServerPlayer;
@@ -25,14 +28,19 @@ public class TravaDaEscolha {
   private TravaDaEscolha() {
   }
 
+  // 21/10 (habilidades, lote da conta do dano): a habilidade Táticas de Gorila trava igual
   private static boolean temEscolha(Pokemon pokemon) {
     String item = ItensSegurados.id(pokemon);
     return ItensSegurados.FAIXA_DA_ESCOLHA.equals(item) || ItensSegurados.LENTES_DA_ESCOLHA.equals(item)
-        || ItensSegurados.LENCO_DA_ESCOLHA.equals(item);
+        || ItensSegurados.LENCO_DA_ESCOLHA.equals(item) || HabilidadesDaConta.travaComoEscolha(pokemon);
   }
 
   // Este golpe está desligado agora? (preso em outro, ou de status com o Colete). Perdeu o item: destrava
   public static boolean bloqueia(Pokemon pokemon, int slot, Move golpe) {
+    // 21/10 (habilidades, lote das reações): o golpe desabilitado pelo Corpo Maldito também fica desligado
+    if (HabilidadesQueReagem.desabilitado(pokemon, golpe)) {
+      return true;
+    }
     if (ItensSegurados.tem(pokemon, ItensSegurados.COLETE_DE_ATAQUE)
         && golpe.getDamageCategory() == DamageCategories.INSTANCE.getSTATUS()) {
       return true;
@@ -47,6 +55,10 @@ public class TravaDaEscolha {
 
   // Por que o golpe está desligado (para a barra de ação)
   public static net.minecraft.network.chat.Component porque(Pokemon pokemon, Move golpe) {
+    if (HabilidadesQueReagem.desabilitado(pokemon, golpe)) {
+      return net.minecraft.network.chat.Component.translatable("cobblemon.battle.cant.disable",
+          pokemon.getDisplayName(false), golpe.getDisplayName());
+    }
     if (ItensSegurados.tem(pokemon, ItensSegurados.COLETE_DE_ATAQUE)
         && golpe.getDamageCategory() == DamageCategories.INSTANCE.getSTATUS()) {
       return net.minecraft.network.chat.Component.translatable("cobblemon_combat_za.item.colete",
@@ -54,9 +66,11 @@ public class TravaDaEscolha {
     }
     Integer preso = PRESOS.get(pokemon.getUuid());
     Move travado = preso == null ? null : pokemon.getMoveSet().get(preso);
+    // (presa pelas Táticas de Gorila, o nome da habilidade no lugar do item)
+    net.minecraft.network.chat.Component deQuem = HabilidadesDaConta.travaComoEscolha(pokemon)
+        ? Habilidades.nome(pokemon) : ItensSegurados.nome(pokemon);
     return net.minecraft.network.chat.Component.translatable("cobblemon_combat_za.item.trava",
-        pokemon.getDisplayName(false), travado == null ? golpe.getDisplayName() : travado.getDisplayName(),
-        ItensSegurados.nome(pokemon));
+        pokemon.getDisplayName(false), travado == null ? golpe.getDisplayName() : travado.getDisplayName(), deQuem);
   }
 
   // Usou um golpe: com a Escolha, na batalha, trava nele

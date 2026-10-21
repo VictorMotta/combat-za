@@ -19,6 +19,7 @@ import dev.victor.combatza.CobblemonCombatZA;
 import dev.victor.combatza.combate.GerenciarCombates;
 import dev.victor.combatza.combate.Lados;
 import dev.victor.combatza.habilidades.Habilidades;
+import dev.victor.combatza.habilidades.TiposNaBatalha;
 import dev.victor.combatza.itens.ItensDoCampo;
 import net.minecraft.SharedConstants;
 import net.minecraft.core.particles.BlockParticleOption;
@@ -57,6 +58,13 @@ public class Armadilhas {
   private static final double[] ESPINHOS_POR_CAMADA = { 1.0 / 8, 1.0 / 6, 1.0 / 4 };
   private static final String FRASE = "cobblemon_combat_za.armadilha.";
   private static final String LEVITACAO = "levitate";
+  // 21/10 (golpes de status que faltavam): até onde o Giro Rápido, o Descondensar e o Arrumar recolhem armadilhas
+  private static final double RAIO_DA_LIMPEZA = 16.0;
+
+  // Uma armadilha recolhida: o golpe que a fez (spikes, toxicspikes, stealthrock, stickyweb) e se foi um selvagem que pôs
+  // (a armadilha do selvagem pega no lado dos jogadores)
+  public record Recolhida(String golpe, boolean doSelvagem) {
+  }
 
   private enum Tipo {
     ESPINHOS(3), TOXICOS(2), PEDRA(1), TEIA(1);
@@ -127,6 +135,14 @@ public class Armadilhas {
     }
   }
 
+  // 21/10 (habilidades, lote das reações): o Detrito Tóxico espalha Espinhos Tóxicos embaixo de quem bateu. "daHabilidade" é
+  // uma Execucao de Espinhos Tóxicos do dono da habilidade (HabilidadesQueReagem), para a armadilha ser do lado dele
+  public static void toxicosEmbaixo(Execucao daHabilidade, Entity quem) {
+    if (quem.level() instanceof ServerLevel nivel) {
+      colocar(daHabilidade, nivel, Tipo.TOXICOS, noChao(nivel, quem.position()));
+    }
+  }
+
   public static void atualizar(long agora) {
     for (Armadilha armadilha : List.copyOf(ARMADILHAS)) {
       boolean acabou = armadilha.deBatalha ? !GerenciarCombates.estaEmCombate(armadilha.jogador)
@@ -148,11 +164,33 @@ public class Armadilhas {
     ARMADILHAS.clear();
   }
 
+  // 21/10 (golpes de status que faltavam): o Giro Rápido e a Rotação Mortal recolhem as armadilhas que pegam em quem girou (as
+  // do outro lado); o Descondensar e o Arrumar, todas. Nos jogos, as armadilhas são "do lado"; aqui, as que estão no chão
+  // até 16 blocos de quem usou, no mesmo mundo
+  public static List<Recolhida> recolher(PokemonEntity quem, boolean soAsQuePegamNele) {
+    List<Recolhida> recolhidas = new ArrayList<>();
+    for (Armadilha armadilha : List.copyOf(ARMADILHAS)) {
+      boolean doSelvagem = armadilha.execucao.getPokemon().isWild();
+      if (armadilha.nivel != quem.level() || noChaoDistancia(armadilha.centro, quem.position()) > RAIO_DA_LIMPEZA
+          || soAsQuePegamNele && Lados.mesmoLado(armadilha.execucao.getPokemon(), quem.getPokemon())) {
+        continue;
+      }
+      ARMADILHAS.remove(armadilha);
+      recolhidas.add(new Recolhida(armadilha.golpe().getName(), doSelvagem));
+      CobblemonCombatZA.LOGGER.info("ARMADILHA: {} recolheu {} ({} camada(s))", quem.getPokemon().getSpecies().getName(),
+          armadilha.golpe().getName(), armadilha.camadas);
+    }
+    return recolhidas;
+  }
+
   // Do mesmo jogador, do mesmo tipo e no mesmo lugar: empilha uma camada. Senão, uma armadilha nova
   private static void colocar(Execucao execucao, ServerLevel nivel, Tipo tipo, Vec3 centro) {
     long agora = execucao.getJogador().server.getTickCount();
     for (Armadilha armadilha : ARMADILHAS) {
-      if (armadilha.jogador == execucao.getJogador() && armadilha.tipo == tipo && armadilha.nivel == nivel
+      // 21/10 (habilidades, lote das reações): só empilha na armadilha do mesmo lado (o Detrito Tóxico do selvagem cai perto
+      // dos Espinhos Tóxicos do seu Pokémon, e não pode virar uma camada a mais dos seus)
+      boolean mesmoLado = Lados.mesmoLado(armadilha.execucao.getPokemon(), execucao.getPokemon());
+      if (armadilha.jogador == execucao.getJogador() && armadilha.tipo == tipo && armadilha.nivel == nivel && mesmoLado
           && noChaoDistancia(armadilha.centro, centro) <= RAIO) {
         armadilha.camadas = Math.min(tipo.camadasMaximas, armadilha.camadas + 1);
         armadilha.renovar(agora);
@@ -251,8 +289,9 @@ public class Armadilhas {
     if (pokemon == null) {
       return 1.0;
     }
-    double multiplicador = AIUtility.INSTANCE.getDamageMultiplier(ElementalTypes.ROCK, pokemon.getPrimaryType());
-    ElementalType segundo = pokemon.getSecondaryType();
+    // 21/10 (lote das formas): os tipos de agora (TiposNaBatalha)
+    double multiplicador = AIUtility.INSTANCE.getDamageMultiplier(ElementalTypes.ROCK, TiposNaBatalha.primario(pokemon));
+    ElementalType segundo = TiposNaBatalha.secundario(pokemon);
     if (segundo != null) {
       multiplicador *= AIUtility.INSTANCE.getDamageMultiplier(ElementalTypes.ROCK, segundo);
     }

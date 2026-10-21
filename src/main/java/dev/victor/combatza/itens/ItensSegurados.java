@@ -18,6 +18,11 @@ import dev.victor.combatza.combate.Combate;
 import dev.victor.combatza.combate.GerenciarCombates;
 import dev.victor.combatza.golpes.EfeitosDosGolpes;
 import dev.victor.combatza.golpes.Feedback;
+import dev.victor.combatza.habilidades.HabilidadesDaConta;
+import dev.victor.combatza.habilidades.HabilidadesDeBaga;
+import dev.victor.combatza.habilidades.HabilidadesDeEntrada;
+import dev.victor.combatza.habilidades.HabilidadesDosItens;
+import dev.victor.combatza.habilidades.HabilidadesQueReagem;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -78,7 +83,8 @@ public class ItensSegurados {
   // O id do Showdown do item que ele segura ("" sem item, ou com um item sem efeito de batalha)
   public static String id(Pokemon pokemon) {
     String id = CobblemonHeldItemManager.INSTANCE.showdownId(pokemon.heldItem());
-    return id == null ? NENHUM : id;
+    // 21/10 (habilidades, lote da entrada e das imunidades): com o Desajeitado, o item não faz nada na batalha
+    return id == null || HabilidadesDeEntrada.desajeitado(pokemon, id) ? NENHUM : id;
   }
 
   // O mesmo id sem a lista do Showdown, que só existe no servidor (no seu jogo conectado a um servidor ela vem vazia): o efeito
@@ -103,6 +109,10 @@ public class ItensSegurados {
   // Usou o item. Como o Cobblemon faz numa batalha contra selvagem (javap no shouldConsumeItem): as frutas e as ervas (a etiqueta
   // "consumed_in_wild_battle") somem; os outros (a Cinta de Foco) ficam com ele e só valem de novo na próxima batalha
   public static void gastar(Pokemon pokemon, String id) {
+    // 21/10: comeu uma baga (Bochechões e Ruminante; a baga ainda está na mão, para o nome)
+    HabilidadesDeBaga.comeu(pokemon, id);
+    // 21/10 (habilidades, lote das reações): a Colheita, o Pegar e o Alígero anotam o item gasto (antes de ele sumir)
+    HabilidadesDosItens.gastouItem(pokemon, id);
     if (pokemon.heldItem().is(CobblemonItemTags.CONSUMED_IN_WILD_BATTLE)) {
       pokemon.removeHeldItem();
     } else {
@@ -134,9 +144,10 @@ public class ItensSegurados {
   }
 
   // O contato que conta para as reações (Elmo Rochoso, Estática, Farpa Grudenta...): os Protetores tiram de todos os golpes de
-  // quem segura; a Luva de Soco, dos socos
+  // quem segura; a Luva de Soco, dos socos. 21/10 (habilidades, lote da conta do dano): a habilidade Longo Alcance, de todos
+  // os golpes de quem tem
   public static boolean fazContato(Pokemon atacante, Move golpe) {
-    if (!EfeitosDosGolpes.fazContato(golpe)) {
+    if (!EfeitosDosGolpes.fazContato(golpe) || HabilidadesDaConta.semContato(atacante)) {
       return false;
     }
     String item = id(atacante);
@@ -159,11 +170,14 @@ public class ItensSegurados {
     USADOS.remove(pokemon.getUuid());
     TravaDaEscolha.esquecer(pokemon);
     EstadoDosItens.esquecer(pokemon);
+    // 21/10 (habilidades, lote das reações): o que as habilidades guardam na batalha acaba, e o item roubado volta
+    HabilidadesQueReagem.esquecer(pokemon);
   }
 
   public static void limpar() {
     USADOS.clear();
     TravaDaEscolha.limpar();
     EstadoDosItens.limpar();
+    HabilidadesQueReagem.limpar();
   }
 }

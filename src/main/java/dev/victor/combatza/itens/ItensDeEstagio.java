@@ -15,6 +15,9 @@ import dev.victor.combatza.combate.GerenciarCombates;
 import dev.victor.combatza.combate.Lutadores;
 import dev.victor.combatza.golpes.AplicarEfeitos;
 import dev.victor.combatza.golpes.Estagios;
+import dev.victor.combatza.habilidades.HabilidadesQueReagem;
+import dev.victor.combatza.pvp.Duelo;
+import dev.victor.combatza.pvp.Duelos;
 import net.minecraft.SharedConstants;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -87,6 +90,20 @@ public class ItensDeEstagio {
         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     if (!subidas.isEmpty() && !copiando) {
       ervaImitadora(pokemon, subidas);
+      // 21/10 (habilidades, lote das reações): o Oportunista do outro lado sobe os mesmos atributos
+      HabilidadesQueReagem.oportunista(pokemon, subidas);
+    }
+  }
+
+  // 21/10 (habilidades, lote das reações): uma cópia de subidas (o Oportunista): o que ela sobe não faz a Erva Imitadora nem
+  // outro Oportunista copiar de volta, como a cópia da própria erva
+  public static void semCopiar(Runnable copia) {
+    boolean antes = copiando;
+    copiando = true;
+    try {
+      copia.run();
+    } finally {
+      copiando = antes;
     }
   }
 
@@ -112,8 +129,13 @@ public class ItensDeEstagio {
 
   // Um Pokémon do jogador, fora da bola e numa batalha (o selvagem não tem para quem trocar)
   public static boolean podeVoltar(Pokemon pokemon) {
-    return !pokemon.isWild() && pokemon.getEntity() != null && pokemon.getOwnerPlayer() != null
-        && GerenciarCombates.estaEmCombate(pokemon);
+    ServerPlayer dono = pokemon.isWild() ? null : pokemon.getOwnerPlayer();
+    if (dono == null || pokemon.getEntity() == null || !GerenciarCombates.estaEmCombate(pokemon)) {
+      return false;
+    }
+    // 21/10 (PvP): no duelo, só volta se outro dos N escolhidos pode entrar no lugar
+    Duelo duelo = Duelos.dueloDe(dono);
+    return duelo == null || duelo.temOutroComVida(dono, pokemon);
   }
 
   // A troca forçada dos jogos, no tempo real: ele volta para a bola, e o dono manda o próximo (a tecla de soltar)
@@ -146,7 +168,8 @@ public class ItensDeEstagio {
     }
   }
 
-  // Do outro lado da batalha: para o selvagem, o lutador de cada jogador; para o seu, os selvagens
+  // Do outro lado da batalha: para o selvagem, o lutador de cada jogador; para o seu, os selvagens (21/10, PvP: no duelo, o
+  // lutador do adversário; Combate.inimigosDe)
   private static List<Pokemon> inimigos(Combate combate, Pokemon pokemon) {
     List<Pokemon> inimigos = new ArrayList<>();
     if (pokemon.isWild()) {
@@ -156,8 +179,8 @@ public class ItensDeEstagio {
           inimigos.add(lutador);
         }
       }
-    } else {
-      for (PokemonEntity selvagem : combate.getSelvagens()) {
+    } else if (pokemon.getOwnerPlayer() != null) {
+      for (PokemonEntity selvagem : combate.inimigosDe(pokemon.getOwnerPlayer())) {
         if (selvagem.isAlive()) {
           inimigos.add(selvagem.getPokemon());
         }

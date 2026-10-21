@@ -11,6 +11,7 @@ import dev.victor.combatza.combate.EterEElixir;
 import dev.victor.combatza.combate.GerenciarCombates;
 import dev.victor.combatza.rede.PassivasPayload;
 import dev.victor.combatza.rede.PassivasPayload.Passiva;
+import dev.victor.combatza.pvp.Duelo;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.SharedConstants;
 import net.minecraft.server.MinecraftServer;
@@ -34,7 +35,9 @@ public class Passivas {
     for (ServerPlayer jogador : servidor.getPlayerList().getPlayers()) {
       Combate combate = GerenciarCombates.combateDoJogador(jogador);
       Arena arena = combate != null ? Arenas.daBatalha(combate) : Arenas.doJogador(jogador);
-      List<Passiva> passivas = montar(arena, agora);
+      // 21/10 (PvP): no duelo, quem aceitou o desafio está no outro lado do campo: as barreiras de lá são as dele
+      boolean meuLado = !(combate instanceof Duelo duelo) || duelo.ladoDe(jogador);
+      List<Passiva> passivas = montar(arena, meuLado, agora);
       // P1-7: o Éter e o Elixir (a recarga mais rápida) dos Pokémon dele
       passivas.addAll(EterEElixir.passivasDe(jogador, agora));
       PassivasPayload pacote = new PassivasPayload(passivas);
@@ -46,7 +49,7 @@ public class Passivas {
     }
   }
 
-  private static List<Passiva> montar(Arena arena, long agora) {
+  private static List<Passiva> montar(Arena arena, boolean meuLado, long agora) {
     List<Passiva> passivas = new ArrayList<>();
     CampoDaBatalha campo = arena.campo();
     if (campo.getDoGolpe() != Clima.NENHUM) {
@@ -57,16 +60,24 @@ public class Passivas {
     if (campo.getTerreno() != Terreno.NENHUM) {
       passivas.add(comPrazo(campo.getTerreno().nome(), Passiva.TODOS, campo.getPrazoDoTerreno(), agora));
     }
-    campo.barreiras(true).forEach((barreira, prazo) -> passivas.add(comPrazo(barreira.nome(), Passiva.SEU_LADO, prazo,
+    // 21/10: o Truque de Agilidade, dos dois lados
+    if (campo.getPrazoDaSalaTrick() != null) {
+      passivas.add(comPrazo(SalaTrick.NOME, Passiva.TODOS, campo.getPrazoDaSalaTrick(), agora));
+    }
+    campo.barreiras(meuLado).forEach((barreira, prazo) -> passivas.add(comPrazo(barreira.nome(), Passiva.SEU_LADO, prazo,
         agora)));
     if (arena.naBatalha()) {
-      campo.barreiras(false).forEach((barreira, prazo) -> passivas.add(comPrazo(barreira.nome(), Passiva.SELVAGENS, prazo,
-          agora)));
+      campo.barreiras(!meuLado).forEach((barreira, prazo) -> passivas.add(comPrazo(barreira.nome(), Passiva.SELVAGENS,
+          prazo, agora)));
     }
     return passivas;
   }
 
   private static Passiva comPrazo(String nome, int lado, CampoDaBatalha.Prazo prazo, long agora) {
+    // 21/10 (habilidades, lote da entrada e das imunidades): o clima forte dura enquanto quem o chamou está lá: sem relógio
+    if (ClimasFortes.semRelogio(prazo)) {
+      return new Passiva(nome, lado, Passiva.SEM_RELOGIO, Passiva.SEM_RELOGIO);
+    }
     return new Passiva(nome, lado, segundos(prazo.fim() - agora), segundos(prazo.duracao()));
   }
 

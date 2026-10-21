@@ -10,10 +10,15 @@ import com.cobblemon.mod.common.pokemon.Pokemon;
 
 import dev.victor.combatza.CobblemonCombatZA;
 import dev.victor.combatza.campo.CampoEBarreiras;
+import dev.victor.combatza.campo.ClimasFortes;
 import dev.victor.combatza.campo.ClimaNosGolpes;
 import dev.victor.combatza.campo.EfeitosDoCampo;
 import dev.victor.combatza.config.Configuracao;
+import dev.victor.combatza.habilidades.HabilidadesDaConta;
 import dev.victor.combatza.habilidades.HabilidadesDeDano;
+import dev.victor.combatza.habilidades.Paradoxo;
+import dev.victor.combatza.habilidades.HabilidadesDeForma;
+import dev.victor.combatza.habilidades.TiposNaBatalha;
 import dev.victor.combatza.itens.Bagas;
 import dev.victor.combatza.itens.ItensDeDano;
 import dev.victor.combatza.itens.ItensDoCampo;
@@ -109,20 +114,25 @@ public class Dano {
     }
 
     boolean fisico = golpe.getDamageCategory() == DamageCategories.INSTANCE.getPHYSICAL();
+    // 21/10 (habilidades, lote da conta do dano): HabilidadesDaConta ao lado de cada parte (a Ignorância no estágio)
+    // 21/10 (habilidades, lote da entrada e das imunidades): Protossíntese e Impulso Quark no maior atributo (Paradoxo)
     double ataqueDoAtacante = (fisico ? atacante.getAttack() : atacante.getSpecialAttack())
-        * Estagios.multiplicador(atacante, fisico ? "atk" : "spa")
+        * HabilidadesDaConta.estagio(atacante, defensor, fisico ? "atk" : "spa")
         * HabilidadesDeDano.ataque(atacante, defensor, golpe, fisico) * ItensDeDano.ataque(atacante, fisico)
-        * ClimaNosGolpes.ataque(atacante, fisico);
+        * ClimaNosGolpes.ataque(atacante, fisico) * HabilidadesDaConta.ataque(atacante, defensor, golpe, fisico)
+        * Paradoxo.atributo(atacante, fisico ? "atk" : "spa") * HabilidadesDeForma.ataque(atacante, fisico);
     double defesaDoAlvo = (fisico ? defensor.getDefence() : defensor.getSpecialDefence())
-        * Estagios.multiplicador(defensor, fisico ? "def" : "spd") * ItensDeDano.defesa(defensor, fisico)
-        * EfeitosDoCampo.defesa(defensor, fisico);
+        * HabilidadesDaConta.estagio(defensor, atacante, fisico ? "def" : "spd") * ItensDeDano.defesa(defensor, fisico)
+        * EfeitosDoCampo.defesa(defensor, fisico) * HabilidadesDaConta.defesa(atacante, defensor, fisico)
+        * Paradoxo.atributo(defensor, fisico ? "def" : "spd") * HabilidadesDeForma.defesa(defensor, fisico);
 
     double poder = ItensDeDano.poder(atacante, golpe, HabilidadesDeDano.poder(atacante, defensor, golpe,
         DanoEspecial.poder(atacante, golpe, defensor, sorte))) * ClimaNosGolpes.poder(atacante, defensor, golpe)
-        * CampoEBarreiras.poder(atacante, defensor, golpe);
+        * CampoEBarreiras.poder(atacante, defensor, golpe) * HabilidadesDaConta.poder(atacante, defensor, golpe);
     double base = (2.0 * atacante.getLevel() / 5 + 2) * poder * ataqueDoAtacante / defesaDoAlvo / 50 + 2;
     boolean critico = !HabilidadesDeDano.semCritico(defensor) && !CampoEBarreiras.semCritico(defensor)
-        && sorte.nextDouble() < chanceDeCritico(atacante, golpe);
+        && (HabilidadesDaConta.criticoCerto(atacante, defensor)
+            || sorte.nextDouble() < chanceDeCritico(atacante, golpe));
     double queimadura = fisico && "brn".equals(EfeitosDeStatus.siglaDoStatus(atacante))
         && !HabilidadesDeDano.ignoraQueimadura(atacante) ? 0.5 : 1.0;
     // Lote 2: a baga que corta pela metade o super efetivo do tipo dela (a Chilan, qualquer golpe Normal)
@@ -130,6 +140,7 @@ public class Dano {
     double danoEmPv = base * stab(atacante, golpe) * efetividade * multiplicadorDeCritico(critico) * aleatorio(sorte)
         * queimadura * baga * HabilidadesDeDano.danoFinal(defensor, efetividade) * ItensDeDano.danoFinal(atacante, efetividade)
         * EfeitosDoCampo.danoFinal(atacante, defensor, golpe) * CampoEBarreiras.barreira(defensor, fisico, critico)
+        * HabilidadesDaConta.danoFinal(atacante, defensor, golpe, efetividade, critico)
         * Balanceamento.MULTIPLICADOR_DE_DANO;
 
     float danoNaVida = (float) (danoEmPv * alvo.getMaxHealth() / defensor.getMaxHealth());
@@ -156,10 +167,11 @@ public class Dano {
     return new Resultado((float) dano, 1.0, critico, ItensDeDano.usaGema(atacante, golpe), false);
   }
 
-  // 5b.2: o tipo do golpe agora (a Esfera Climática muda com o clima)
+  // 5b.2: o tipo do golpe agora (a Esfera Climática muda com o clima). 21/10 (lote das formas): e os tipos dele agora
+  // (TiposNaBatalha: Proteico, Troca de Cor...)
   private static double stab(Pokemon atacante, Move golpe) {
     ElementalType tipoDoGolpe = ClimaNosGolpes.tipo(atacante, golpe);
-    boolean mesmoTipo = tipoDoGolpe == atacante.getPrimaryType() || tipoDoGolpe == atacante.getSecondaryType();
+    boolean mesmoTipo = TiposNaBatalha.tem(atacante, tipoDoGolpe);
     return mesmoTipo ? HabilidadesDeDano.stab(atacante) : 1.0;
   }
 
@@ -171,12 +183,13 @@ public class Dano {
         && ClimaNosGolpes.tipo(atacante, golpe) == ElementalTypes.GROUND) {
       return 0;
     }
-    double multiplicador = contraOTipo(golpe, atacante, defensor, defensor.getPrimaryType());
-    ElementalType segundoTipo = defensor.getSecondaryType();
+    double multiplicador = contraOTipo(golpe, atacante, defensor, TiposNaBatalha.primario(defensor));
+    ElementalType segundoTipo = TiposNaBatalha.secundario(defensor);
     if (segundoTipo != null) {
       multiplicador *= contraOTipo(golpe, atacante, defensor, segundoTipo);
     }
-    return multiplicador;
+    // 21/10: o Casco Tera (vida cheia: "pouco efetivo")
+    return HabilidadesDaConta.cascoTera(defensor, multiplicador);
   }
 
   private static double contraOTipo(Move golpe, Pokemon atacante, Pokemon defensor, ElementalType tipoDoDefensor) {
@@ -188,13 +201,17 @@ public class Dano {
             && ItensSegurados.tem(defensor, ItensSegurados.BOLA_DE_FERRO))) {
       return 1.0;
     }
+    // 21/10 (habilidades, lote da entrada e das imunidades): a Correnteza Delta tira a fraqueza do tipo Voador
+    if (multiplicador > 1 && tipoDoDefensor == ElementalTypes.FLYING && ClimasFortes.protegeOVoador(defensor)) {
+      return 1.0;
+    }
     return multiplicador;
   }
 
   // O estágio de crítico: o do golpe (Talho, Folha Navalha: +1) e o dos itens (Lentes de Mira, Garra Afiada, Baga Lansat)
   private static double chanceDeCritico(Pokemon atacante, Move golpe) {
-    int estagio = Math.clamp((long) golpe.getTemplate().getCritRatio() - 1 + ItensDeDano.estagioDeCritico(atacante), 0,
-        CHANCE_DE_CRITICO.length - 1);
+    int estagio = Math.clamp((long) golpe.getTemplate().getCritRatio() - 1 + ItensDeDano.estagioDeCritico(atacante)
+        + HabilidadesDaConta.estagioDeCritico(atacante), 0, CHANCE_DE_CRITICO.length - 1);
     return CHANCE_DE_CRITICO[estagio] * Balanceamento.MULTIPLICADOR_CHANCE_CRITICO;
   }
 
