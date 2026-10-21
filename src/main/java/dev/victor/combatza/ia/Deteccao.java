@@ -13,6 +13,7 @@ import dev.victor.combatza.captura.Desmaio;
 import dev.victor.combatza.combate.Captura;
 import dev.victor.combatza.combate.Combate;
 import dev.victor.combatza.combate.GerenciarCombates;
+import dev.victor.combatza.config.Configuracao;
 import dev.victor.combatza.golpes.StatusNossos;
 import dev.victor.combatza.rede.SinaisPayload;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -21,8 +22,9 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.phys.Vec3;
 
-// 7.1 (decisões dele, 19/10): o selvagem te NOTA pela VISÃO. Na frente dele (um cone de 120 graus), até 16 blocos de dia e
-// 10 à noite, e sem nada no meio, o medidor vai enchendo: 1,5 segundo para encher. Agachado (Shift), demora o dobro.
+// 7.1 (decisões dele, 19/10): o selvagem te NOTA pela VISÃO. Na frente dele (um cone de 120 graus), até 10 blocos de dia e
+// 6 à noite, e sem nada no meio, o medidor vai enchendo: 3 segundos para encher. Agachado (Shift), demora o dobro. (Era 16 e
+// 10 blocos e 1,5 s; dele, 20/10: "tá muito fácil do selvagem te ver". Os três ficam no arquivo de configuração.)
 // Atrás dele, só nota de perto (5 blocos) e bem devagar. Saiu da vista antes de encher, o medidor esvazia (esquece em 2 s).
 // Encheu: ele reage pelo temperamento (Temperamento): o AGRESSIVO começa a batalha; o PACÍFICO para e fica te olhando; o
 // ARISCO foge. TODOS mostram os sinais no seu jogo (SinaisNaTela): o "?" em cima dele e o olho no alto da tela.
@@ -30,13 +32,10 @@ import net.minecraft.world.phys.Vec3;
 // quando um jogador em pé chega a 8 blocos (agachado, ele continua dormindo); acordado, ele começa a te notar como sempre
 public class Deteccao {
   private static final int A_CADA_TICKS = 5;
-  private static final double ALCANCE_DE_DIA = 16;
-  private static final double ALCANCE_DE_NOITE = 10;
   private static final double CONE = Math.cos(Math.toRadians(60));
   private static final double POR_TRAS_SO_DE_PERTO = 5;
   private static final double POR_TRAS = 0.15;
   private static final double AGACHADO = 0.5;
-  private static final double TICKS_PARA_NOTAR = 30;
   private static final double TICKS_PARA_ESQUECER = 40;
   private static final long TICKS_DO_SINAL_DO_AGRESSIVO = 2L * SharedConstants.TICKS_PER_SECOND;
   private static final long TICKS_OLHANDO_SEM_TE_VER = 8L * SharedConstants.TICKS_PER_SECOND;
@@ -124,7 +123,7 @@ public class Deteccao {
 
   // Os selvagens em volta que podem te notar: fora de qualquer batalha (a nossa e a do Cobblemon)
   private static void olharEmVolta(ServerPlayer jogador, long agora) {
-    double alcance = jogador.level().isDay() ? ALCANCE_DE_DIA : ALCANCE_DE_NOITE;
+    double alcance = jogador.level().isDay() ? Configuracao.alcanceDaVisaoDeDia() : Configuracao.alcanceDaVisaoDeNoite();
     for (PokemonEntity selvagem : jogador.level().getEntitiesOfClass(PokemonEntity.class,
         jogador.getBoundingBox().inflate(alcance), e -> e.getPokemon().isWild() && e.isAlive() && !e.isBattling()
             && !Captura.dentroDaBola(e) && !Desmaio.esta(e)
@@ -159,7 +158,7 @@ public class Deteccao {
     if (jogador.isCrouching()) {
       quanto *= AGACHADO;
     }
-    return quanto * A_CADA_TICKS / TICKS_PARA_NOTAR;
+    return quanto * A_CADA_TICKS / (Configuracao.segundosParaNotar() * SharedConstants.TICKS_PER_SECOND);
   }
 
   private static void notar(Atencao atencao, long agora) {

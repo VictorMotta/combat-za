@@ -55,7 +55,22 @@ public class PartyNaTela {
         || cliente.getDebugOverlay().showDebugScreen()) {
       return;
     }
-    boolean naEsquerda = !HistoricoDaBatalha.historicoNaEsquerda();
+    // O lugar e o tamanho do bloco (LayoutDaHud): o de sempre, ou o que você escolheu no layout da HUD
+    LayoutDaHud.comecar(tela, LayoutDaHud.Bloco.PARTY);
+    desenharQuadrinho(tela, cliente, membros, convite);
+    LayoutDaHud.terminar(tela);
+  }
+
+  // O layout da HUD (LayoutDaHud): a caixa no maior tamanho (o convite, o título e as 4 linhas), na borda do lado dela
+  static LayoutDaHud.Caixa caixa(int largura, int altura, boolean naEsquerda) {
+    float x = naEsquerda ? MARGEM : largura - MARGEM - LARGURA;
+    float alturaDaCaixa = ALTURA_DO_TITULO + ESPACO + ALTURA_DO_TITULO + MAXIMO * (ALTURA + ESPACO) - ESPACO;
+    return new LayoutDaHud.Caixa(x, altura * TOPO, LARGURA, alturaDaCaixa);
+  }
+
+  private static void desenharQuadrinho(GuiGraphics tela, Minecraft cliente, List<PartyPayload.Membro> membros,
+      String convite) {
+    boolean naEsquerda = LayoutDaHud.naEsquerda(LayoutDaHud.Bloco.PARTY, tela.guiWidth(), tela.guiHeight());
     float x = naEsquerda ? MARGEM : tela.guiWidth() - MARGEM - LARGURA;
     float y = tela.guiHeight() * TOPO;
     if (!convite.isEmpty()) {

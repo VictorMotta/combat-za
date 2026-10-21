@@ -152,9 +152,20 @@ public class SinaisNaTela {
     tela.flush();
     atualizarFaixa(cliente, daFaixa, progresso, desdeQueNotou, parcial, passou);
     if (alfaDaFaixa > 0) {
+      // O lugar e o tamanho da faixa (LayoutDaHud): o de sempre, ou o que você escolheu no layout da HUD. O "?" em cima dos
+      // selvagens fica no mundo
+      LayoutDaHud.comecar(tela, LayoutDaHud.Bloco.OLHO);
       desenharFaixa(tela, agora);
       tela.flush();
+      LayoutDaHud.terminar(tela);
     }
+  }
+
+  // O layout da HUD (LayoutDaHud): a caixa da faixa, com a altura do olho no susto (o maior tamanho dele)
+  static LayoutDaHud.Caixa caixaDaFaixa(int largura) {
+    float meiaAltura = ALTURA_DA_CAIXA / 2 * (1 + CRESCER_NO_SUSTO);
+    return new LayoutDaHud.Caixa(largura / 2f - LARGURA_DA_FAIXA / 2, CENTRO_DA_FAIXA - meiaAltura, LARGURA_DA_FAIXA,
+        2 * meiaAltura);
   }
 
   private static void desenharInterrogacao(GuiGraphics tela, Font fonte, LivingEntity vivo, float parcial, float pulso) {

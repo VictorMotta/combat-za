@@ -55,6 +55,8 @@ public class HudDeCombate {
   private static final int TAMANHO_DAS_CARGAS = 7;
   private static final int FUNDO_DAS_CARGAS = 0xFFC8901E;
   private static final float ESCALA_DAS_CARGAS = 0.75f;
+  // O layout da HUD: a caixa do losango tem lugar para nomes de golpe de até 70 pixels dos lados
+  private static final int NOME_COMPRIDO = 70;
 
   private HudDeCombate() {
   }
@@ -74,7 +76,21 @@ public class HudDeCombate {
     if (pokemon == null || !(pokemon.getState() instanceof SentOutState)) {
       return;
     }
+    // O lugar e o tamanho do bloco (LayoutDaHud): o de sempre, ou o que você escolheu no layout da HUD
+    LayoutDaHud.comecar(tela, LayoutDaHud.Bloco.GOLPES);
     desenharGolpes(tela, cliente.font, pokemon);
+    LayoutDaHud.terminar(tela);
+  }
+
+  // O layout da HUD (LayoutDaHud): a caixa do losango, com os nomes dos lados e a dica da prévia em cima
+  static LayoutDaHud.Caixa caixa(int largura, int altura) {
+    float centroX = largura - MARGEM_DIREITA;
+    float centroY = altura - MARGEM_DE_BAIXO;
+    float folgaDoNome = TAMANHO + 7;
+    float lado = DISTANCIA_ENTRE_GOLPES + folgaDoNome + NOME_COMPRIDO + 3;
+    float cima = DISTANCIA_ENTRE_GOLPES + ALTURA_DA_DICA + 2;
+    float baixo = DISTANCIA_ENTRE_GOLPES + folgaDoNome + 11;
+    return new LayoutDaHud.Caixa(centroX - lado, centroY - cima, 2 * lado, cima + baixo);
   }
 
   private static void desenharGolpes(GuiGraphics tela, Font fonte, Pokemon pokemon) {

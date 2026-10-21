@@ -29,8 +29,9 @@ import net.minecraft.world.phys.AABB;
 // - Sombrio e Fantasma no escuro (luz até 7) +33, no claro (luz 12 ou mais) −33;
 // - 7.1e: −33 se um Pokémon com dono, FORA DA BOLA, a até 9 blocos dele, tem Intimidação, Nervosismo ou Pressão (como no
 //   Fight or Flight, getIntimidateCoefficient: uma caixa de 18 × 18 × 18 em volta do selvagem).
-// Três faixas: 100 ou mais é AGRESSIVO (ataca sozinho); de 25 a 100, PACÍFICO (só revida); abaixo de 25, ARISCO (foge).
-// E o nível manda: abaixo do 25 ele nunca ataca sozinho.
+// Três faixas: 120 ou mais é AGRESSIVO (ataca sozinho); de 25 a 120, PACÍFICO (só revida); abaixo de 25, ARISCO (foge).
+// E o nível manda: abaixo do 25 ele nunca ataca sozinho. (Era 100; dele, 20/10: muitos ficavam bravos, escolheu "menos
+// bravos". A raiva para atacar e o nível ficam no arquivo de configuração.)
 // 7.1c (decisões dele, 19/10, depois de ver todos fugindo): a espécie entra pela cara (os atributos base) e pelo tipo, e
 // NÃO pelo "foge" / "se defende" do Cobblemon. Nos arquivos dele, só o Patrat diz "foge" e nenhum diz "não se defende"; o
 // resto é o valor padrão, que no jogo é igual ao de quem escreveu ("só o que ele diz"). E abaixo do nível 15 vale a conta,
@@ -55,9 +56,7 @@ public class Temperamento {
   private static final double NO_ESCURO = 33;
   private static final double PELA_INTIMIDACAO = -33;
   private static final double CAIXA_DA_INTIMIDACAO = 18;
-  private static final double AGRESSIVO_A_PARTIR = 100;
   private static final double PACIFICO_A_PARTIR = 25;
-  private static final int NIVEL_PARA_ATACAR_SOZINHO = 25;
   private static final int LUZ_DO_ESCURO = 7;
   private static final int LUZ_DO_CLARO = 12;
   // Os nomes do Cobblemon (cobblemon:brave) e quantas vezes a natureza pesa. As bravas são as listas do Fight or Flight; as
@@ -86,12 +85,13 @@ public class Temperamento {
     double raiva = raiva(selvagem);
     Decisao decisao = pelaEspecieOuLugar(selvagem, raiva);
     if (decisao == null) {
-      Tipo tipo = raiva >= AGRESSIVO_A_PARTIR ? Tipo.AGRESSIVO
+      Tipo tipo = raiva >= Configuracao.raivaParaAtacar() ? Tipo.AGRESSIVO
           : (raiva >= PACIFICO_A_PARTIR ? Tipo.PACIFICO : Tipo.ARISCO);
       decisao = new Decisao(tipo, raiva, "pela raiva");
     }
-    if (decisao.tipo() == Tipo.AGRESSIVO && selvagem.getPokemon().getLevel() < NIVEL_PARA_ATACAR_SOZINHO) {
-      return new Decisao(Tipo.PACIFICO, raiva, decisao.porque() + ", mas abaixo do nível 25");
+    int nivelMinimo = Configuracao.nivelParaAtacarSozinho();
+    if (decisao.tipo() == Tipo.AGRESSIVO && selvagem.getPokemon().getLevel() < nivelMinimo) {
+      return new Decisao(Tipo.PACIFICO, raiva, decisao.porque() + ", mas abaixo do nível " + nivelMinimo);
     }
     return decisao;
   }

@@ -167,6 +167,11 @@ public class Execucao {
     return daIa;
   }
 
+  // O bicho em que a mira pegou (null = um ponto no chão): no golpe do guarda, o alvo escolhido pela IA
+  public Entity alvoMirado() {
+    return mirada instanceof EntityHitResult acerto ? acerto.getEntity() : null;
+  }
+
   // 7.4b: o golpe que a IA escolheu para um Pokémon com dono (o guarda); o do selvagem também é da IA, mas não é de guarda
   public boolean ehDoGuarda() {
     return daIa && !pokemon.isWild();

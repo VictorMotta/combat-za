@@ -119,6 +119,19 @@ public class MegaNoCliente {
       return;
     }
     mostrada += (estado.carga() - mostrada) * Math.min(1f, tempo.getRealtimeDeltaTicks() * SUAVIDADE);
+    // O lugar e o tamanho do bloco (LayoutDaHud): o de sempre, ou o que você escolheu no layout da HUD
+    LayoutDaHud.comecar(tela, LayoutDaHud.Bloco.MEGA);
+    desenharMedidor(tela, cliente);
+    LayoutDaHud.terminar(tela);
+  }
+
+  // O layout da HUD (LayoutDaHud): a caixa do medidor, com o brilho e os brilhinhos em volta
+  static LayoutDaHud.Caixa caixa(int largura, int altura) {
+    float fora = RAIO + 6f;
+    return new LayoutDaHud.Caixa(largura - MARGEM_DIREITA - fora, altura - MARGEM_DE_BAIXO - fora, 2 * fora, 2 * fora);
+  }
+
+  private static void desenharMedidor(GuiGraphics tela, Minecraft cliente) {
     float cx = tela.guiWidth() - MARGEM_DIREITA;
     float cy = tela.guiHeight() - MARGEM_DE_BAIXO;
     boolean ativa = estado.megando() && !estado.pausado();

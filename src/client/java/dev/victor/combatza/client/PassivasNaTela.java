@@ -32,6 +32,8 @@ public class PassivasNaTela {
   private static final long NOME_FICA = 3000;
   private static final long NOME_SOME = 600;
   private static final int PISCA_NOS_ULTIMOS = 3;
+  // O layout da HUD: a caixa tem lugar para 6 ícones
+  private static final int ICONES_NA_CAIXA = 6;
   private static final int FUNDO_DE_CIMA = 0xC0222838;
   private static final int FUNDO_DE_BAIXO = 0xC0101420;
   private static final int BRANCO = 0xFFFFFFFF;
@@ -77,6 +79,14 @@ public class PassivasNaTela {
       }
     }
     passivas = pacote.passivas();
+  }
+
+  // O layout da HUD (LayoutDaHud): a caixa do bloco, nas coordenadas do painel do time (as passivas ficam logo acima do painel
+  // do selecionado)
+  static LayoutDaHud.Caixa caixa() {
+    float alturaDoTempo = ALTURA_DA_LETRA * LETRA_DO_TEMPO + 1;
+    return new LayoutDaHud.Caixa(0, -(ICONE + alturaDoTempo + ACIMA_DO_PAINEL), ICONES_NA_CAIXA * (ICONE + ESPACO) - ESPACO,
+        ICONE + alturaDoTempo);
   }
 
   // Na escala e no lugar do painel do time: (0, 0) é o canto de cima dele, os ícones ficam logo acima

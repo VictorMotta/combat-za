@@ -492,6 +492,8 @@ public class Tutorial {
       if (FabricLoader.getInstance().isModLoaded("xaerominimap")) {
         paginas.add(pagina(18, List.of(), texto("18.1"), texto("18.2"), texto("18.3")));
       }
+      // O layout da HUD (dele, 20/10: "uma forma dele redimensionar cada bloco (...) e ficar sempre salvo")
+      paginas.add(pagina(22, List.of(), texto("22.1"), texto("22.2"), texto("22.3")));
       paginas.add(pagina(8, List.of(oZoom), texto("8.1"), texto("8.2", ZoomDaCamera.tecla()), texto("8.3")));
       paginas.add(pagina(9, todas, texto("9.1")));
       return paginas;

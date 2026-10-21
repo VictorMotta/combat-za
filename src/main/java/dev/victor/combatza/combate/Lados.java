@@ -89,10 +89,11 @@ public class Lados {
 
   // Quem o golpe pega além do alvo marcado (no caminho do projétil e do jato, e na área do ponto de chegada).
   // 7.4b: o golpe do GUARDA (o seu Pokémon pela IA, Guardas) só pega MONSTROS, dentro e fora da batalha: atravessa os
-  // selvagens (a luta é do lutador, e um acerto sem querer começaria outra), você e os aliados
+  // selvagens (a luta é do lutador, e um acerto sem querer começaria outra), você e os aliados. E o alvo dele, mesmo não
+  // sendo monstro (o golem ou o aldeão que você bateu), também na área em volta do Pokémon
   public static boolean pegaNoGolpe(Execucao execucao, PokemonEntity atacante, Entity entidade, boolean emBatalha) {
     if (execucao.ehDoGuarda()) {
-      return ehMonstro(entidade);
+      return ehMonstro(entidade) || entidade == execucao.alvoMirado();
     }
     return ehInimigoDe(atacante, entidade) && entraNaLutaDe(atacante, entidade, emBatalha);
   }

@@ -44,15 +44,6 @@ public class PainelDoTime {
   private record Enquadramento(float caixa, float escala, float origemY) {
   }
 
-  // Onde o desenho está na tela e o quanto encolheu. A tesoura (scissor) do Minecraft não acompanha a pose, então a
-  // conta do recorte é feita aqui
-  private record Lugar(float x, float y, float escala) {
-    void recortar(GuiGraphics tela, float x0, float y0, float largura, float altura) {
-      tela.enableScissor((int) Math.floor(x + x0 * escala), (int) Math.floor(y + y0 * escala),
-          (int) Math.ceil(x + (x0 + largura) * escala), (int) Math.ceil(y + (y0 + altura) * escala));
-    }
-  }
-
   // Tela de resumo (Summary): caixa de 66, escala 2 x 20, origem 10 acima. PC (StorageSlot): caixa de 25, escala
   // 2,5 x 4,5, origem 1 abaixo. Os dois giram 13 graus para baixo e 35 para o lado (o PC vira para a esquerda, como no Z-A)
   private static final Enquadramento DO_RESUMO = new Enquadramento(66f, 40f, -10f);
@@ -205,23 +196,44 @@ public class PainelDoTime {
       }
     }
     boolean todosDeGuarda = LutadorNoCliente.todosDeGuarda();
-    float escala = escala(tela, VAGAS_DO_TIME + (todosDeGuarda ? 1 : 0));
-    float altura = MOLDURA + ESPACO_ATE_A_FILEIRA + ALTURA_DA_FILEIRA;
-    Lugar lugar = new Lugar(MARGEM_ESQUERDA, tela.guiHeight() - MARGEM_DE_BAIXO - altura * escala, escala);
-    tela.pose().pushPose();
-    tela.pose().translate(lugar.x(), lugar.y(), 0);
-    tela.pose().scale(escala, escala, 1f);
+    // O lugar e o tamanho de cada bloco (LayoutDaHud): o de sempre, ou o que você escolheu no layout da HUD. O painel do
+    // selecionado e a fileira são blocos separados (dele, 20/10: "a vida do seu bicho selecionado pode ser separada também,
+    // separada da barra de baixo"); sem ajuste, o painel fica em cima da fileira, onde ela estiver
+    LayoutDaHud.comecar(tela, LayoutDaHud.Bloco.SELECIONADO);
     if (atual != null && atual.getState() instanceof SentOutState) {
-      desenharSelecionado(tela, cliente.font, lugar, atual, tempo.getRealtimeDeltaTicks());
+      desenharSelecionado(tela, cliente.font, atual, tempo.getRealtimeDeltaTicks());
     }
-    desenharFileira(tela, cliente.font, lugar, time, selecionado, todosDeGuarda, MOLDURA + ESPACO_ATE_A_FILEIRA);
-    // P5-10: as passivas (o clima, o campo e as barreiras) logo acima, na mesma escala
+    LayoutDaHud.terminar(tela);
+    LayoutDaHud.comecar(tela, LayoutDaHud.Bloco.TIME);
+    desenharFileira(tela, cliente.font, time, selecionado, todosDeGuarda, MOLDURA + ESPACO_ATE_A_FILEIRA);
+    LayoutDaHud.terminar(tela);
+    // P5-10: as passivas (o clima, o campo e as barreiras) logo acima do painel do selecionado, na mesma escala; com lugar
+    // próprio no layout, lá
+    LayoutDaHud.comecar(tela, LayoutDaHud.Bloco.PASSIVAS);
     PassivasNaTela.desenhar(tela, cliente.font);
-    tela.pose().popPose();
+    LayoutDaHud.terminar(tela);
   }
 
-  private static float escala(GuiGraphics tela, int blocos) {
-    float espacoLivre = tela.guiWidth() / 2f - METADE_DA_BARRA_DE_ITENS - MAO_SECUNDARIA - 2 * MARGEM_ESQUERDA;
+  // O layout da HUD (LayoutDaHud): a caixa da fileira no maior tamanho (7 blocos, com o de "todos de guarda"). As caixas do
+  // painel, da fileira e das passivas usam as mesmas coordenadas: (0, 0) é o canto de cima do painel
+  static LayoutDaHud.Caixa caixaDaFileira() {
+    return new LayoutDaHud.Caixa(0, MOLDURA + ESPACO_ATE_A_FILEIRA, larguraDaFileira(VAGAS_DO_TIME + 1), ALTURA_DA_FILEIRA);
+  }
+
+  // A caixa do painel do selecionado: o retrato e, ao lado, a linha do nível, o nome e a barra de vida
+  static LayoutDaHud.Caixa caixaDoSelecionado() {
+    return new LayoutDaHud.Caixa(0, 0, MOLDURA + ESPACO_ATE_O_TEXTO + LARGURA_DA_VIDA, MOLDURA);
+  }
+
+  // O lugar de sempre: embaixo à esquerda, encolhido para caber antes da barra de itens
+  static LayoutDaHud.Transformacao padrao(int largura, int altura) {
+    float escala = escala(largura, VAGAS_DO_TIME + (LutadorNoCliente.todosDeGuarda() ? 1 : 0));
+    float alturaDoBloco = MOLDURA + ESPACO_ATE_A_FILEIRA + ALTURA_DA_FILEIRA;
+    return new LayoutDaHud.Transformacao(MARGEM_ESQUERDA, altura - MARGEM_DE_BAIXO - alturaDoBloco * escala, escala);
+  }
+
+  private static float escala(int largura, int blocos) {
+    float espacoLivre = largura / 2f - METADE_DA_BARRA_DE_ITENS - MAO_SECUNDARIA - 2 * MARGEM_ESQUERDA;
     return Math.clamp(espacoLivre / larguraDaFileira(blocos), ENCOLHER_ATE, 1f);
   }
 
@@ -243,10 +255,10 @@ public class PainelDoTime {
 
   // Item 6: o retrato de corpo inteiro numa moldura de vidro (o canto de cima à direita mais redondo) e, ao lado, a
   // plaquinha do nível, o gênero num círculo, o status, o nome grande e a barra de vida
-  private static void desenharSelecionado(GuiGraphics tela, Font fonte, Lugar lugar, Pokemon pokemon, float tempo) {
+  private static void desenharSelecionado(GuiGraphics tela, Font fonte, Pokemon pokemon, float tempo) {
     Formas.retangulo(tela, 0, 0, MOLDURA, MOLDURA, CANTOS_DA_MOLDURA, MOLDURA_DE_CIMA, MOLDURA_DE_BAIXO);
     tela.flush();
-    corpoInteiro(tela, lugar, pokemon, RETRATOS_GRANDES, DO_RESUMO, 1, 1, MOLDURA - 2, tempo);
+    corpoInteiro(tela, pokemon, RETRATOS_GRANDES, DO_RESUMO, 1, 1, MOLDURA - 2, tempo);
     naFrente(tela, () -> {
       Formas.borda(tela, 0, 0, MOLDURA, MOLDURA, CANTOS_DA_MOLDURA, 0.75f, BORDA_DA_MOLDURA);
       if (podeEvoluir(pokemon)) {
@@ -270,14 +282,14 @@ public class PainelDoTime {
   // comprido, com a tecla de soltar embaixo; nas pontas, setas que brilham (as teclas ← e → trocam o selecionado).
   // 7.9: com "todos de guarda", um 7º bloco com o escudinho depois do último (só para mostrar que está ligado: as setas
   // não param nele)
-  private static void desenharFileira(GuiGraphics tela, Font fonte, Lugar lugar, List<Vaga> time, int selecionado,
+  private static void desenharFileira(GuiGraphics tela, Font fonte, List<Vaga> time, int selecionado,
       boolean todosDeGuarda, float y) {
     float largura = larguraDaFileira(time.size() + (todosDeGuarda ? 1 : 0));
     seta(tela, 0, y + BLOCO / 2, 1);
     seta(tela, largura, y + BLOCO / 2, -1);
     for (int i = 0; i < time.size(); i++) {
       float x = LARGURA_DA_SETA + ESPACO_DA_SETA + i * (BLOCO + ESPACO_ENTRE_BLOCOS);
-      bloco(tela, fonte, lugar, time.get(i), time.get(i).numero() == selecionado, x, y);
+      bloco(tela, fonte, time.get(i), time.get(i).numero() == selecionado, x, y);
     }
     if (todosDeGuarda) {
       blocoDosGuardas(tela, LARGURA_DA_SETA + ESPACO_DA_SETA + time.size() * (BLOCO + ESPACO_ENTRE_BLOCOS), y);
@@ -290,7 +302,7 @@ public class PainelDoTime {
     Simbolos.escudo(tela, x + BLOCO / 2, y + BLOCO / 2 - 1f, BLOCO * TAMANHO_DO_ESCUDO, BRANCO, 1f);
   }
 
-  private static void bloco(GuiGraphics tela, Font fonte, Lugar lugar, Vaga vaga, boolean eOSelecionado, float x,
+  private static void bloco(GuiGraphics tela, Font fonte, Vaga vaga, boolean eOSelecionado, float x,
       float y) {
     Pokemon pokemon = vaga.pokemon();
     float altura = eOSelecionado ? ALTURA_DA_FILEIRA : BLOCO;
@@ -302,7 +314,7 @@ public class PainelDoTime {
       Formas.retangulo(tela, x, y, BLOCO, altura, CANTOS_DO_BLOCO, BLOCO_DE_CIMA, BLOCO_DE_BAIXO);
     }
     tela.flush();
-    corpoInteiro(tela, lugar, pokemon, RETRATOS_PEQUENOS, DO_PC, x, y, BLOCO, 0f);
+    corpoInteiro(tela, pokemon, RETRATOS_PEQUENOS, DO_PC, x, y, BLOCO, 0f);
     naFrente(tela, () -> {
       Formas.borda(tela, x, y, BLOCO, altura, CANTOS_DO_BLOCO, eOSelecionado ? 0.75f : 0.5f,
           eOSelecionado ? BORDA_DO_SELECIONADO : BORDA_DO_BLOCO);
@@ -372,13 +384,13 @@ public class PainelDoTime {
 
   // O corpo inteiro com a mesma função das telas do Cobblemon (PokemonGuiUtilsKt.drawProfilePokemon), recortado na
   // caixa. Para outro tamanho de caixa, a escala e a origem crescem na mesma proporção. "tempo" = quanto a animação anda
-  private static void corpoInteiro(GuiGraphics tela, Lugar lugar, Pokemon pokemon, Map<UUID, FloatingState> estados,
+  private static void corpoInteiro(GuiGraphics tela, Pokemon pokemon, Map<UUID, FloatingState> estados,
       Enquadramento enquadramento, float x, float y, float tamanho, float tempo) {
     FloatingState estado = estados.computeIfAbsent(pokemon.getUuid(), uuid -> new FloatingState());
     estado.setCurrentAspects(pokemon.getAspects());
     float proporcao = tamanho / enquadramento.caixa();
     float cor = pokemon.isFainted() ? COR_DE_QUEM_DESMAIOU : 1f;
-    lugar.recortar(tela, x, y, tamanho, tamanho);
+    LayoutDaHud.recortar(tela, x, y, tamanho, tamanho);
     tela.pose().pushPose();
     tela.pose().translate(x + tamanho / 2, y + enquadramento.origemY() * proporcao, 0);
     PokemonGuiUtilsKt.drawProfilePokemon(pokemon.asRenderablePokemon(), tela.pose(),

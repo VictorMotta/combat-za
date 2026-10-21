@@ -121,7 +121,7 @@ public class HistoricoDaBatalha {
   private static final long DURACAO_DO_AVISO = 5000;
   private static final float ALTURA_DO_AVISO = 28f;
   private static final float ACIMA_DOS_CARTOES = 4f;
-  private static final float MARGEM_DE_CIMA = 2f;
+  static final float MARGEM_DE_CIMA = 2f;
   private static final float ESPACO_ENTRE_ROSTOS = 2f;
   private static final float LARGURA_MAXIMA_DO_AVISO = 260f;
   private static final float LETRA_DO_TEXTO = 0.8f;
@@ -153,6 +153,8 @@ public class HistoricoDaBatalha {
   private static final float LETRA_DO_VS = 1.25f;
   private static final float LETRA_DO_RESULTADO = 0.9f;
   private static final float LARGURA_MAXIMA_DO_PAINEL = 300f;
+  // O layout da HUD: a caixa tem a altura de um painel comum (com o resultado) mais os 3 cartões
+  private static final float ALTURA_DE_UM_PAINEL = 60f;
   private static final float DESMAIADO = 0.35f;
   private static final int FUNDO_DA_NOSSA_FOTO = 0x404A90CC;
   private static final int FUNDO_DA_FOTO_SELVAGEM = 0x40C24A72;
@@ -318,19 +320,27 @@ public class HistoricoDaBatalha {
     if (cliente.options.hideGui || cliente.getDebugOverlay().showDebugScreen() || cliente.player == null) {
       return;
     }
-    boolean naEsquerda = minimapaADireita(agora);
-    // 7.9: a fileirinha dos guardas fica no alto, do mesmo lado; o painel da batalha começa embaixo dela
-    float fundoDosGuardas = FileiraDosGuardas.desenhar(tela, cliente, naEsquerda, MARGEM_DE_CIMA);
+    int largura = tela.guiWidth();
+    int altura = tela.guiHeight();
+    // 7.9: a fileirinha dos guardas fica no alto, do mesmo lado; o painel da batalha começa embaixo dela. No layout da HUD
+    // (LayoutDaHud), cada um pode ter o seu lugar e o seu tamanho
+    LayoutDaHud.comecar(tela, LayoutDaHud.Bloco.GUARDAS);
+    float fundoDosGuardas = FileiraDosGuardas.desenhar(tela, cliente,
+        LayoutDaHud.naEsquerda(LayoutDaHud.Bloco.GUARDAS, largura, altura), MARGEM_DE_CIMA);
+    LayoutDaHud.terminar(tela);
     if (CARTOES.isEmpty() && aviso == null && painel == null) {
       return;
     }
-    float y = tela.guiHeight() * TOPO;
+    boolean naEsquerda = LayoutDaHud.naEsquerda(LayoutDaHud.Bloco.HISTORICO, largura, altura);
+    float topoMinimo = topoMinimo(largura, altura, naEsquerda, fundoDosGuardas);
+    LayoutDaHud.comecar(tela, LayoutDaHud.Bloco.HISTORICO);
+    float y = altura * TOPO;
     if (painel != null) {
-      float fundoDoPainel = desenharPainel(tela, cliente, painel, y, agora, naEsquerda, fundoDosGuardas);
+      float fundoDoPainel = desenharPainel(tela, cliente, painel, y, agora, naEsquerda, topoMinimo);
       y = Math.max(y, fundoDoPainel + ACIMA_DOS_CARTOES);
     } else if (aviso != null) {
       // 8.2b: com as linhas do XP o aviso cresce; ele também começa embaixo da fileirinha, e os cartões embaixo dele
-      float fundoDoAviso = desenharAviso(tela, cliente.font, aviso, y, agora, naEsquerda, fundoDosGuardas);
+      float fundoDoAviso = desenharAviso(tela, cliente.font, aviso, y, agora, naEsquerda, topoMinimo);
       y = Math.max(y, fundoDoAviso + ACIMA_DOS_CARTOES);
     }
     for (Cartao cartao : CARTOES) {
@@ -340,6 +350,26 @@ public class HistoricoDaBatalha {
       desenharCartao(tela, cliente.font, cartao, y, entrando, Math.clamp(alfa, 0f, 1f), naEsquerda);
       y += ALTURA + ESPACO;
     }
+    LayoutDaHud.terminar(tela);
+  }
+
+  // Até onde o painel da batalha pode subir: com o histórico num lugar seu (layout), até o topo da caixa dele; os dois no
+  // lugar de sempre, até embaixo dos guardas; só os guardas noutro lugar, até o alto da tela
+  private static float topoMinimo(int largura, int altura, boolean naEsquerda, float fundoDosGuardas) {
+    if (LayoutDaHud.ajustado(LayoutDaHud.Bloco.HISTORICO)) {
+      return caixa(largura, altura, naEsquerda).y();
+    }
+    return LayoutDaHud.ajustado(LayoutDaHud.Bloco.GUARDAS) ? MARGEM_DE_CIMA : fundoDosGuardas;
+  }
+
+  // O layout da HUD (LayoutDaHud): a caixa do bloco, encostada na borda do lado dele, da largura do maior painel; de um
+  // painel comum acima dos cartões até o fim do terceiro cartão
+  static LayoutDaHud.Caixa caixa(int largura, int altura, boolean naEsquerda) {
+    float cartoes = altura * TOPO;
+    float topo = Math.max(MARGEM_DE_CIMA, cartoes - ALTURA_DE_UM_PAINEL - ACIMA_DOS_CARTOES);
+    float baixo = cartoes + MAXIMO * (ALTURA + ESPACO) - ESPACO;
+    return new LayoutDaHud.Caixa(naEsquerda ? 0 : largura - LARGURA_MAXIMA_DO_PAINEL, topo, LARGURA_MAXIMA_DO_PAINEL,
+        baixo - topo);
   }
 
   // O minimapa do Xaero está em cima à direita? ("fromRight=true" e não "fromBottom=true" na linha dele). O jogador pode
@@ -654,11 +684,10 @@ public class HistoricoDaBatalha {
   }
 
   // O rosto, o mesmo desenho dos retratos da lista do Cobblemon (GuiUtilsKt.drawPosablePortrait), recortado na caixinha
-  // de "tamanho" pixels. "brilho" escurece o retrato (o desmaiado fica cinza)
+  // de "tamanho" pixels (o recorte acompanha o bloco no layout da HUD). "brilho" escurece o retrato (o desmaiado fica cinza)
   static void rosto(GuiGraphics tela, Rosto rosto, float x, float y, float tamanho, float brilho, float alfa) {
     float proporcao = tamanho / CAIXA_DO_COBBLEMON;
-    tela.enableScissor((int) Math.floor(x), (int) Math.floor(y), (int) Math.ceil(x + tamanho),
-        (int) Math.ceil(y + tamanho));
+    LayoutDaHud.recortar(tela, x, y, tamanho, tamanho);
     tela.pose().pushPose();
     tela.pose().translate(x + RETRATO_X_DO_COBBLEMON * proporcao,
         y + (RETRATO_Y_DO_COBBLEMON + DESCIDA_FIXA_DO_COBBLEMON) * proporcao - DESCIDA_FIXA_DO_COBBLEMON, 0);

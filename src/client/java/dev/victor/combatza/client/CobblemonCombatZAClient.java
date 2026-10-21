@@ -59,6 +59,9 @@ public class CobblemonCombatZAClient implements ClientModInitializer {
     PreviaDoGolpe.registrar();
     DesenhoDaPrevia.registrar();
     Tutorial.registrar();
+    // O layout da HUD: o lugar e o tamanho de cada bloco (salvos no seu jogo) e o editor, pelo menu de pausa
+    LayoutDaHud.registrar();
+    TelaDoLayout.registrar();
     // O vigia de travamento da tela (VigiaDeTravamento): sem mundo aberto (menus, carregando), parar é normal
     VigiaDeTravamento vigiaDaTela = VigiaDeTravamento.comecar("jogo (tela)", () -> Minecraft.getInstance().level == null);
     ClientTickEvents.END_CLIENT_TICK.register(cliente -> vigiaDaTela.sinal());

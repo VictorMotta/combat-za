@@ -26,6 +26,18 @@ public class Configuracao {
   private static final double DANO_MONSTRO = 1.0;
   private static final String ARQUIVO = "cobblemon_combat_za.json";
   private static final int MAXIMO_ENTRE_ITENS = 60;
+  // Os limites das opções do equilíbrio (fora deles, vale o padrão)
+  private static final double MAIOR_MULTIPLICADOR_DE_DANO = 5;
+  private static final double MENOR_ALCANCE = 1;
+  private static final double MAIOR_ALCANCE = 64;
+  private static final double MENOS_SEGUNDOS_PARA_NOTAR = 0.25;
+  private static final double MAIS_SEGUNDOS_PARA_NOTAR = 60;
+  private static final double LIMITE_DA_RAIVA = 1000;
+  private static final int MAIOR_NIVEL_PARA_ATACAR = 1000;
+  // As opções que o arquivo precisa ter: faltando alguma (um arquivo de uma versão antiga), ele é gravado de novo com elas,
+  // mantendo os valores que já tinha
+  private static final List<String> OPCOES = List.of("danoDoSelvagem", "danoDosSeusPokemon", "alcanceDaVisaoDeDia",
+      "alcanceDaVisaoDeNoite", "segundosParaNotar", "raivaParaAtacar", "nivelParaAtacarSozinho");
 
   // O que fica no arquivo. Os nomes dos campos são os nomes no JSON
   private static final class Dados {
@@ -39,6 +51,18 @@ public class Configuracao {
     private List<String> sempreFogem = List.of("wimpod", "abra");
     // 9.1b (dele, 20/10: "uns 5 s, configurável"): a espera entre dois itens da mochila na batalha
     private int segundosEntreItens = 5;
+    // O equilíbrio da batalha (dele, 20/10: "vamos nerfar um pouco o dano dos selvagens, isso tá muito caótico, um lvl 20 mata
+    // muito fácil um lvl 10, e tá muito fácil do selvagem te ver"; "cada server pode colocar do jeito que quiser"; "e o dano do
+    // nosso Pokémon também"). Escolheu: os golpes do selvagem nos seus Pokémon tiram 50%; os dos seus nos selvagens, 100%
+    private double danoDoSelvagem = 0.5;
+    private double danoDosSeusPokemon = 1.0;
+    // A visão do selvagem (escolheu "bem mais difícil"; era 16 e 10 blocos e 1,5 s)
+    private double alcanceDaVisaoDeDia = 10;
+    private double alcanceDaVisaoDeNoite = 6;
+    private double segundosParaNotar = 3;
+    // Quem ataca sozinho depois de te notar (escolheu "menos bravos"; a raiva era 100)
+    private double raivaParaAtacar = 120;
+    private int nivelParaAtacarSozinho = 25;
   }
 
   private static Dados atual = new Dados();
@@ -67,11 +91,15 @@ public class Configuracao {
       arquivoComErro = false;
       // 6.10 desfeita (dele, 19/10: "volta o chat ao normal, deixa a pessoa configurar o chat dela"): um arquivo com as
       // opções do chat, que não existem mais, é gravado de novo sem elas (com os valores que você já tinha)
-      if (texto.contains("\"opacidadeDoChat\"")) {
+      // E um arquivo de uma versão antiga, sem as opções novas, ganha as opções (com os valores padrão delas)
+      if (texto.contains("\"opacidadeDoChat\"") || OPCOES.stream().anyMatch(opcao -> !texto.contains("\"" + opcao + "\""))) {
         salvar();
       }
-      CobblemonCombatZA.LOGGER.info("CONFIGURAÇÃO: dano no jogador '{}', chance de mirar em você {}",
-          atual.danoNoJogador, atual.chanceDeMirarEmVoce);
+      CobblemonCombatZA.LOGGER.info("CONFIGURAÇÃO: dano no jogador '{}', chance de mirar em você {}, dano do selvagem {}, "
+          + "dano dos seus Pokémon {}, visão {}/{} blocos em {} s, raiva para atacar {} (a partir do nível {})",
+          atual.danoNoJogador, atual.chanceDeMirarEmVoce, atual.danoDoSelvagem, atual.danoDosSeusPokemon,
+          atual.alcanceDaVisaoDeDia, atual.alcanceDaVisaoDeNoite, atual.segundosParaNotar, atual.raivaParaAtacar,
+          atual.nivelParaAtacarSozinho);
       return true;
     } catch (IOException | RuntimeException erro) {
       // O Gson avisa um erro de vários jeitos (JsonParseException, NumberFormatException...): todos caem aqui
@@ -104,6 +132,34 @@ public class Configuracao {
     return atual.segundosEntreItens;
   }
 
+  public static double danoDoSelvagem() {
+    return atual.danoDoSelvagem;
+  }
+
+  public static double danoDosSeusPokemon() {
+    return atual.danoDosSeusPokemon;
+  }
+
+  public static double alcanceDaVisaoDeDia() {
+    return atual.alcanceDaVisaoDeDia;
+  }
+
+  public static double alcanceDaVisaoDeNoite() {
+    return atual.alcanceDaVisaoDeNoite;
+  }
+
+  public static double segundosParaNotar() {
+    return atual.segundosParaNotar;
+  }
+
+  public static double raivaParaAtacar() {
+    return atual.raivaParaAtacar;
+  }
+
+  public static int nivelParaAtacarSozinho() {
+    return atual.nivelParaAtacarSozinho;
+  }
+
   public static Set<String> sempreAgressivos() {
     return sempreAgressivos;
   }
@@ -128,6 +184,17 @@ public class Configuracao {
     if (dados.segundosEntreItens < 0 || dados.segundosEntreItens > MAXIMO_ENTRE_ITENS) {
       dados.segundosEntreItens = padrao.segundosEntreItens;
     }
+    dados.danoDoSelvagem = entre(dados.danoDoSelvagem, 0, MAIOR_MULTIPLICADOR_DE_DANO, padrao.danoDoSelvagem);
+    dados.danoDosSeusPokemon = entre(dados.danoDosSeusPokemon, 0, MAIOR_MULTIPLICADOR_DE_DANO, padrao.danoDosSeusPokemon);
+    dados.alcanceDaVisaoDeDia = entre(dados.alcanceDaVisaoDeDia, MENOR_ALCANCE, MAIOR_ALCANCE, padrao.alcanceDaVisaoDeDia);
+    dados.alcanceDaVisaoDeNoite = entre(dados.alcanceDaVisaoDeNoite, MENOR_ALCANCE, MAIOR_ALCANCE,
+        padrao.alcanceDaVisaoDeNoite);
+    dados.segundosParaNotar = entre(dados.segundosParaNotar, MENOS_SEGUNDOS_PARA_NOTAR, MAIS_SEGUNDOS_PARA_NOTAR,
+        padrao.segundosParaNotar);
+    dados.raivaParaAtacar = entre(dados.raivaParaAtacar, -LIMITE_DA_RAIVA, LIMITE_DA_RAIVA, padrao.raivaParaAtacar);
+    if (dados.nivelParaAtacarSozinho < 0 || dados.nivelParaAtacarSozinho > MAIOR_NIVEL_PARA_ATACAR) {
+      dados.nivelParaAtacarSozinho = padrao.nivelParaAtacarSozinho;
+    }
     dados.sempreAgressivos = limpa(dados.sempreAgressivos, padrao.sempreAgressivos);
     dados.nuncaAgressivos = limpa(dados.nuncaAgressivos, padrao.nuncaAgressivos);
     dados.sempreFogem = limpa(dados.sempreFogem, padrao.sempreFogem);
@@ -135,6 +202,11 @@ public class Configuracao {
     sempreAgressivos = Set.copyOf(dados.sempreAgressivos);
     nuncaAgressivos = Set.copyOf(dados.nuncaAgressivos);
     sempreFogem = Set.copyOf(dados.sempreFogem);
+  }
+
+  // Um número de "minimo" a "maximo"; fora disso (ou um valor que não é número), o padrão
+  private static double entre(double valor, double minimo, double maximo, double padrao) {
+    return valor >= minimo && valor <= maximo ? valor : padrao;
   }
 
   // Os nomes em minúsculas e sem os vazios; sem a lista no arquivo, a padrão
@@ -167,6 +239,21 @@ public class Configuracao {
         + "  // Na batalha, depois de usar um item da mochila (poção, reanimador, X) ou de dar/tirar o item segurado de um\n"
         + "  // Pokémon seu, quantos segundos você espera para usar outro (de 0 a 60; 0 = sem espera)\n"
         + "  \"segundosEntreItens\": " + atual.segundosEntreItens + ",\n"
+        + "  // O EQUILÍBRIO DA BATALHA. Depois de editar: /combatza recarregar\n"
+        + "  // A parte do dano normal (o dos jogos) que os golpes dos selvagens tiram dos Pokémon dos jogadores: 1 = o normal,\n"
+        + "  // 0.5 = a metade (de 0 a 5). Não muda o dano neles em você (danoNoJogador) nem o que tira por turno (queimadura...)\n"
+        + "  \"danoDoSelvagem\": " + atual.danoDoSelvagem + ",\n"
+        + "  // O mesmo para os golpes dos Pokémon dos jogadores nos selvagens: 1 = o normal, 1.5 = 50% a mais (de 0 a 5)\n"
+        + "  \"danoDosSeusPokemon\": " + atual.danoDosSeusPokemon + ",\n"
+        + "  // Até quantos blocos o selvagem te vê de frente, de dia e de noite (de 1 a 64), e quantos segundos te vendo para\n"
+        + "  // te notar (o \"?\" enchendo; agachado, o dobro; de 0.25 a 60)\n"
+        + "  \"alcanceDaVisaoDeDia\": " + atual.alcanceDaVisaoDeDia + ",\n"
+        + "  \"alcanceDaVisaoDeNoite\": " + atual.alcanceDaVisaoDeNoite + ",\n"
+        + "  \"segundosParaNotar\": " + atual.segundosParaNotar + ",\n"
+        + "  // Depois de te notar, ataca sozinho quem tem esta raiva ou mais (ela vem da natureza, do nível, dos atributos e do\n"
+        + "  // escuro; dá 0 a uns 170; menos raiva = mais selvagens atacam) e pelo menos este nível. Os outros só revidam ou fogem\n"
+        + "  \"raivaParaAtacar\": " + atual.raivaParaAtacar + ",\n"
+        + "  \"nivelParaAtacarSozinho\": " + atual.nivelParaAtacarSozinho + ",\n"
         + "  // O temperamento pela espécie (nome em inglês, como no Cobblemon), antes da conta da raiva. Nunca agressivos e\n"
         + "  // sempre fogem passam na frente dos sempre agressivos. Depois de editar: /combatza recarregar\n"
         + "  \"sempreAgressivos\": " + gson.toJson(atual.sempreAgressivos) + ",\n"

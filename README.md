@@ -28,6 +28,9 @@ Optional: [Cobblemon: Mega Showdown](https://modrinth.com/mod/cobblemon-mega-sho
 Full guide, in English and Portuguese: the [Wiki](../../wiki) ([Installation](../../wiki/Installation) ·
 [Instalação](../../wiki/Instalação)). Made and tested with the **Cobbleverse** modpack (1.7.42).
 
+**Server owners:** the battle balance (wild damage, your damage, how far wild Pokémon see you, how many attack on their own)
+is set in `config/cobblemon_combat_za.json`: see [Server configuration](../../wiki/Server-configuration).
+
 ## Building
 
 ```

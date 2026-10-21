@@ -351,7 +351,7 @@ public class ControleDeGolpes {
       // 7.2: o Terremoto do selvagem pega você também. 7.4b: o do guarda só pega monstros
       boolean doSelvagem = execucao.getPokemon().isWild();
       List<Entity> naZona = Area.emVolta(atacante, centro, Balanceamento.RAIO_EM_VOLTA_DO_POKEMON,
-          e -> execucao.ehDoGuarda() ? Lados.ehMonstro(e)
+          e -> execucao.ehDoGuarda() ? Lados.pegaNoGolpe(execucao, atacante, e, emBatalha)
               : (doSelvagem || !(e instanceof Player)) && Lados.entraNaLutaDe(atacante, e, emBatalha));
       return comDistancia(execucao, naZona, centro, Balanceamento.RAIO_EM_VOLTA_DO_POKEMON);
     }

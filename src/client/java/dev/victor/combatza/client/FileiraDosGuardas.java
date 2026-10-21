@@ -45,6 +45,8 @@ public class FileiraDosGuardas {
   private static final int FUNDO = 0x8C101418;
   private static final int FUNDO_DO_ROSTO = 0x404A90CC;
   private static final int FUNDO_DA_BARRINHA = 0x8C0F1E14;
+  // O layout da HUD: a caixa tem lugar para 6 guardas (o time inteiro de guarda)
+  private static final int MAXIMO_DE_GUARDAS = 6;
 
   // O "estado" do retrato de cada guarda (a pose), como o Cobblemon guarda nas telas dele
   private static final Map<UUID, FloatingState> ESTADOS = new HashMap<>();
@@ -87,6 +89,21 @@ public class FileiraDosGuardas {
     escrever(tela, cliente, rotulo, x + MARGEM + ESCUDO + ESPACO_DO_ESCUDO, meio - ALTURA_DA_LETRA * LETRA / 2, LETRA,
         cor(modo));
     return topo + altura + ESPACO_ATE_O_PAINEL;
+  }
+
+  // O layout da HUD (LayoutDaHud): a caixa no maior tamanho (6 guardas e o nome de modo mais comprido), encostada na borda do
+  // lado dela, no alto da tela
+  static LayoutDaHud.Caixa caixa(int larguraDaTela, boolean naEsquerda) {
+    Minecraft cliente = Minecraft.getInstance();
+    float rotulo = 0;
+    for (Guardas.Modo modo : Guardas.Modo.values()) {
+      rotulo = Math.max(rotulo, cliente.font.width(modo.nome()) * LETRA);
+    }
+    float largura = MARGEM + ESCUDO + ESPACO_DO_ESCUDO + rotulo + ESPACO + MAXIMO_DE_GUARDAS * (ROSTO + ESPACO) - ESPACO
+        + MARGEM;
+    float altura = MARGEM + ROSTO + ESPACO_DA_BARRINHA + BARRINHA + MARGEM;
+    return new LayoutDaHud.Caixa(naEsquerda ? 0 : larguraDaTela - largura, HistoricoDaBatalha.MARGEM_DE_CIMA, largura,
+        altura);
   }
 
   // Fora da bola, sem desmaiar, e nem o parceiro nem a montaria

@@ -31,8 +31,10 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.NeutralMob;
+import net.minecraft.world.entity.OwnableEntity;
 import net.minecraft.world.entity.monster.Spider;
 import net.minecraft.world.entity.monster.piglin.Piglin;
 import net.minecraft.world.entity.monster.warden.Warden;
@@ -47,6 +49,9 @@ import net.minecraft.world.entity.monster.warden.Warden;
 // Eles usam os 4 golpes pelo MESMO cérebro do selvagem (EscolhaDoGolpe, a IA única), um atrás do outro (7.4e: sem o respiro
 // do selvagem), e os golpes passam pelos aliados (Lados). O alvo (7.4f): primeiro quem bateu nele, até matar; senão, o
 // monstro mais perto de você. Fora de batalha, o Pokémon que você comandou com as teclas nos últimos 10 s
+// (dele, 20/10: "bati num golem e meus Pokémon não fizeram nada (...) qualquer bicho que eu bater, até villager, meus Pokémon
+// atacam"): no Neutro e no Agressivo, o bicho que VOCÊ acerta (com a mão, uma flecha...) vira o alvo deles até morrer, como o
+// lobo do Minecraft, mesmo não sendo monstro (aldeão, golem, vaca); e quem te ataca ou ataca um deles também, monstro ou não
 // é seu, e não do guarda. O modo fica guardado no seu jogador (um "anexo" do Fabric: vai junto no save e volta depois de
 // morrer) e é avisado ao seu jogo, para a roda mostrar o atual
 public class Guardas {
@@ -107,8 +112,13 @@ public class Guardas {
   private record Comandado(UUID pokemon, long tick) {
   }
 
+  // O bicho que o jogador acertou e quando (o "lastHurtMobTimestamp" dele): enquanto estiver vivo e perto, é o alvo dos guardas
+  private record AlvoDoDono(Mob alvo, int tick) {
+  }
+
   private static final Map<UUID, Cerebro> CEREBROS = new HashMap<>();
   private static final Map<UUID, Comandado> COMANDADOS = new HashMap<>();
+  private static final Map<UUID, AlvoDoDono> ALVOS_DOS_DONOS = new HashMap<>();
 
   private Guardas() {
   }
@@ -158,13 +168,17 @@ public class Guardas {
   public static void limpar() {
     CEREBROS.clear();
     COMANDADOS.clear();
+    ALVOS_DOS_DONOS.clear();
   }
 
   public static void atualizar(MinecraftServer servidor) {
     long agora = servidor.getTickCount();
     Set<UUID> vistos = new HashSet<>();
+    Set<UUID> online = new HashSet<>();
     for (ServerPlayer jogador : servidor.getPlayerList().getPlayers()) {
+      online.add(jogador.getUUID());
       Modo modo = modo(jogador);
+      Mob doDono = alvoDoDono(jogador);
       if (modo == Modo.PASSIVO || !jogador.isAlive() || jogador.isSpectator()) {
         continue;
       }
@@ -178,10 +192,45 @@ public class Guardas {
           continue;
         }
         vistos.add(pokemon.getUuid());
-        guardar(jogador, guarda, modo, agora);
+        guardar(jogador, guarda, modo, doDono, agora);
       }
     }
     CEREBROS.keySet().retainAll(vistos);
+    ALVOS_DOS_DONOS.keySet().retainAll(online);
+  }
+
+  // O bicho que você acertou por último (o Minecraft guarda quem e quando, como para o lobo: Player.attack e a flecha chamam o
+  // setLastHurtMob). Um acerto novo troca o alvo; ele sai quando morre, some, fica a mais de 24 blocos de você ou muda de
+  // mundo. Os Pokémon ficam de fora (o selvagem é da batalha; o com dono, aliado), e os bichos mansos de alguém também
+  private static Mob alvoDoDono(ServerPlayer jogador) {
+    AlvoDoDono atual = ALVOS_DOS_DONOS.get(jogador.getUUID());
+    int quando = jogador.getLastHurtMobTimestamp();
+    if (jogador.getLastHurtMob() instanceof Mob acertado && podeSerAlvo(acertado) && !mansoDeAlguem(acertado)
+        && bateuHaPouco(true, jogador.tickCount, quando) && (atual == null || atual.tick() != quando)) {
+      atual = new AlvoDoDono(acertado, quando);
+      ALVOS_DOS_DONOS.put(jogador.getUUID(), atual);
+      CobblemonCombatZA.LOGGER.info("GUARDAS: {} bateu em {}: é o alvo dos guardas", jogador.getGameProfile().getName(),
+          acertado.getName().getString());
+    }
+    if (atual == null) {
+      return null;
+    }
+    Mob alvo = atual.alvo();
+    if (!alvo.isAlive() || alvo.isRemoved() || alvo.level() != jogador.level() || alvo.distanceTo(jogador) > LONGE_DO_DONO) {
+      ALVOS_DOS_DONOS.remove(jogador.getUUID());
+      return null;
+    }
+    return alvo;
+  }
+
+  // Qualquer bicho vivo que não é Pokémon (os jogadores nem são "Mob")
+  private static boolean podeSerAlvo(LivingEntity bicho) {
+    return bicho instanceof Mob && bicho.isAlive() && !(bicho instanceof PokemonEntity);
+  }
+
+  // O lobo, o gato, o cavalo... domados por alguém
+  private static boolean mansoDeAlguem(Mob bicho) {
+    return bicho instanceof OwnableEntity manso && manso.getOwnerUUID() != null;
   }
 
   // 7.4c: numa batalha por turnos do Cobblemon (contra um treinador ou outro jogador), ocupado (evoluindo, saindo da bola...)
@@ -196,7 +245,7 @@ public class Guardas {
         && agora - comandado.tick() < COMANDADO_HA_POUCO;
   }
 
-  private static void guardar(ServerPlayer jogador, PokemonEntity guarda, Modo modo, long agora) {
+  private static void guardar(ServerPlayer jogador, PokemonEntity guarda, Modo modo, Mob doDono, long agora) {
     Pokemon pokemon = guarda.getPokemon();
     Cerebro cerebro = CEREBROS.computeIfAbsent(pokemon.getUuid(), uuid -> new Cerebro(agora));
     // 7.4e (dele: "ficou ruim, o bicho não consegue fazer nada, o mob vira nele e só morre"): sem o respiro do selvagem;
@@ -204,7 +253,7 @@ public class Guardas {
     if (IaDoSelvagem.ocupado(pokemon) || agora % A_CADA_TICKS != 0) {
       return;
     }
-    Mob alvo = alvo(jogador, guarda, modo, cerebro);
+    Mob alvo = alvo(jogador, guarda, modo, cerebro, doDono);
     if (alvo == null) {
       return;
     }
@@ -216,26 +265,31 @@ public class Guardas {
     if (ControleDeGolpes.usarGolpeDaIa(guarda, slot, alvo, jogador, agora)) {
       cerebro.usados.add(golpe);
       CobblemonCombatZA.LOGGER.info("GUARDA ({}): {} foi em {} com {} ({})", modo, pokemon.getSpecies().getName(),
-          alvo.getName().getString(), golpe, alvo == cerebro.revidando ? "revidando" : "o mais perto de você");
+          alvo.getName().getString(), golpe, alvo == cerebro.revidando ? "revidando"
+              : alvo == doDono ? "o que você bateu" : "o mais perto de você");
     }
   }
 
   // 7.4f (dele: "primeiro ele se salva: se algum bater nele, ele revida até matar, depois volta para o mais perto de mim"):
-  // 1º o monstro que ele já está revidando, até morrer; 2º um monstro que bateu nele há pouco (vira o "revidando"); 3º o
-  // monstro mais perto de você. Sem ver o que está revidando (um bloco no meio), ele espera
-  private static Mob alvo(ServerPlayer jogador, PokemonEntity guarda, Modo modo, Cerebro cerebro) {
+  // 1º o bicho que ele já está revidando, até morrer; 2º um bicho que bateu nele há pouco (vira o "revidando"; monstro ou
+  // não, como o golem); 3º o que VOCÊ bateu, até morrer; 4º o monstro mais perto de você. Sem ver o que está revidando (um
+  // bloco no meio), ele espera; sem ver o que você bateu, vai no mais perto
+  private static Mob alvo(ServerPlayer jogador, PokemonEntity guarda, Modo modo, Cerebro cerebro, Mob doDono) {
     Mob revidando = cerebro.revidando;
     if (revidando != null
         && (!revidando.isAlive() || revidando.isRemoved() || revidando.distanceTo(jogador) > LONGE_DO_DONO)) {
       cerebro.revidando = null;
     }
-    if (cerebro.revidando == null && guarda.getLastHurtByMob() instanceof Mob quemBateu && quemBateu.isAlive()
-        && Lados.ehMonstro(quemBateu) && bateuHaPouco(true, guarda.tickCount, guarda.getLastHurtByMobTimestamp())
+    if (cerebro.revidando == null && guarda.getLastHurtByMob() instanceof Mob quemBateu && podeSerAlvo(quemBateu)
+        && bateuHaPouco(true, guarda.tickCount, guarda.getLastHurtByMobTimestamp())
         && quemBateu.distanceTo(jogador) <= LONGE_DO_DONO) {
       cerebro.revidando = quemBateu;
     }
     if (cerebro.revidando != null) {
       return guarda.hasLineOfSight(cerebro.revidando) ? cerebro.revidando : null;
+    }
+    if (doDono != null && guarda.hasLineOfSight(doDono)) {
+      return doDono;
     }
     return maisPertoDeVoce(jogador, guarda, modo);
   }
@@ -246,7 +300,7 @@ public class Guardas {
     Mob maisPerto = null;
     double menorDistancia = Double.MAX_VALUE;
     for (Mob monstro : jogador.level().getEntitiesOfClass(Mob.class, jogador.getBoundingBox().inflate(ALCANCE),
-        m -> m.isAlive() && Lados.ehMonstro(m) && serve(m, jogador, guarda, modo) && guarda.hasLineOfSight(m))) {
+        m -> podeSerAlvo(m) && serve(m, jogador, guarda, modo) && guarda.hasLineOfSight(m))) {
       double distancia = jogador.distanceToSqr(monstro);
       if (distancia < menorDistancia) {
         menorDistancia = distancia;
@@ -259,7 +313,8 @@ public class Guardas {
   // 7.4g (dele: "qualquer mob ofensivo que chega perto de mim, no Neutro ou no Agressivo, eles têm que encher de porrada,
   // menos a aranha de manhã no Neutro; no Agressivo, mete a porrada até na aranha"). Monstro = os hostis do Minecraft
   // (Lados.ehMonstro), agora com o creeper:
-  // - quem está contra vocês (mirando ou bateu há pouco em você ou nele), sempre;
+  // - quem está contra vocês (mirando ou bateu há pouco em você ou nele), sempre, monstro ou não (o golem bravo, o lobo, a
+  //   lhama que cospe);
   // - os que ficam em paz até alguém mexer (os "neutros" do Minecraft, como o enderman e o piglin zumbi; o piglin; o warden),
   //   só se estiverem contra vocês: um golpe num deles calmo deixa o grupo todo bravo (7.4b);
   // - Agressivo: qualquer outro monstro a até 16 blocos de você, até a aranha calma;
@@ -271,7 +326,8 @@ public class Guardas {
     if (contraVoces) {
       return true;
     }
-    if (monstro instanceof NeutralMob || monstro instanceof Piglin || monstro instanceof Warden) {
+    if (!Lados.ehMonstro(monstro) || monstro instanceof NeutralMob || monstro instanceof Piglin
+        || monstro instanceof Warden) {
       return false;
     }
     if (modo == Modo.AGRESSIVO) {

@@ -52,7 +52,7 @@ public class Dano {
       return new Resultado(0, 0, false);
     }
     if (alvo instanceof PokemonEntity alvoPokemon) {
-      return contraPokemon(atacante, golpe, alvoPokemon, sorte);
+      return equilibrio(atacante, alvoPokemon, contraPokemon(atacante, golpe, alvoPokemon, sorte));
     }
     if (alvo instanceof Player) {
       return contraJogador(atacante, golpe, sorte);
@@ -75,6 +75,20 @@ public class Dano {
         * Configuracao.multiplicadorDoDanoNoJogador() * ItensDeDano.doAtacante(atacante, golpe)
         * EfeitosDoCampo.contraQuemNaoEPokemon(atacante, golpe);
     return new Resultado((float) dano, 1.0, critico, ItensDeDano.usaGema(atacante, golpe), false);
+  }
+
+  // O equilíbrio da batalha (dele, 20/10: "um lvl 20 mata muito fácil um lvl 10", "cada server pode colocar do jeito que
+  // quiser", "e o dano do nosso Pokémon também"): o golpe do selvagem num Pokémon de jogador tira a parte "danoDoSelvagem"
+  // (padrão: a metade); o golpe do Pokémon de jogador num selvagem, a parte "danoDosSeusPokemon" (padrão: o normal)
+  private static Resultado equilibrio(Pokemon atacante, PokemonEntity alvo, Resultado resultado) {
+    boolean alvoSelvagem = alvo.getPokemon().isWild();
+    double parte = atacante.isWild() && !alvoSelvagem ? Configuracao.danoDoSelvagem()
+        : !atacante.isWild() && alvoSelvagem ? Configuracao.danoDosSeusPokemon() : 1.0;
+    if (parte == 1.0) {
+      return resultado;
+    }
+    return new Resultado((float) (resultado.dano() * parte), resultado.efetividade(), resultado.critico(), resultado.gema(),
+        resultado.bagaDeResistencia());
   }
 
   // 7.2: para a IA do selvagem escolher o golpe (IaDoSelvagem): o multiplicador do tipo contra o alvo (em quem não é
