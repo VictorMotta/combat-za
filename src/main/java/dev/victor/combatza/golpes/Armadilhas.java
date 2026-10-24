@@ -223,7 +223,7 @@ public class Armadilhas {
     AABB caixa = new AABB(armadilha.centro, armadilha.centro).inflate(RAIO, ALTURA, RAIO);
     Set<UUID> dentroAgora = new HashSet<>();
     for (Entity entidade : armadilha.nivel.getEntities((Entity) null, caixa,
-        e -> e instanceof LivingEntity && e.isAlive() && Lados.ehInimigoDe(quemColocou, e)
+        e -> e instanceof LivingEntity && e.isAlive() && !Lados.ehNpc(e) && Lados.ehInimigoDe(quemColocou, e)
             && Lados.entraNaLutaDe(quemColocou, e, emBatalha))) {
       if (noChaoDistancia(entidade.position(), armadilha.centro) > RAIO) {
         continue;

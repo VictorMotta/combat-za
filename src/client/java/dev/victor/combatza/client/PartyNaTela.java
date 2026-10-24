@@ -48,6 +48,10 @@ public class PartyNaTela {
   }
 
   private static void desenhar(GuiGraphics tela, DeltaTracker tempo) {
+    // 23/10: na batalha por turnos do Cobblemon, só a tela dele (BatalhaPorTurnos)
+    if (BatalhaPorTurnos.agora()) {
+      return;
+    }
     Minecraft cliente = Minecraft.getInstance();
     List<PartyPayload.Membro> membros = PartyNoCliente.membros();
     String convite = PartyNoCliente.convite();

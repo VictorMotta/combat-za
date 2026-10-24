@@ -16,6 +16,7 @@ import dev.victor.combatza.captura.Irritados;
 import dev.victor.combatza.campo.ClimaNosGolpes;
 import dev.victor.combatza.campo.EfeitosDoCampo;
 import dev.victor.combatza.campo.LimpezaDoCampo;
+import dev.victor.combatza.combate.BatalhaDoCobblemon;
 import dev.victor.combatza.combate.GerenciarCombates;
 import dev.victor.combatza.combate.Lados;
 import dev.victor.combatza.combate.Lutadores;
@@ -69,7 +70,9 @@ public class ControleDeGolpes {
   public static void usarGolpe(ServerPlayer jogador, UsarGolpePayload pedido) {
     int slotGolpe = pedido.slotGolpe();
     int slotPokemon = pedido.slotPokemon();
-    if (slotGolpe < 0 || slotGolpe >= MAXIMO_DE_GOLPES || slotPokemon < 0 || slotPokemon >= TAMANHO_DO_TIME) {
+    // 23/10: na batalha por turnos do Cobblemon, o golpe é pelo menu dele (BatalhaDoCobblemon)
+    if (slotGolpe < 0 || slotGolpe >= MAXIMO_DE_GOLPES || slotPokemon < 0 || slotPokemon >= TAMANHO_DO_TIME
+        || BatalhaDoCobblemon.esta(jogador)) {
       return;
     }
     // 7.9: com "todos de guarda", fora da batalha ninguém recebe comando (o seu jogo nem manda; isto é a garantia)
@@ -444,7 +447,7 @@ public class ControleDeGolpes {
   private static boolean acertar(Execucao execucao, PokemonEntity atacante, Entity alvo, double multiplicadorDeArea,
       boolean primeiro, boolean comVisual) {
     // Party: o Pokémon de um estranho e o selvagem da batalha de outra pessoa: o golpe passa (nem dano, nem batalha). E nenhum
-    // golpe (seu, do guarda ou do selvagem) pega num NPC treinador (Lados.ehNpc), nem a área
+    // golpe (seu, do guarda, do selvagem ou do treinador) pega num NPC (Lados.ehNpc: aldeão, mercador, treinador), nem a área
     if (Lados.foraDaSuaLuta(execucao, alvo) || Lados.ehNpc(alvo)) {
       return false;
     }

@@ -176,6 +176,10 @@ public class PainelDoTime {
   }
 
   private static void desenhar(GuiGraphics tela, DeltaTracker tempo) {
+    // 23/10: na batalha por turnos do Cobblemon, só a tela dele (BatalhaPorTurnos)
+    if (BatalhaPorTurnos.agora()) {
+      return;
+    }
     Minecraft cliente = Minecraft.getInstance();
     if (cliente.options.hideGui || cliente.player == null || escondidoPeloJogador
         || cliente.getDebugOverlay().showDebugScreen()) {

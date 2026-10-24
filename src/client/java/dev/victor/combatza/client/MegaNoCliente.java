@@ -93,7 +93,8 @@ public class MegaNoCliente {
         InputConstants.Type.KEYSYM, InputConstants.UNKNOWN.getValue(), TeclasDeGolpe.CATEGORIA));
     ClientTickEvents.END_CLIENT_TICK.register(cliente -> {
       while (tecla.consumeClick()) {
-        if (ClientPlayNetworking.canSend(MegaPayload.TIPO)) {
+        // 23/10: na batalha por turnos, a Mega é a do Cobblemon (BatalhaPorTurnos)
+        if (!BatalhaPorTurnos.agora() && ClientPlayNetworking.canSend(MegaPayload.TIPO)) {
           ClientPlayNetworking.send(new MegaPayload());
         }
       }
@@ -113,6 +114,10 @@ public class MegaNoCliente {
   }
 
   private static void desenhar(GuiGraphics tela, DeltaTracker tempo) {
+    // 23/10: na batalha por turnos do Cobblemon, só a tela dele (BatalhaPorTurnos)
+    if (BatalhaPorTurnos.agora()) {
+      return;
+    }
     Minecraft cliente = Minecraft.getInstance();
     if (!estado.visivel() || cliente.options.hideGui || cliente.player == null
         || cliente.getDebugOverlay().showDebugScreen()) {

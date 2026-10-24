@@ -132,12 +132,9 @@ public class ItensDeVida {
   // A frase é a do Cobblemon ("bebeu o seu Suco de Baga!")
   private static void beberOSuco(Combate combate, PokemonEntity entidade) {
     Pokemon pokemon = entidade.getPokemon();
-    if (ItensSegurados.usadoNestaBatalha(pokemon, ItensSegurados.SUCO_DE_BAGA)) {
-      return;
-    }
     int curou = Vida.curar(entidade, SUCO_DE_BAGA);
+    // Gasto, ele sai da mão (ItensSegurados.gastar): um suco novo, dado depois, vale de novo
     ItensSegurados.gastar(pokemon, ItensSegurados.SUCO_DE_BAGA);
-    pokemon.removeHeldItem();
     avisar(combate, pokemon, Component.translatable("cobblemon.battle.enditem.berryjuice", pokemon.getDisplayName(false))
         .append(Component.translatable("cobblemon_combat_za.pv.ganhou", curou)));
     CobblemonCombatZA.LOGGER.info("ITEM: {} bebeu o Suco de Baga: +{} PV ({}/{})", pokemon.getSpecies().getName(), curou,

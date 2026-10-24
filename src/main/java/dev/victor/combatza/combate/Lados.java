@@ -13,20 +13,22 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.monster.Enemy;
+import net.minecraft.world.entity.npc.Npc;
 import net.minecraft.world.entity.player.Player;
 
 public class Lados {
   private Lados() {
   }
 
-  // Os NPCs (dele, 21/10: "meu Pokémon tá atacando NPC, isso não pode acontecer, mesmo se eu mirar nele; (...) duelo não tem
-  // isso de Pokémon atacar NPC nem player"): os treinadores do RCT (tudo do mod rctmod: o treinador e a Associação dos
-  // Treinadores) e os NPCs do próprio Cobblemon. A mira passa por eles e nenhum golpe pega neles (Mira, ControleDeGolpes,
-  // Guardas). O aldeão não conta: os guardas atacam o aldeão que você bater (10.4)
+  // Os NPCs (dele, 21/10: "meu Pokémon tá atacando NPC, isso não pode acontecer, mesmo se eu mirar nele"; 23/10: "adiciona
+  // para os Pokémon nunca poder dar dano nesses NPCs do jogo", escolheu "todo NPC, aldeão incluído"): tudo que o Minecraft
+  // marca como NPC (a interface Npc: o aldeão, o mercador ambulante, o mercador do CobbleDollars, o treinador do RCT), os
+  // NPCs do próprio Cobblemon e tudo do mod rctmod (a Associação dos Treinadores). A mira passa por eles e nenhum golpe pega
+  // neles (Mira, ControleDeGolpes, Armadilhas), nem os guardas vão neles (Guardas). O golem não é NPC: continua atacável
   private static final String MOD_DOS_TREINADORES = "rctmod";
 
   public static boolean ehNpc(Entity entidade) {
-    return entidade instanceof NPCEntity
+    return entidade instanceof Npc || entidade instanceof NPCEntity
         || MOD_DOS_TREINADORES.equals(BuiltInRegistries.ENTITY_TYPE.getKey(entidade.getType()).getNamespace());
   }
 
@@ -149,6 +151,11 @@ public class Lados {
   // selvagens (a luta é do lutador, e um acerto sem querer começaria outra), você e os aliados. E o alvo dele, mesmo não
   // sendo monstro (o golem ou o aldeão que você bateu), também na área em volta do Pokémon
   public static boolean pegaNoGolpe(Execucao execucao, PokemonEntity atacante, Entity entidade, boolean emBatalha) {
+    // 23/10 (dele: "não dar dano não quer dizer que não é para atravessar: no meio da luta, se ele se enfia na frente, vai
+    // atrapalhar"): o NPC nunca para o golpe. O projétil e o jato passam por ele e seguem até o alvo
+    if (ehNpc(entidade)) {
+      return false;
+    }
     if (execucao.ehDoGuarda()) {
       return ehMonstro(entidade) || entidade == execucao.alvoMirado();
     }

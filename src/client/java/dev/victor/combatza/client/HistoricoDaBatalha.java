@@ -329,6 +329,10 @@ public class HistoricoDaBatalha {
   }
 
   private static void desenhar(GuiGraphics tela, DeltaTracker tempo) {
+    // 23/10: na batalha por turnos do Cobblemon, só a tela dele (BatalhaPorTurnos)
+    if (BatalhaPorTurnos.agora()) {
+      return;
+    }
     Minecraft cliente = Minecraft.getInstance();
     long agora = Util.getMillis();
     CARTOES.removeIf(cartao -> agora - cartao.chegou() > DURACAO + SUMINDO);

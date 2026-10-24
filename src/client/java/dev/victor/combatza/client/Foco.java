@@ -50,6 +50,8 @@ public class Foco {
   private static ApertoDeTecla aperto;
   private static int alvo = SEM_ALVO;
   private static int ticksSemVer = 0;
+  // 23/10: o travado caiu no meio da batalha; o foco espera o próximo Pokémon dela para travar sozinho
+  private static boolean voltarSozinho = false;
   private static long ultimoGiro = 0;
   private static float ombro = 0f;
   private static long ultimoOmbro = 0;
@@ -71,7 +73,13 @@ public class Foco {
     // Segurar o G não fica travando e soltando: só o aperto conta
     aperto = new ApertoDeTecla(tecla);
     ClientTickEvents.END_CLIENT_TICK.register(cliente -> {
-      if (aperto.foiApertada()) {
+      boolean apertou = aperto.foiApertada();
+      // 23/10: na batalha por turnos do Cobblemon, sem foco (BatalhaPorTurnos)
+      if (BatalhaPorTurnos.agora()) {
+        soltar();
+        return;
+      }
+      if (apertou) {
         alternar(cliente);
       }
       conferirOAlvo(cliente);
@@ -101,6 +109,14 @@ public class Foco {
 
   // Quem o foco, a placa e a prévia tratam como inimigo: o selvagem. 21/10 (PvP): no duelo, só o Pokémon do adversário (o
   // dono dele está do outro lado do painel da batalha: HistoricoDaBatalha.ehDoAdversario); os selvagens ficam de fora
+  // 23/10 (dele: "numa batalha contra NPC e pessoa, não pode deixar o foco sair do Pokémon deles; toda hora tinha um selvagem
+  // perto de mim e o foco ia para ele; de preferência, até contra selvagem, só foca em quem está na batalha; fora da batalha,
+  // aí sim, livre"): na batalha, o foco só trava (e só troca, no G e no mouse de lado) entre os Pokémon dela: os selvagens que
+  // lutam com você, o Pokémon do treinador, o do adversário no duelo (a marca "na sua batalha" das placas). Fora dela, como antes
+  static boolean podeTravar(PokemonEntity entidade) {
+    return ehAlvo(entidade) && (!HistoricoDaBatalha.emBatalha() || PlacasNaTela.naSuaBatalha(entidade.getId()));
+  }
+
   public static boolean ehAlvo(PokemonEntity entidade) {
     return HistoricoDaBatalha.emDuelo() ? HistoricoDaBatalha.ehDoAdversario(entidade.getOwnerUUID())
         : ehSelvagem(entidade);
@@ -118,7 +134,7 @@ public class Foco {
     PokemonEntity melhor = null;
     double menorAngulo = ANGULO_MAXIMO;
     for (PokemonEntity pokemon : cliente.level.getEntitiesOfClass(PokemonEntity.class,
-        cliente.player.getBoundingBox().inflate(ALCANCE), Foco::ehAlvo)) {
+        cliente.player.getBoundingBox().inflate(ALCANCE), Foco::podeTravar)) {
       Vec3 direcao = pokemon.getBoundingBox().getCenter().subtract(olhos);
       double distancia = cliente.player.distanceTo(pokemon);
       if (!pokemon.isAlive() || Captura.dentroDaBola(pokemon) || distancia > ALCANCE || direcao.lengthSqr() < 0.0001) {
@@ -203,7 +219,7 @@ public class Foco {
     PokemonEntity melhor = null;
     double menor = LADO_MAXIMO;
     for (PokemonEntity pokemon : cliente.level.getEntitiesOfClass(PokemonEntity.class,
-        cliente.player.getBoundingBox().inflate(ALCANCE), Foco::ehAlvo)) {
+        cliente.player.getBoundingBox().inflate(ALCANCE), Foco::podeTravar)) {
       if (pokemon == atual || !pokemon.isAlive() || Captura.dentroDaBola(pokemon)
           || cliente.player.distanceTo(pokemon) > ALCANCE) {
         continue;
@@ -247,6 +263,7 @@ public class Foco {
   private static void alternar(Minecraft cliente) {
     if (alvo != SEM_ALVO) {
       soltar();
+      voltarSozinho = false;
       return;
     }
     PokemonEntity candidato = candidato(cliente);
@@ -259,6 +276,7 @@ public class Foco {
 
   private static void conferirOAlvo(Minecraft cliente) {
     if (alvo == SEM_ALVO) {
+      travarNoProximo(cliente);
       return;
     }
     PokemonEntity pokemon = alvo();
@@ -266,11 +284,32 @@ public class Foco {
         || cliente.player == null
         || cliente.player.distanceTo(pokemon) > ALCANCE_TRAVADO) {
       soltar();
+      // 23/10: o travado caiu (ou voltou para a bola) no meio da batalha: o foco passa sozinho para o próximo dela
+      voltarSozinho = HistoricoDaBatalha.emBatalha();
       return;
     }
     ticksSemVer = estaVisivel(cliente, cliente.player.getEyePosition(), pokemon, 1f) ? 0 : ticksSemVer + 1;
     if (ticksSemVer > TICKS_FORA_DE_VISTA) {
       soltar();
+    }
+  }
+
+  // 23/10: na batalha, depois que o travado caiu, o foco trava sozinho no próximo Pokémon dela que aparecer (o próximo do
+  // treinador, o próximo do adversário, outro selvagem do bando). Acabou a batalha, ou você soltou no G: não volta
+  private static void travarNoProximo(Minecraft cliente) {
+    if (!voltarSozinho) {
+      return;
+    }
+    if (!HistoricoDaBatalha.emBatalha()) {
+      voltarSozinho = false;
+      return;
+    }
+    PokemonEntity proximo = candidato(cliente);
+    if (proximo != null) {
+      alvo = proximo.getId();
+      ticksSemVer = 0;
+      ultimoGiro = 0;
+      voltarSozinho = false;
     }
   }
 

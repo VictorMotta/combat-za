@@ -81,6 +81,10 @@ public class DesenhoDaPrevia {
   }
 
   private static void desenhar(WorldRenderContext contexto) {
+    // 23/10: na batalha por turnos do Cobblemon, sem prévia (BatalhaPorTurnos)
+    if (BatalhaPorTurnos.agora()) {
+      return;
+    }
     int slot = PreviaDoGolpe.mostrando();
     Minecraft cliente = Minecraft.getInstance();
     if (slot < 0 || cliente.player == null || cliente.level == null || contexto.consumers() == null

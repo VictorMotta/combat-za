@@ -150,7 +150,7 @@ public class PreviaDoGolpe {
     return Mira.noChao(cliente.level, alvo.getPosition(parcial).add(marcador));
   }
 
-  private static void esquecer() {
+  static void esquecer() {
     segurando = NENHUM;
     cancelado = false;
     marcador = null;

@@ -12,6 +12,7 @@ import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
 import com.cobblemon.mod.common.pokemon.Pokemon;
 
 import dev.victor.combatza.CobblemonCombatZA;
+import dev.victor.combatza.combate.BatalhaDoCobblemon;
 import dev.victor.combatza.combate.Combate;
 import dev.victor.combatza.combate.GerenciarCombates;
 import dev.victor.combatza.combate.Lutadores;
@@ -142,6 +143,10 @@ public class Mega {
   }
 
   private static void pedido(ServerPlayer jogador) {
+    // 23/10: na batalha por turnos, a Mega é a do Cobblemon (o botão dele)
+    if (BatalhaDoCobblemon.esta(jogador)) {
+      return;
+    }
     if (!instalado()) {
       avisar(jogador, Component.translatable(FRASE + "sem_mod"));
       return;

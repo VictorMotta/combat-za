@@ -42,7 +42,8 @@ public class GerenciarCombates {
   public static void entrarEmCombate(ServerPlayer jogador, PokemonEntity selvagem, Pokemon quemComecou) {
     // Etapa 8: caído no chão, ele não volta para batalha nenhuma (só espera a bola). 21/10 (PvP): quem está num duelo também
     // não entra em batalha com selvagem até o duelo acabar (pvp.Duelos)
-    if (Desmaio.esta(selvagem) || Duelos.estaEmDuelo(jogador)) {
+    // 23/10: nem quem está numa batalha por turnos do Cobblemon (BatalhaDoCobblemon)
+    if (Desmaio.esta(selvagem) || Duelos.estaEmDuelo(jogador) || BatalhaDoCobblemon.esta(jogador)) {
       return;
     }
     // 21/10 (treinadores): a batalha contra um treinador do RCT é só sua e dele (ninguém entra, nenhum selvagem se mistura)

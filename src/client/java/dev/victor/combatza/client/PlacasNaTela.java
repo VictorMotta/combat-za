@@ -132,6 +132,12 @@ public class PlacasNaTela {
   private static Matrix4f visao;
   private static Matrix4f projecao;
 
+  // 23/10: o servidor contou que esta entidade está na SUA batalha (o foco, Foco.podeTravar)
+  public static boolean naSuaBatalha(int entidade) {
+    PlacasPayload.Placa placa = DO_SERVIDOR.get(entidade);
+    return placa != null && placa.emCombate();
+  }
+
   private PlacasNaTela() {
   }
 
@@ -156,6 +162,10 @@ public class PlacasNaTela {
   }
 
   private static void desenhar(GuiGraphics tela, DeltaTracker tempo) {
+    // 23/10: na batalha por turnos do Cobblemon, só a tela dele (BatalhaPorTurnos)
+    if (BatalhaPorTurnos.agora()) {
+      return;
+    }
     Minecraft cliente = Minecraft.getInstance();
     if (cliente.level == null || cliente.player == null || visao == null) {
       return;

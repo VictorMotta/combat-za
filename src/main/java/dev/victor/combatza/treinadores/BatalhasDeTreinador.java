@@ -124,6 +124,10 @@ public final class BatalhasDeTreinador {
     List<Pokemon> time = new ArrayList<>();
     for (Pokemon modelo : modelos) {
       Pokemon copia = modelo.clone(true, servidor.registryAccess());
+      // A cópia leva junto o treinador original (OT) do RCT, e o timcore (biblioteca do Cobbleverse) troca o isWild() do
+      // Cobblemon: com OT, "não é selvagem". Aí o mod inteiro tratava a cópia como Pokémon de alguém (a mira passava por
+      // ela, e os golpes dela não pegavam em ninguém). Sem OT, ela é o "selvagem sem dono" que a batalha espera
+      copia.removeOriginalTrainer();
       copia.heal();
       time.add(copia);
     }

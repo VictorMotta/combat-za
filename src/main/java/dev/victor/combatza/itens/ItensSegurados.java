@@ -23,9 +23,13 @@ import dev.victor.combatza.habilidades.HabilidadesDeBaga;
 import dev.victor.combatza.habilidades.HabilidadesDeEntrada;
 import dev.victor.combatza.habilidades.HabilidadesDosItens;
 import dev.victor.combatza.habilidades.HabilidadesQueReagem;
+import dev.victor.combatza.pvp.Duelos;
+import dev.victor.combatza.treinadores.BatalhasDeTreinador;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
 // 9.1 (parte 4 da sequência de 20/10: "os itens segurados, em lotes"; decidido por ele em 19/10: "etapa própria, em lotes,
@@ -113,11 +117,24 @@ public class ItensSegurados {
     HabilidadesDeBaga.comeu(pokemon, id);
     // 21/10 (habilidades, lote das reações): a Colheita, o Pegar e o Alígero anotam o item gasto (antes de ele sumir)
     HabilidadesDosItens.gastouItem(pokemon, id);
-    if (pokemon.heldItem().is(CobblemonItemTags.CONSUMED_IN_WILD_BATTLE)) {
+    // 23/10: o Suco de Baga também some ao ser bebido (não está na etiqueta do Cobblemon); sem a anotação de "usado nesta
+    // batalha", um suco novo dado no meio da luta é bebido quando a vida cair da metade (dele: "não tá usando o suco de baga")
+    if (someAoGastar(pokemon) || SUCO_DE_BAGA.equals(id)) {
       pokemon.removeHeldItem();
     } else {
       USADOS.computeIfAbsent(pokemon.getUuid(), uuid -> new HashSet<>()).add(id);
     }
+  }
+
+  // 23/10: a lista do Cobblemon de "some ao gastar", pelo tipo de batalha, como na batalha por turnos dele: contra selvagem e
+  // contra treinador, as bagas, as ervas e a bola de neve; no duelo (PvP), só as bagas (as ervas voltam no fim). O resto
+  // (Cinta de Foco, Balão, Gemas, Política de Fraqueza...) não some: vale uma vez por batalha e volta a valer na próxima
+  private static boolean someAoGastar(Pokemon pokemon) {
+    ServerPlayer dono = pokemon.isWild() ? null : pokemon.getOwnerPlayer();
+    TagKey<Item> lista = dono != null && Duelos.estaEmDuelo(dono) ? CobblemonItemTags.CONSUMED_IN_PVP_BATTLE
+        : dono != null && BatalhasDeTreinador.estaEmBatalha(dono) ? CobblemonItemTags.CONSUMED_IN_NPC_BATTLE
+            : CobblemonItemTags.CONSUMED_IN_WILD_BATTLE;
+    return pokemon.heldItem().is(lista);
   }
 
   // O item de uma vez ainda vale (ele segura, e não gastou nesta batalha: a Cinta de Foco e o Balão ficam com ele)

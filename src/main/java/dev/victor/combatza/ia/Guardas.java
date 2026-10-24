@@ -16,6 +16,7 @@ import com.cobblemon.mod.common.pokemon.Species;
 import com.mojang.serialization.Codec;
 
 import dev.victor.combatza.CobblemonCombatZA;
+import dev.victor.combatza.combate.BatalhaDoCobblemon;
 import dev.victor.combatza.combate.Captura;
 import dev.victor.combatza.combate.Lados;
 import dev.victor.combatza.golpes.ControleDeGolpes;
@@ -179,7 +180,8 @@ public class Guardas {
       online.add(jogador.getUUID());
       Modo modo = modo(jogador);
       Mob doDono = alvoDoDono(jogador);
-      if (modo == Modo.PASSIVO || !jogador.isAlive() || jogador.isSpectator()) {
+      // 23/10: na batalha por turnos do Cobblemon, os guardas ficam parados (BatalhaDoCobblemon)
+      if (modo == Modo.PASSIVO || !jogador.isAlive() || jogador.isSpectator() || BatalhaDoCobblemon.esta(jogador)) {
         continue;
       }
       Pokemon parceiro = Parceiro.de(jogador);
@@ -223,7 +225,7 @@ public class Guardas {
     return alvo;
   }
 
-  // Qualquer bicho vivo que não é Pokémon nem NPC treinador (os jogadores nem são "Mob")
+  // Qualquer bicho vivo que não é Pokémon nem NPC (Lados.ehNpc: aldeão, mercador, treinador; os jogadores nem são "Mob")
   private static boolean podeSerAlvo(LivingEntity bicho) {
     return bicho instanceof Mob && bicho.isAlive() && !(bicho instanceof PokemonEntity) && !Lados.ehNpc(bicho);
   }

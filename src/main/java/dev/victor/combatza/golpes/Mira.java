@@ -28,7 +28,7 @@ public class Mira {
 
   // Com o foco (lock-on) do cliente, a mira é o alvo travado, se ele existe, está vivo, a até 24 blocos e não é aliado.
   // Senão, a mira de sempre: o que está no meio da visão do jogador. Em batalha, a mira passa pelos monstros
-  // (Lados.entraNaLuta). E sempre passa pelos NPCs treinadores (Lados.ehNpc). 21/10 (PvP): no duelo, só o Pokémon do
+  // (Lados.entraNaLuta). E sempre passa pelos NPCs (Lados.ehNpc: aldeão, mercador, treinador). 21/10 (PvP): no duelo, só o Pokémon do
   // adversário fica na mira (Lados.miraAtravessa)
   public static HitResult mirar(ServerPlayer jogador, int alvoTravado, boolean emBatalha) {
     Entity alvo = alvoTravado < 0 ? null : jogador.serverLevel().getEntity(alvoTravado);

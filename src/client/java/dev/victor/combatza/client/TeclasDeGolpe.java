@@ -40,6 +40,15 @@ public class TeclasDeGolpe {
     // 6.11: o aperto só começa a prévia (PreviaDoGolpe); o golpe sai ao SOLTAR (ou é cancelado). Em batalha, o golpe vai para
     // o lutador, mesmo com a setinha em outro (LutadorNoCliente); com "todos de guarda", ninguém recebe comando
     ClientTickEvents.END_CLIENT_TICK.register(client -> {
+      // 23/10: na batalha por turnos do Cobblemon, as teclas dos golpes não fazem nada (os apertos são jogados fora, e o
+      // golpe que estava sendo segurado não sai ao soltar)
+      if (BatalhaPorTurnos.agora()) {
+        for (ApertoDeTecla aperto : APERTOS) {
+          aperto.foiApertada();
+        }
+        PreviaDoGolpe.esquecer();
+        return;
+      }
       for (int i = 0; i < TECLAS.length; i++) {
         if (APERTOS[i].foiApertada() && LutadorNoCliente.vagaDoComandado() >= 0) {
           PreviaDoGolpe.apertou(i);
