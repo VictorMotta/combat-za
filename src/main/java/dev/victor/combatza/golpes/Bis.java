@@ -88,7 +88,7 @@ public class Bis {
     long agora = execucao.getJogador().server.getTickCount();
     NO_BIS.put(pokemon.getUuid(), new NoBis(pokemon, slot, agora + TURNOS * EfeitosDeStatus.ticksPorTurno()));
     CobblemonCombatZA.LOGGER.info("BIS: {} preso em {} por {} turnos", pokemon.getSpecies().getName(),
-        pokemon.getMoveSet().get(slot).getName(), TURNOS);
+        pokemon.getMoveSet().get(slot) == null ? "?" : pokemon.getMoveSet().get(slot).getName(), TURNOS);
     GolpesDeStatus.avisar(pokemon, Component.translatable("cobblemon.battle.start.encore", pokemon.getDisplayName(false)));
     GolpesDesligados.avisarODono(pokemon);
     GolpesDeStatus.ervaMental(pokemon);

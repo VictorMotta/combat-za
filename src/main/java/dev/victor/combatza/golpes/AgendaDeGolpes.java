@@ -69,7 +69,15 @@ public class AgendaDeGolpes {
 
   public static void atualizar(long agora) {
     for (Execucao execucao : new ArrayList<>(EM_EXECUCAO.values())) {
-      atualizarExecucao(execucao, agora);
+      // 23/10 (um erro num golpe derrubou o servidor dedicado com todo mundo): o golpe que der erro é largado e o erro fica
+      // no log; a batalha e o servidor continuam
+      try {
+        atualizarExecucao(execucao, agora);
+      } catch (RuntimeException erro) {
+        CobblemonCombatZA.LOGGER.error("GOLPE COM ERRO: {} de {} foi largado", execucao.getGolpe().getName(),
+            execucao.getPokemon().getSpecies().getName(), erro);
+        EM_EXECUCAO.remove(execucao.getPokemon().getUuid(), execucao);
+      }
     }
     // 21/10 (habilidades, lote da conta do dano): a segunda pancada do Laço Familiar
     LacoFamiliar.atualizar(agora);

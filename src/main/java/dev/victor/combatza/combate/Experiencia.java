@@ -29,6 +29,7 @@ import com.cobblemon.mod.common.pokemon.requirements.DefeatRequirement;
 import com.cobblemon.mod.common.pokemon.requirements.LevelRequirement;
 
 import dev.victor.combatza.CobblemonCombatZA;
+import dev.victor.combatza.SemDerrubar;
 import dev.victor.combatza.captura.Desmaio;
 import dev.victor.combatza.ia.Parceiro;
 import net.minecraft.ChatFormatting;
@@ -99,12 +100,12 @@ public class Experiencia {
 
   public static void registrar() {
     // O selvagem morreu (até no golpe que mata de uma vez, que não passa pelo AFTER_DAMAGE: achado da 4.4b-4)
-    ServerLivingEntityEvents.AFTER_DEATH.register((entidade, fonte) -> {
+    ServerLivingEntityEvents.AFTER_DEATH.register(SemDerrubar.depoisDaMorte("Experiencia.AFTER_DEATH", (entidade, fonte) -> {
       if (entidade instanceof PokemonEntity selvagem && selvagem.getPokemon().isWild() && entidade.getServer() != null) {
         distribuir(entidade.getServer(), selvagem.getPokemon(), true, null);
       }
-    });
-    CobblemonEvents.POKEMON_CAPTURED.subscribe(Priority.NORMAL, Experiencia::aoCapturar);
+    }));
+    CobblemonEvents.POKEMON_CAPTURED.subscribe(Priority.NORMAL, SemDerrubar.evento("Experiencia.POKEMON_CAPTURED", Experiencia::aoCapturar));
   }
 
   private static void aoCapturar(PokemonCapturedEvent evento) {

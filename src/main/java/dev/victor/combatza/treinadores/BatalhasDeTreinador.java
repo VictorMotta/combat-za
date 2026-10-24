@@ -13,6 +13,7 @@ import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
 import com.cobblemon.mod.common.pokemon.Pokemon;
 
 import dev.victor.combatza.CobblemonCombatZA;
+import dev.victor.combatza.SemDerrubar;
 import dev.victor.combatza.combate.Combate;
 import dev.victor.combatza.combate.GerenciarCombates;
 import dev.victor.combatza.golpes.Feedback;
@@ -79,19 +80,19 @@ public final class BatalhasDeTreinador {
     PayloadTypeRegistry.playC2S().register(RespostaDoTreinadorPayload.TIPO, RespostaDoTreinadorPayload.STREAM_CODEC);
     EscolhaDoModo.registrar();
     ServerLivingEntityEvents.ALLOW_DEATH.addPhaseOrdering(ANTES_DO_DESMAIO, Event.DEFAULT_PHASE);
-    ServerLivingEntityEvents.ALLOW_DEATH.register(ANTES_DO_DESMAIO, (entidade, fonte, dano) ->
-        !(entidade instanceof PokemonEntity pokemon) || !desmaiouAgora(pokemon, fonte));
+    ServerLivingEntityEvents.ALLOW_DEATH.register(ANTES_DO_DESMAIO, SemDerrubar.podeMorrer("BatalhasDeTreinador.ALLOW_DEATH", (entidade, fonte, dano) ->
+        !(entidade instanceof PokemonEntity pokemon) || !desmaiouAgora(pokemon, fonte)));
     // Saindo da bola, na animação da Mega, caído ou voltando para a bola, ele não leva dano (como o seu na Mega)
-    ServerLivingEntityEvents.ALLOW_DAMAGE.register((entidade, fonte, dano) -> !(entidade instanceof PokemonEntity pokemon
-        && foraDaLuta(pokemon)) || fonte.is(DamageTypeTags.BYPASSES_INVULNERABILITY));
+    ServerLivingEntityEvents.ALLOW_DAMAGE.register(SemDerrubar.podeLevarDano("BatalhasDeTreinador.ALLOW_DAMAGE", (entidade, fonte, dano) -> !(entidade instanceof PokemonEntity pokemon
+        && foraDaLuta(pokemon)) || fonte.is(DamageTypeTags.BYPASSES_INVULNERABILITY)));
     // Uma cópia marcada que carrega do disco (não é a que a batalha conhece) é uma sobra: some no próximo tick
-    ServerEntityEvents.ENTITY_LOAD.register((entidade, nivel) -> {
+    ServerEntityEvents.ENTITY_LOAD.register(SemDerrubar.aoCarregar("BatalhasDeTreinador.ENTITY_LOAD", (entidade, nivel) -> {
       Registro registro = POR_ENTIDADE.get(entidade.getUUID());
       if (entidade.getTags().contains(MARCA) && (registro == null || registro.entidade() != entidade)) {
         SOBRAS.add(entidade);
       }
-    });
-    ServerTickEvents.END_SERVER_TICK.register(BatalhasDeTreinador::atualizar);
+    }));
+    ServerTickEvents.END_SERVER_TICK.register(servidor -> SemDerrubar.rodar("BatalhasDeTreinador", () -> atualizar(servidor)));
     ServerLifecycleEvents.SERVER_STOPPING.register(servidor -> encerrarTodas());
     ServerLifecycleEvents.SERVER_STOPPED.register(servidor -> limpar());
   }

@@ -21,6 +21,7 @@ import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
 import com.cobblemon.mod.common.pokemon.Pokemon;
 
 import dev.victor.combatza.CobblemonCombatZA;
+import dev.victor.combatza.SemDerrubar;
 import dev.victor.combatza.campo.Arena;
 import dev.victor.combatza.campo.Arenas;
 import dev.victor.combatza.campo.Clima;
@@ -170,14 +171,14 @@ public class HabilidadesDeForma {
   }
 
   public static void registrar() {
-    ServerTickEvents.END_SERVER_TICK.register(HabilidadesDeForma::aCadaTick);
+    ServerTickEvents.END_SERVER_TICK.register(servidor -> SemDerrubar.rodar("HabilidadesDeForma", () -> aCadaTick(servidor)));
     // A rede de segurança: saiu da bola fora de uma batalha, ou o dono entrou no jogo, com uma forma de batalha anotada
-    CobblemonEvents.POKEMON_SENT_POST.subscribe(Priority.NORMAL, HabilidadesDeForma::saiuDaBola);
-    ServerPlayConnectionEvents.JOIN.register((conexao, remetente, servidor) -> {
+    CobblemonEvents.POKEMON_SENT_POST.subscribe(Priority.NORMAL, SemDerrubar.evento("HabilidadesDeForma.POKEMON_SENT_POST", HabilidadesDeForma::saiuDaBola));
+    ServerPlayConnectionEvents.JOIN.register(SemDerrubar.aoEntrar("HabilidadesDeForma.JOIN", (conexao, remetente, servidor) -> {
       for (Pokemon pokemon : Cobblemon.INSTANCE.getStorage().getParty(conexao.getPlayer())) {
         voltarSeEstaForaDaBatalha(pokemon);
       }
-    });
+    }));
     ServerLifecycleEvents.SERVER_STOPPED.register(servidor -> limpar());
   }
 

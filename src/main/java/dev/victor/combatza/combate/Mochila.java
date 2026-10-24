@@ -11,6 +11,7 @@ import com.cobblemon.mod.common.item.battle.XStatItem;
 import com.cobblemon.mod.common.pokemon.Pokemon;
 
 import dev.victor.combatza.CobblemonCombatZA;
+import dev.victor.combatza.SemDerrubar;
 import dev.victor.combatza.config.Configuracao;
 import dev.victor.combatza.golpes.Estagios;
 import dev.victor.combatza.golpes.Feedback;
@@ -49,9 +50,9 @@ public class Mochila {
   }
 
   public static void registrar() {
-    CobblemonEvents.POKEMON_HEALED.subscribe(Priority.NORMAL, Mochila::aoCurar);
+    CobblemonEvents.POKEMON_HEALED.subscribe(Priority.NORMAL, SemDerrubar.evento("Mochila.POKEMON_HEALED", Mochila::aoCurar));
     UseItemCallback.EVENT.register(Mochila::aoUsarItem);
-    ServerPlayConnectionEvents.DISCONNECT.register((conexao, servidor) -> ESPERA_ATE.remove(conexao.getPlayer().getUUID()));
+    ServerPlayConnectionEvents.DISCONNECT.register(SemDerrubar.aoSair("Mochila.DISCONNECT", (conexao, servidor) -> ESPERA_ATE.remove(conexao.getPlayer().getUUID())));
   }
 
   // Uma poção ou um reanimador (a fonte da cura é um item) num Pokémon seu

@@ -24,6 +24,7 @@ import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
 import com.cobblemon.mod.common.pokemon.Pokemon;
 
 import dev.victor.combatza.CobblemonCombatZA;
+import dev.victor.combatza.SemDerrubar;
 import dev.victor.combatza.combate.GerenciarCombates;
 import dev.victor.combatza.golpes.Feedback;
 import dev.victor.combatza.rede.EscolhaDoDueloPayload;
@@ -96,12 +97,12 @@ public class Duelos {
     ServerPlayNetworking.registerGlobalReceiver(QuantosNoDueloPayload.TIPO,
         (pedido, contexto) -> escolheu(contexto.player(), pedido.quantos()));
     // Antes do nosso aviso de batalha (o da batalha contra selvagem, NORMAL): cancelado aqui, ele nem chega lá
-    CobblemonEvents.BATTLE_STARTED_PRE.subscribe(Priority.HIGH, Duelos::aoComecarBatalha);
+    CobblemonEvents.BATTLE_STARTED_PRE.subscribe(Priority.HIGH, SemDerrubar.evento("Duelos.BATTLE_STARTED_PRE", Duelos::aoComecarBatalha));
     // Antes da troca do lutador (Lutadores.segurarATroca, NORMAL): quem não está no duelo nem chega a recolher o lutador
-    CobblemonEvents.POKEMON_SENT_PRE.subscribe(Priority.HIGHEST, Duelos::antesDeSoltar);
-    CobblemonEvents.POKEMON_SENT_POST.subscribe(Priority.LOW, Duelos::aoSoltar);
-    CobblemonEvents.POKEMON_FAINTED.subscribe(Priority.LOW, Duelos::aoDesmaiar);
-    ServerTickEvents.END_SERVER_TICK.register(Duelos::conferirOsDesafios);
+    CobblemonEvents.POKEMON_SENT_PRE.subscribe(Priority.HIGHEST, SemDerrubar.evento("Duelos.POKEMON_SENT_PRE", Duelos::antesDeSoltar));
+    CobblemonEvents.POKEMON_SENT_POST.subscribe(Priority.LOW, SemDerrubar.evento("Duelos.POKEMON_SENT_POST", Duelos::aoSoltar));
+    CobblemonEvents.POKEMON_FAINTED.subscribe(Priority.LOW, SemDerrubar.evento("Duelos.POKEMON_FAINTED", Duelos::aoDesmaiar));
+    ServerTickEvents.END_SERVER_TICK.register(servidor -> SemDerrubar.rodar("Duelos", () -> conferirOsDesafios(servidor)));
     ServerLifecycleEvents.SERVER_STOPPED.register(servidor -> limpar());
   }
 

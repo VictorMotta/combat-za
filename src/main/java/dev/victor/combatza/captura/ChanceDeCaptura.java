@@ -14,6 +14,7 @@ import com.cobblemon.mod.common.pokemon.Gender;
 import com.cobblemon.mod.common.pokemon.Pokemon;
 
 import dev.victor.combatza.CobblemonCombatZA;
+import dev.victor.combatza.SemDerrubar;
 import dev.victor.combatza.combate.Combate;
 import dev.victor.combatza.combate.GerenciarCombates;
 import dev.victor.combatza.combate.Lados;
@@ -97,8 +98,8 @@ public class ChanceDeCaptura {
   }
 
   public static void registrar() {
-    CobblemonEvents.POKEMON_CATCH_RATE.subscribe(Priority.NORMAL, ChanceDeCaptura::aoCalcularATaxa);
-    CobblemonEvents.POKE_BALL_CAPTURE_CALCULATED.subscribe(Priority.NORMAL, ChanceDeCaptura::aoSortear);
+    CobblemonEvents.POKEMON_CATCH_RATE.subscribe(Priority.NORMAL, SemDerrubar.evento("ChanceDeCaptura.POKEMON_CATCH_RATE", ChanceDeCaptura::aoCalcularATaxa));
+    CobblemonEvents.POKE_BALL_CAPTURE_CALCULATED.subscribe(Priority.NORMAL, SemDerrubar.evento("ChanceDeCaptura.POKE_BALL_CAPTURE_CALCULATED", ChanceDeCaptura::aoSortear));
   }
 
   // A bola lançada: os nossos extras entram na taxa que o sorteio do Cobblemon vai usar

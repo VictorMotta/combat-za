@@ -12,6 +12,7 @@ import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
 import com.cobblemon.mod.common.pokemon.Pokemon;
 
 import dev.victor.combatza.CobblemonCombatZA;
+import dev.victor.combatza.SemDerrubar;
 import dev.victor.combatza.combate.BatalhaDoCobblemon;
 import dev.victor.combatza.combate.Combate;
 import dev.victor.combatza.combate.GerenciarCombates;
@@ -84,13 +85,13 @@ public class Mega {
     ServerPlayNetworking.registerGlobalReceiver(MegaPayload.TIPO, (pacote, contexto) -> pediu(contexto.player()));
     // Durante a animação (uns 6 segundos parado), o seu Pokémon não leva dano na batalha. Na batalha por turnos do
     // Cobblemon, o Mega Showdown até pausa a batalha (8,5 segundos)
-    ServerLivingEntityEvents.ALLOW_DAMAGE.register((entidade, fonte, dano) -> !(entidade instanceof PokemonEntity corpo
-        && transformandoNaBatalha(corpo.getPokemon())));
-    CobblemonEvents.POKEMON_FAINTED.subscribe(Priority.NORMAL, Mega::aoDesmaiar);
-    ServerPlayConnectionEvents.DISCONNECT.register((conexao, servidor) -> {
+    ServerLivingEntityEvents.ALLOW_DAMAGE.register(SemDerrubar.podeLevarDano("Mega.ALLOW_DAMAGE", (entidade, fonte, dano) -> !(entidade instanceof PokemonEntity corpo
+        && transformandoNaBatalha(corpo.getPokemon()))));
+    CobblemonEvents.POKEMON_FAINTED.subscribe(Priority.NORMAL, SemDerrubar.evento("Mega.POKEMON_FAINTED", Mega::aoDesmaiar));
+    ServerPlayConnectionEvents.DISCONNECT.register(SemDerrubar.aoSair("Mega.DISCONNECT", (conexao, servidor) -> {
       MEDIDORES.remove(conexao.getPlayer().getUUID());
       ENVIADOS.remove(conexao.getPlayer().getUUID());
-    });
+    }));
   }
 
   // O aviso de desmaio do Cobblemon sai sempre que a vida chega a zero (Pokemon.setCurrentHealth), na nossa batalha também

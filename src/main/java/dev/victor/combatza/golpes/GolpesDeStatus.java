@@ -10,6 +10,7 @@ import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
 import com.cobblemon.mod.common.pokemon.Pokemon;
 
 import dev.victor.combatza.CobblemonCombatZA;
+import dev.victor.combatza.SemDerrubar;
 import dev.victor.combatza.campo.Arena;
 import dev.victor.combatza.campo.Arenas;
 import dev.victor.combatza.campo.LimpezaDoCampo;
@@ -46,10 +47,10 @@ public class GolpesDeStatus {
   // Uma linha no CobblemonCombatZA: o pacote dos golpes riscados, o relógio, o fim do mundo, a volta para a bola e o desmaio
   public static void registrar() {
     PayloadTypeRegistry.playS2C().register(GolpesDesligadosPayload.TIPO, GolpesDesligadosPayload.STREAM_CODEC);
-    ServerTickEvents.END_SERVER_TICK.register(servidor -> atualizar(servidor.getTickCount()));
+    ServerTickEvents.END_SERVER_TICK.register(servidor -> SemDerrubar.rodar("GolpesDeStatus", () -> atualizar(servidor.getTickCount())));
     ServerLifecycleEvents.SERVER_STOPPED.register(servidor -> limpar());
-    CobblemonEvents.POKEMON_RECALL_POST.subscribe(Priority.NORMAL, GolpesDeStatus::aoRecolher);
-    CobblemonEvents.POKEMON_FAINTED.subscribe(Priority.NORMAL, GolpesDeStatus::aoDesmaiar);
+    CobblemonEvents.POKEMON_RECALL_POST.subscribe(Priority.NORMAL, SemDerrubar.evento("GolpesDeStatus.POKEMON_RECALL_POST", GolpesDeStatus::aoRecolher));
+    CobblemonEvents.POKEMON_FAINTED.subscribe(Priority.NORMAL, SemDerrubar.evento("GolpesDeStatus.POKEMON_FAINTED", GolpesDeStatus::aoDesmaiar));
   }
 
   // Depois do acerto (AplicarEfeitos.depoisDeAcertar): os golpes de status no alvo e os giros que limpam o chão

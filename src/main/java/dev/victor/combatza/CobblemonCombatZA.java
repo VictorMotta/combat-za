@@ -18,6 +18,7 @@ import com.cobblemon.mod.common.battles.pokemon.BattlePokemon;
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
 import com.cobblemon.mod.common.pokemon.Pokemon;
 
+import dev.victor.combatza.SemDerrubar;
 import dev.victor.combatza.captura.ChanceDeCaptura;
 import dev.victor.combatza.combate.Experiencia;
 import dev.victor.combatza.combate.GerenciarCombates;
@@ -147,17 +148,17 @@ public class CobblemonCombatZA implements ModInitializer {
     ParticulasDosGolpes.carregar();
     AnimacoesDeBatalha.carregar();
     Projetil.registrar();
-    CobblemonEvents.BATTLE_STARTED_PRE.subscribe(Priority.NORMAL, this::aoIniciarBatalha);
-    CobblemonEvents.POKEMON_FAINTED.subscribe(Priority.NORMAL, this::aoDesmaiar);
-    CobblemonEvents.POKEMON_RECALL_POST.subscribe(Priority.NORMAL, this::aoRecolher);
-    CobblemonEvents.POKEMON_SENT_POST.subscribe(Priority.NORMAL, this::aoSoltar);
-    CobblemonEvents.POKEMON_SENT_PRE.subscribe(Priority.NORMAL, this::antesDeSoltar);
+    CobblemonEvents.BATTLE_STARTED_PRE.subscribe(Priority.NORMAL, SemDerrubar.evento("CobblemonCombatZA.BATTLE_STARTED_PRE", this::aoIniciarBatalha));
+    CobblemonEvents.POKEMON_FAINTED.subscribe(Priority.NORMAL, SemDerrubar.evento("CobblemonCombatZA.POKEMON_FAINTED", this::aoDesmaiar));
+    CobblemonEvents.POKEMON_RECALL_POST.subscribe(Priority.NORMAL, SemDerrubar.evento("CobblemonCombatZA.POKEMON_RECALL_POST", this::aoRecolher));
+    CobblemonEvents.POKEMON_SENT_POST.subscribe(Priority.NORMAL, SemDerrubar.evento("CobblemonCombatZA.POKEMON_SENT_POST", this::aoSoltar));
+    CobblemonEvents.POKEMON_SENT_PRE.subscribe(Priority.NORMAL, SemDerrubar.evento("CobblemonCombatZA.POKEMON_SENT_PRE", this::antesDeSoltar));
     ChanceDeCaptura.registrar();
     Experiencia.registrar();
     Mochila.registrar();
     Desmaio.registrar();
-    ServerLivingEntityEvents.AFTER_DAMAGE.register(this::aoReceberDano);
-    ServerLivingEntityEvents.ALLOW_DAMAGE.register(this::podeLevarDano);
+    ServerLivingEntityEvents.AFTER_DAMAGE.register(SemDerrubar.depoisDoDano("CobblemonCombatZA.AFTER_DAMAGE", this::aoReceberDano));
+    ServerLivingEntityEvents.ALLOW_DAMAGE.register(SemDerrubar.podeLevarDano("CobblemonCombatZA.ALLOW_DAMAGE", this::podeLevarDano));
     ServerLifecycleEvents.SERVER_STARTED.register(servidor -> {
       Cobblemon.INSTANCE.getConfig().setPlayerDamagePokemon(true);
       LOGGER.info("Dano do jogador em Pokémon LIBERADO (playerDamagePokemon = true)");
@@ -172,40 +173,41 @@ public class CobblemonCombatZA implements ModInitializer {
         vigiaDoServidor = null;
       }
     });
+    // 23/10: cada parte roda protegida (SemDerrubar): um erro numa delas não derruba mais o servidor
     ServerTickEvents.END_SERVER_TICK.register(servidor -> {
       if (vigiaDoServidor != null) {
         vigiaDoServidor.sinal();
       }
-      GerenciarCombates.atualizar();
-      IaDoSelvagem.atualizar(servidor);
-      Guardas.atualizar(servidor);
-      Parceiro.atualizar(servidor);
-      AgendaDeGolpes.atualizar(servidor.getTickCount());
-      CorridaMontada.atualizar(servidor);
-      Jatos.atualizar(servidor.getTickCount());
-      Cargas.atualizar(servidor.getTickCount());
-      Preso.atualizar(servidor.getTickCount());
-      Armadilhas.atualizar(servidor.getTickCount());
-      CampoDeBolhas.atualizar(servidor.getTickCount());
-      Deteccao.atualizar(servidor);
-      EfeitosDeStatus.atualizar(servidor, servidor.getTickCount());
-      TempoRealDoStatus.atualizar(servidor, servidor.getTickCount());
-      SonoECongelado.atualizar(servidor.getTickCount());
-      Paralisia.atualizar();
-      Confusao.atualizar(servidor.getTickCount());
-      Estagios.atualizar(servidor.getTickCount());
-      PlacasDosSelvagens.atualizar(servidor);
-      PainelDaBatalha.atualizar(servidor);
-      Mega.atualizar(servidor);
-      Desmaio.atualizar(servidor);
-      Parties.atualizar(servidor);
-      PontosDaParty.atualizar(servidor);
-      Irritados.atualizar(servidor.getTickCount());
-      ItensDeVida.atualizar(servidor.getTickCount());
-      EfeitosDoCampo.atualizar(servidor, servidor.getTickCount());
+      SemDerrubar.rodar("GerenciarCombates", () -> GerenciarCombates.atualizar());
+      SemDerrubar.rodar("IaDoSelvagem", () -> IaDoSelvagem.atualizar(servidor));
+      SemDerrubar.rodar("Guardas", () -> Guardas.atualizar(servidor));
+      SemDerrubar.rodar("Parceiro", () -> Parceiro.atualizar(servidor));
+      SemDerrubar.rodar("AgendaDeGolpes", () -> AgendaDeGolpes.atualizar(servidor.getTickCount()));
+      SemDerrubar.rodar("CorridaMontada", () -> CorridaMontada.atualizar(servidor));
+      SemDerrubar.rodar("Jatos", () -> Jatos.atualizar(servidor.getTickCount()));
+      SemDerrubar.rodar("Cargas", () -> Cargas.atualizar(servidor.getTickCount()));
+      SemDerrubar.rodar("Preso", () -> Preso.atualizar(servidor.getTickCount()));
+      SemDerrubar.rodar("Armadilhas", () -> Armadilhas.atualizar(servidor.getTickCount()));
+      SemDerrubar.rodar("CampoDeBolhas", () -> CampoDeBolhas.atualizar(servidor.getTickCount()));
+      SemDerrubar.rodar("Deteccao", () -> Deteccao.atualizar(servidor));
+      SemDerrubar.rodar("EfeitosDeStatus", () -> EfeitosDeStatus.atualizar(servidor, servidor.getTickCount()));
+      SemDerrubar.rodar("TempoRealDoStatus", () -> TempoRealDoStatus.atualizar(servidor, servidor.getTickCount()));
+      SemDerrubar.rodar("SonoECongelado", () -> SonoECongelado.atualizar(servidor.getTickCount()));
+      SemDerrubar.rodar("Paralisia", () -> Paralisia.atualizar());
+      SemDerrubar.rodar("Confusao", () -> Confusao.atualizar(servidor.getTickCount()));
+      SemDerrubar.rodar("Estagios", () -> Estagios.atualizar(servidor.getTickCount()));
+      SemDerrubar.rodar("PlacasDosSelvagens", () -> PlacasDosSelvagens.atualizar(servidor));
+      SemDerrubar.rodar("PainelDaBatalha", () -> PainelDaBatalha.atualizar(servidor));
+      SemDerrubar.rodar("Mega", () -> Mega.atualizar(servidor));
+      SemDerrubar.rodar("Desmaio", () -> Desmaio.atualizar(servidor));
+      SemDerrubar.rodar("Parties", () -> Parties.atualizar(servidor));
+      SemDerrubar.rodar("PontosDaParty", () -> PontosDaParty.atualizar(servidor));
+      SemDerrubar.rodar("Irritados", () -> Irritados.atualizar(servidor.getTickCount()));
+      SemDerrubar.rodar("ItensDeVida", () -> ItensDeVida.atualizar(servidor.getTickCount()));
+      SemDerrubar.rodar("EfeitosDoCampo", () -> EfeitosDoCampo.atualizar(servidor, servidor.getTickCount()));
       // 21/10 (habilidades, lote da entrada e das imunidades): climas fortes, Paradoxo, Ruminante, Fuga Automática...
-      HabilidadesDeEntrada.atualizar(servidor, servidor.getTickCount());
-      Passivas.atualizar(servidor);
+      SemDerrubar.rodar("HabilidadesDeEntrada", () -> HabilidadesDeEntrada.atualizar(servidor, servidor.getTickCount()));
+      SemDerrubar.rodar("Passivas", () -> Passivas.atualizar(servidor));
     });
     ServerLifecycleEvents.SERVER_STOPPED.register(servidor -> {
       GerenciarCombates.encerrarTodos();
@@ -275,7 +277,7 @@ public class CobblemonCombatZA implements ModInitializer {
     PayloadTypeRegistry.playS2C().register(PassivasPayload.TIPO, PassivasPayload.STREAM_CODEC);
     PayloadTypeRegistry.playS2C().register(PartyPayload.TIPO, PartyPayload.STREAM_CODEC);
     PayloadTypeRegistry.playS2C().register(PontosDaPartyPayload.TIPO, PontosDaPartyPayload.STREAM_CODEC);
-    ServerPlayConnectionEvents.DISCONNECT.register((conexao, servidor) -> {
+    ServerPlayConnectionEvents.DISCONNECT.register(SemDerrubar.aoSair("CobblemonCombatZA.DISCONNECT", (conexao, servidor) -> {
       PlacasDosSelvagens.esquecer(conexao.getPlayer());
       Rolamento.esquecer(conexao.getPlayer());
       PainelDaBatalha.esquecer(conexao.getPlayer());
@@ -287,7 +289,7 @@ public class CobblemonCombatZA implements ModInitializer {
       Passivas.esquecer(conexao.getPlayer());
       Parties.aoDesconectar(conexao.getPlayer());
       PontosDaParty.esquecer(conexao.getPlayer());
-    });
+    }));
     ServerPlayNetworking.registerGlobalReceiver(UsarGolpePayload.TIPO,
         (payload, contexto) -> ControleDeGolpes.usarGolpe(contexto.player(), payload));
     ServerPlayNetworking.registerGlobalReceiver(MeusPontosPayload.TIPO,

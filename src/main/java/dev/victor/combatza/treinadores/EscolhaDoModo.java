@@ -18,6 +18,7 @@ import com.cobblemon.mod.common.battles.pokemon.BattlePokemon;
 import com.cobblemon.mod.common.pokemon.Pokemon;
 
 import dev.victor.combatza.CobblemonCombatZA;
+import dev.victor.combatza.SemDerrubar;
 import dev.victor.combatza.combate.GerenciarCombates;
 import dev.victor.combatza.golpes.Feedback;
 import dev.victor.combatza.rede.PerguntaDoTreinadorPayload;
@@ -61,14 +62,14 @@ final class EscolhaDoModo {
   }
 
   static void registrar() {
-    CobblemonEvents.BATTLE_STARTED_PRE.subscribe(Priority.NORMAL, EscolhaDoModo::aoIniciar);
+    CobblemonEvents.BATTLE_STARTED_PRE.subscribe(Priority.NORMAL, SemDerrubar.evento("EscolhaDoModo.BATTLE_STARTED_PRE", EscolhaDoModo::aoIniciar));
     ServerPlayNetworking.registerGlobalReceiver(RespostaDoTreinadorPayload.TIPO,
         (pacote, contexto) -> responder(contexto.player(), pacote.escolha()));
-    ServerPlayConnectionEvents.DISCONNECT.register((conexao, servidor) -> {
+    ServerPlayConnectionEvents.DISCONNECT.register(SemDerrubar.aoSair("EscolhaDoModo.DISCONNECT", (conexao, servidor) -> {
       PENDENTES.remove(conexao.getPlayer().getUUID());
       PASSAGENS.remove(conexao.getPlayer().getUUID());
       ULTIMO_AVISO.remove(conexao.getPlayer().getUUID());
-    });
+    }));
   }
 
   static void atualizar(long agora) {

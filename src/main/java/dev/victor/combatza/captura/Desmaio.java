@@ -13,6 +13,7 @@ import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
 import com.cobblemon.mod.common.pokemon.Pokemon;
 
 import dev.victor.combatza.CobblemonCombatZA;
+import dev.victor.combatza.SemDerrubar;
 import dev.victor.combatza.combate.Captura;
 import dev.victor.combatza.combate.Combate;
 import dev.victor.combatza.combate.Experiencia;
@@ -67,11 +68,11 @@ public class Desmaio {
   }
 
   public static void registrar() {
-    ServerLivingEntityEvents.ALLOW_DEATH.register((entidade, fonte, dano) ->
-        !(entidade instanceof PokemonEntity selvagem) || !cair(selvagem, fonte));
+    ServerLivingEntityEvents.ALLOW_DEATH.register(SemDerrubar.podeMorrer("Desmaio.ALLOW_DEATH", (entidade, fonte, dano) ->
+        !(entidade instanceof PokemonEntity selvagem) || !cair(selvagem, fonte)));
     // Caído, não leva dano (só o do vazio e o do /kill)
-    ServerLivingEntityEvents.ALLOW_DAMAGE.register((entidade, fonte, dano) ->
-        !(entidade instanceof PokemonEntity pokemon && esta(pokemon)) || fonte.is(DamageTypeTags.BYPASSES_INVULNERABILITY));
+    ServerLivingEntityEvents.ALLOW_DAMAGE.register(SemDerrubar.podeLevarDano("Desmaio.ALLOW_DAMAGE", (entidade, fonte, dano) ->
+        !(entidade instanceof PokemonEntity pokemon && esta(pokemon)) || fonte.is(DamageTypeTags.BYPASSES_INVULNERABILITY)));
   }
 
   private static boolean cair(PokemonEntity selvagem, DamageSource fonte) {

@@ -150,8 +150,12 @@ public class Corrida {
   // Quem voa: o Cobblemon diz que ele voa, ou ele tem montaria pelo ar (o Gyarados)
   public static boolean voa(PokemonEntity entidade) {
     FormData forma = entidade.getPokemon().getForm();
-    return forma.getBehaviour().getMoving().getFly().getCanFly()
-        || forma.getRiding().getBehaviours().containsKey(RidingStyle.AIR);
+    if (forma.getBehaviour().getMoving().getFly().getCanFly()) {
+      return true;
+    }
+    // 23/10: quem não tem montaria nenhuma vem sem a lista (null) no Cobblemon (o Psyduck da Misty derrubou o servidor aqui)
+    var montarias = forma.getRiding().getBehaviours();
+    return montarias != null && montarias.containsKey(RidingStyle.AIR);
   }
 
   // No ar: fora do chão e da água, e mais de 1 bloco acima do chão embaixo dele
