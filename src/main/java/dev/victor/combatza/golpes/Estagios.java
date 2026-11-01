@@ -12,7 +12,6 @@ import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
 import com.cobblemon.mod.common.pokemon.Pokemon;
 
 import dev.victor.combatza.CobblemonCombatZA;
-import dev.victor.combatza.combate.GerenciarCombates;
 import dev.victor.combatza.habilidades.HabilidadesDeEstagio;
 import net.minecraft.SharedConstants;
 import net.minecraft.core.particles.DustParticleOptions;
@@ -79,12 +78,23 @@ public class Estagios {
     if (depois == 0) {
       ficha.estagios().remove(atributo);
     } else {
-      ficha.estagios().put(atributo, new Estagio(depois, acabaNoTick));
+      ficha.estagios().put(atributo, new Estagio(depois, ate(ficha.estagios().get(atributo), depois, acabaNoTick)));
     }
     if ("spe".equals(atributo)) {
       atualizarVelocidadeDeAndar(pokemon);
     }
     return depois - antes;
+  }
+
+  // 01/11 (dele: "o tempo é único e não renova"): mais uma mudança no mesmo sentido, com a de antes valendo, não renova o
+  // tempo: só soma 2 s ao que falta. A primeira (ou a que vira o sentido) vale o tempo pedido (10 s: Balanceamento)
+  // O que vale até o fim da batalha (os itens X, o Comandante: Long.MAX_VALUE) continua assim
+  private static long ate(Estagio antes, int depois, long pedido) {
+    if (antes == null || Integer.signum(antes.valor()) != Integer.signum(depois) || pedido == Long.MAX_VALUE) {
+      return pedido;
+    }
+    long aMais = Math.round(Balanceamento.SEGUNDOS_A_MAIS_DO_ESTAGIO * SharedConstants.TICKS_PER_SECOND);
+    return antes.acabaNoTick() > Long.MAX_VALUE - aMais ? Long.MAX_VALUE : antes.acabaNoTick() + aMais;
   }
 
   // Lote 3 dos itens (Erva Branca): as quedas somem, as subidas ficam. Devolve se havia alguma queda
@@ -133,9 +143,8 @@ public class Estagios {
 
   public static void atualizar(long agora) {
     for (Ficha ficha : PLACAR.values()) {
-      if (!GerenciarCombates.estaEmCombate(ficha.pokemon())) {
-        tirarOsQueAcabaram(ficha, agora);
-      }
+      // 01/11: na batalha também (antes, na batalha, os estágios ficavam até ela acabar)
+      tirarOsQueAcabaram(ficha, agora);
       if (agora % SharedConstants.TICKS_PER_SECOND == 0) {
         mostrarParticulas(ficha);
       }

@@ -81,6 +81,7 @@ public final class Substituto {
     double emPv = danoNaVida * pokemon.getMaxHealth() / entidade.getMaxHealth();
     double sobra = vida - emPv;
     Feedback.particulas(entidade, ParticleTypes.CLOUD, PARTICULAS);
+    Feedback.avisoNoAlvo(entidade, "boneco");
     GolpesDeStatus.avisar(pokemon, Component.translatable("cobblemon.battle.activate.substitute",
         pokemon.getDisplayName(false)));
     if (sobra <= 0) {

@@ -74,7 +74,8 @@ public class Intimidacao {
       avisar(jogador, quem, Component.translatable("cobblemon.battle.activate.mist", vitima.getDisplayName(false)));
       return;
     }
-    int mudou = Estagios.mudar(vitima, "atk", -1, agora);
+    // 01/11: os 10 s de todo estágio (agora o estágio também acaba na batalha)
+    int mudou = Estagios.mudar(vitima, "atk", -1, HabilidadesDeEstagio.ateQuando(vitima));
     CobblemonCombatZA.LOGGER.info("INTIMIDAÇÃO: {} intimidou {} (Ataque agora {})", quem.getSpecies().getName(),
         vitima.getSpecies().getName(), Estagios.de(vitima, "atk"));
     // 21/10: com o Contrário, a Intimidação SOBE o Ataque

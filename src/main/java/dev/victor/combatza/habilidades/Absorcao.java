@@ -57,6 +57,7 @@ public class Absorcao {
     // Absorve Volts absorve) e a habilidade que vale (o Quebra-Molde de quem bate ignora as absorções)
     ElementalType tipo = ClimaNosGolpes.tipo(execucao.getPokemon(), golpe);
     if (Habilidades.tem(pokemon, FOGO_BRILHANTE) && tipo == ElementalTypes.FIRE) {
+      Feedback.avisoNoAlvo(entidade, "absorveu");
       acenderFogo(execucao, pokemon);
       return true;
     }
@@ -64,6 +65,8 @@ public class Absorcao {
     if (absorve == null || tipo != absorve.tipo()) {
       return false;
     }
+    // 01/11: o aviso grande no mundo
+    Feedback.avisoNoAlvo(entidade, "absorveu");
     MutableComponent aviso = Component.translatable("cobblemon_combat_za.habilidade.absorveu",
         pokemon.getDisplayName(false), golpe.getDisplayName(), Habilidades.nome(pokemon));
     if (absorve.atributo() == null) {

@@ -106,6 +106,9 @@ public class LayoutDaHud {
   static float barraX = 0.5f;
   static float barraY = 0.5f;
   static boolean barraRecolhida = false;
+  // 01/11 (dele: "bota uma opção para trocar entre clicar e alternar e segurar o lock on"): false = apertar o foco alterna
+  // (trava / solta); true = o foco fica travado enquanto você segura a tecla (Foco)
+  static boolean focoSegurando = false;
 
   private LayoutDaHud() {
   }
@@ -300,6 +303,7 @@ public class LayoutDaHud {
         barraX = Math.clamp(editor.get("x").getAsFloat(), 0f, 1f);
         barraY = Math.clamp(editor.get("y").getAsFloat(), 0f, 1f);
         barraRecolhida = editor.get("recolhida").getAsBoolean();
+        focoSegurando = editor.has("focoSegurando") && editor.get("focoSegurando").getAsBoolean();
       }
       for (Bloco bloco : Bloco.values()) {
         if (json.has(bloco.nome)) {
@@ -331,6 +335,7 @@ public class LayoutDaHud {
     editor.addProperty("x", barraX);
     editor.addProperty("y", barraY);
     editor.addProperty("recolhida", barraRecolhida);
+    editor.addProperty("focoSegurando", focoSegurando);
     json.add(EDITOR, editor);
     try {
       Files.writeString(ARQUIVO, new GsonBuilder().setPrettyPrinting().create().toJson(json));

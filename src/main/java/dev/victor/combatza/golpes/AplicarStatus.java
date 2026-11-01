@@ -115,6 +115,7 @@ public class AplicarStatus {
   }
 
   private static void naoPegou(Execucao execucao, Pokemon pokemon, String sigla, Component motivo) {
+    Feedback.avisoNoAlvo(pokemon.getEntity(), "sem_efeito");
     CobblemonCombatZA.LOGGER.info("STATUS NÃO PEGOU: {} em {} ({})", sigla, pokemon.getSpecies().getName(),
         motivo.getString());
     Feedback.historico(execucao.getJogador(), pokemon, pokemon.getDisplayName(false).copy().append(" ").append(motivo));

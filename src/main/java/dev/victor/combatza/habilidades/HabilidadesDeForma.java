@@ -725,7 +725,8 @@ public class HabilidadesDeForma {
       if (pedido == null) {
         continue;
       }
-      int mudou = Estagios.mudar(pokemon, atributo, pedido, agora);
+      // 01/11: os 10 s de todo estágio (agora o estágio também acaba na batalha)
+      int mudou = Estagios.mudar(pokemon, atributo, pedido, HabilidadesDeEstagio.ateQuando(pokemon));
       avisar(pokemon, Component.translatable(Estagios.FRASE + AplicarEfeitos.comoMudou(pedido, mudou),
           Estagios.nomeDoAtributo(atributo, pokemon)));
       if (mudou != 0) {

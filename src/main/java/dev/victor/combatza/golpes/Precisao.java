@@ -64,7 +64,7 @@ public class Precisao {
     chance *= multiplicador(HabilidadesDaConta.estagioQueVale(atacante, alvo, "accuracy"));
     // 01/11: a evasão do identificado (Previsão, Farejador, Olho Milagroso) não conta
     if (!IGNORAM_A_EVASAO.contains(Habilidades.atual(atacante)) && !GolpesQueMarcam.semEvasao(alvo)) {
-      chance /= multiplicador(HabilidadesDaConta.estagioQueVale(alvo, atacante, "evasion"));
+      chance /= multiplicadorDaEvasao(HabilidadesDaConta.estagioQueVale(alvo, atacante, "evasion"));
     }
     // 21/10: Pele Milagrosa, Pés Laçados e Entusiasmo
     chance = HabilidadesDaConta.precisao(atacante, golpe, alvo, chance);
@@ -104,7 +104,15 @@ public class Precisao {
         execucao.getGolpe().getName(), Math.round(chance * 100));
     Feedback.historico(execucao.getJogador(), alvo,
         Component.translatable("cobblemon_combat_za.golpe.desviou", alvo.getName()));
+    Feedback.avisoNoAlvo(alvo, "desviou");
     return true;
+  }
+
+  // 01/11 (dele: "abaixa quanto evade"; escolheu "metade do efeito, até +6"): a evasão que sobe vale metade de cada estágio
+  // (+1: acerta 86%; +2: 75%; +4: 60%; +6: 50%). A que cai vale inteira, como nos jogos
+  private static double multiplicadorDaEvasao(int estagio) {
+    int limitado = Math.clamp(estagio, -ESTAGIO_MAXIMO, ESTAGIO_MAXIMO);
+    return limitado >= 0 ? 1.0 + limitado / 6.0 : multiplicador(limitado);
   }
 
   private static double multiplicador(int estagio) {

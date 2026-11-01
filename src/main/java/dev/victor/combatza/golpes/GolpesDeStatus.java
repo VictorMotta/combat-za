@@ -22,6 +22,7 @@ import dev.victor.combatza.combate.Lados;
 import dev.victor.combatza.habilidades.Habilidades;
 import dev.victor.combatza.habilidades.TrocaDeHabilidade;
 import dev.victor.combatza.itens.ItensSegurados;
+import dev.victor.combatza.rede.AvisoNoAlvoPayload;
 import dev.victor.combatza.rede.GolpesDesligadosPayload;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -48,6 +49,8 @@ public class GolpesDeStatus {
   // Uma linha no CobblemonCombatZA: o pacote dos golpes riscados, o relógio, o fim do mundo, a volta para a bola e o desmaio
   public static void registrar() {
     PayloadTypeRegistry.playS2C().register(GolpesDesligadosPayload.TIPO, GolpesDesligadosPayload.STREAM_CODEC);
+    // 01/11: o aviso grande no mundo (Feedback.avisoNoAlvo)
+    PayloadTypeRegistry.playS2C().register(AvisoNoAlvoPayload.TIPO, AvisoNoAlvoPayload.STREAM_CODEC);
     ServerTickEvents.END_SERVER_TICK.register(servidor -> SemDerrubar.rodar("GolpesDeStatus", () -> atualizar(servidor.getTickCount())));
     ServerLifecycleEvents.SERVER_STOPPED.register(servidor -> limpar());
     CobblemonEvents.POKEMON_RECALL_POST.subscribe(Priority.NORMAL, SemDerrubar.evento("GolpesDeStatus.POKEMON_RECALL_POST", GolpesDeStatus::aoRecolher));

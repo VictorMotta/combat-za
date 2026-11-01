@@ -45,10 +45,13 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.Brain;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.schedule.Activity;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
 // 7.2a (decisões dele, 19/10): o selvagem LUTA com os 4 golpes dele, pelo mesmo caminho do seu Pokémon (a carga, a
@@ -75,6 +78,10 @@ public class IaDoSelvagem {
   private static final double DE_PERTO = 2.5;
   private static final double DE_LONGE = 7.0;
   private static final double FOLGA_DA_DISTANCIA = 1.5;
+  // 01/11: os giros tentados em volta do alvo até achar um lugar que vê ele, e o limite do Pokémon de treinador
+  private static final double[] GIROS_PARA_VER = { 0, 45, -45, 90, -90, 135, -135, 180 };
+  private static final double PERTO_DO_TREINADOR = 10.0;
+  private static final double PERTO_DO_TREINADOR_SEM_LUGAR = 3.0;
   private static final double GIRO_MINIMO = 25;
   private static final double GIRO_A_MAIS = 20;
   private static final float VELOCIDADE = 1.2f;
@@ -344,7 +351,55 @@ public class IaDoSelvagem {
     }
     // 8.6: em volta de VOCÊ (nenhum Pokémon seu fora), mais devagar que você correndo: dá para fugir
     float velocidade = principal instanceof Player jogador ? Andar.contraVoce(selvagem, jogador, VELOCIDADE) : VELOCIDADE;
-    Andar.ate(selvagem, dele.add(paraMim.scale(preferida)), velocidade);
+    Andar.ate(selvagem, destino(selvagem, principal, dele, paraMim, preferida), velocidade);
+  }
+
+  // 01/11 (dele: "o Pokémon do NPC vai para muito longe do treinador e fica se escondendo atrás da parede"): o lugar em volta
+  // do alvo precisa ver o alvo (sem bloco no meio): se o primeiro não vê, ele tenta girando em volta (45°, 90°...). O Pokémon
+  // de treinador também não sai de perto dele (10 blocos): o lugar longe demais vem para o limite.
+  // 01/11 (dele: "se ele está dentro de um cômodo, só ficar no cômodo; no ginásio ele fica indo para fora"): o lugar do
+  // Pokémon de treinador também precisa VER O TREINADOR, e assim o lado de fora da parede do ginásio nunca serve. Sem um
+  // lugar que veja os dois, um que veja o treinador; sem nenhum, a 3 blocos do treinador, do lado do alvo
+  private static Vec3 destino(PokemonEntity selvagem, Entity principal, Vec3 dele, Vec3 direcao, double distancia) {
+    LivingEntity treinador = BatalhasDeTreinador.treinador(selvagem);
+    Vec3 primeiro = null;
+    Vec3 veOTreinador = null;
+    for (double giro : GIROS_PARA_VER) {
+      double radianos = Math.toRadians(giro);
+      Vec3 girada = new Vec3(direcao.x * Math.cos(radianos) - direcao.z * Math.sin(radianos), 0,
+          direcao.x * Math.sin(radianos) + direcao.z * Math.cos(radianos));
+      Vec3 ponto = dele.add(girada.scale(distancia));
+      if (treinador != null && ponto.distanceTo(treinador.position()) > PERTO_DO_TREINADOR) {
+        Vec3 doTreinador = ponto.subtract(treinador.position());
+        ponto = treinador.position().add(doTreinador.normalize().scale(PERTO_DO_TREINADOR));
+      }
+      if (primeiro == null) {
+        primeiro = ponto;
+      }
+      boolean veTreinador = treinador == null || veDali(selvagem, ponto, treinador.getEyePosition());
+      if (veTreinador && veDali(selvagem, ponto, principal.getEyePosition())) {
+        return ponto;
+      }
+      if (veTreinador && veOTreinador == null) {
+        veOTreinador = ponto;
+      }
+    }
+    if (treinador == null) {
+      return primeiro;
+    }
+    if (veOTreinador != null) {
+      return veOTreinador;
+    }
+    Vec3 paraOAlvo = dele.subtract(treinador.position()).multiply(1, 0, 1);
+    return paraOAlvo.lengthSqr() < 1.0E-4 ? treinador.position()
+        : treinador.position().add(paraOAlvo.normalize().scale(PERTO_DO_TREINADOR_SEM_LUGAR));
+  }
+
+  // Dali (com os olhos na altura dos dele) ele vê esse ponto, sem bloco no meio?
+  private static boolean veDali(PokemonEntity selvagem, Vec3 ponto, Vec3 olhosDoOutro) {
+    Vec3 olhos = ponto.add(0, selvagem.getEyeHeight(), 0);
+    return selvagem.level().clip(new ClipContext(olhos, olhosDoOutro, ClipContext.Block.COLLIDER,
+        ClipContext.Fluid.NONE, selvagem)).getType() == HitResult.Type.MISS;
   }
 
   // Luta de longe quem tem mais golpes de dano sem contato do que com contato

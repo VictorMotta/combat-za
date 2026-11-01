@@ -22,15 +22,24 @@ import net.minecraft.world.phys.Vec3;
 // 01/11 (dele: "ele taca de longe ou erra ou taca com uma parede na frente, tem que deixar nossos Pokémon mais inteligentes";
 // escolheu "chegar perto e ver"): o golpe de longe só sai VENDO o alvo (sem bloco no meio) e a até 10 blocos dele. Mais longe
 // que 12 blocos, ou sem ver, ele anda até o alvo (o caminho contorna a parede) e solta quando chega lá. Com o marcador que você
-// pôs, vale o lugar do marcador: depois dele, só anda se não vê o alvo ou se ele está fora do alcance do golpe
+// pôs, vale o lugar do marcador: depois dele, só anda se não vê o alvo ou se ele está fora do alcance do golpe.
+// 01/11 (dele: "acho que errou o terremoto"): a área em volta de si (Terremoto, Surfar, Descarga) com o alvo fora dela: ele anda
+// até ficar a 3 blocos do alvo (antes soltava de onde estava, e o alvo a mais de 5 blocos não levava nada)
 public class Corrida {
   private static final int TICKS_ENTRE_CAMINHOS = 4;
   private static final long TICKS_DO_SALTO = 4;
   private static final double FOLGA_DO_ALCANCE = 2.0;
   private static final double LONGE_PARA_SOLTAR = 12.0;
   private static final double PERTO_PARA_SOLTAR = 10.0;
+  // A área em volta de si: anda se o alvo está a mais de 4 blocos (da casca dele), e solta a 3
+  private static final double LONGE_DA_AREA = 4.0;
+  private static final double PERTO_DA_AREA = 3.0;
   // 01/11: até o marcador, ele tem 5 s (o marcador pode estar longe dele)
   private static final double SEGUNDOS_ATE_O_MARCADOR = 5.0;
+  // 01/11 (dele: "nosso Pokémon também: fica na nossa visão, nada de ir para fora"): correndo até o alvo, o seu Pokémon que
+  // passa 1 s onde você não o vê, a mais de 6 blocos de você, desiste do golpe ("saiu da sua visão") e volta para o seu lado
+  private static final double LIVRE_PERTO_DE_VOCE = 6.0;
+  private static final int TICKS_FORA_DA_VISAO = SharedConstants.TICKS_PER_SECOND;
   // 8.6 (dele: "correndo muito atrás da gente, deslizando"): a corrida do selvagem até VOCÊ vai no máximo a 85% da sua
   // corrida (Andar.contraVoce) e desiste na metade do tempo (1,5 s): o bote fica curto, e correndo você escapa
   private static final double SEGUNDOS_DA_CORRIDA_ATE_VOCE = 1.5;
@@ -62,10 +71,17 @@ public class Corrida {
   public static boolean longeDemais(Move golpe, PokemonEntity atacante, HitResult mirada, boolean doMarcador) {
     FormaDoGolpe forma = FormaDoGolpe.de(golpe);
     if (atacante == null || atacante.isVehicle() || !(mirada instanceof EntityHitResult acerto)
-        || EfeitosDosGolpes.fazContato(golpe) || forma != FormaDoGolpe.UNICO && forma != FormaDoGolpe.AREA_INIMIGOS) {
+        || EfeitosDosGolpes.fazContato(golpe)) {
       return false;
     }
     Entity alvo = acerto.getEntity();
+    if (forma == FormaDoGolpe.AREA_TODOS) {
+      return alvo != atacante && ateACasca(atacante, alvo) > (doMarcador ? Balanceamento.RAIO_EM_VOLTA_DO_POKEMON
+          : LONGE_DA_AREA);
+    }
+    if (forma != FormaDoGolpe.UNICO && forma != FormaDoGolpe.AREA_INIMIGOS) {
+      return false;
+    }
     return !ve(atacante, alvo) || atacante.distanceTo(alvo) > distanciaParaSoltar(golpe, doMarcador, LONGE_PARA_SOLTAR);
   }
 
@@ -75,9 +91,26 @@ public class Corrida {
     return doMarcador ? doGolpe : Math.min(boa, doGolpe);
   }
 
+  // A distância até a casca do alvo (o alvo grande conta a largura dele)
+  private static double ateACasca(PokemonEntity atacante, Entity alvo) {
+    return Math.max(0, atacante.distanceTo(alvo) - alvo.getBbWidth() / 2);
+  }
+
   // Ele enxerga o alvo (nenhum bloco entre os olhos dos dois)?
   private static boolean ve(PokemonEntity atacante, Entity alvo) {
     return atacante.hasLineOfSight(alvo);
+  }
+
+  // AgendaDeGolpes, a cada tick da corrida: o seu Pokémon saiu da sua visão por 1 s? (o selvagem e o do treinador, não)
+  public static boolean foraDaSuaVisao(Execucao execucao) {
+    PokemonEntity atacante = execucao.getEntidade();
+    Player dono = execucao.getPokemon().isWild() ? null : execucao.getPokemon().getOwnerPlayer();
+    if (atacante == null || dono == null || dono.level() != atacante.level()
+        || atacante.distanceTo(dono) <= LIVRE_PERTO_DE_VOCE || dono.hasLineOfSight(atacante)) {
+      execucao.dentroDaVisao();
+      return false;
+    }
+    return execucao.foraDaVisao() >= TICKS_FORA_DA_VISAO;
   }
 
   public static boolean desistiu(Execucao execucao, long agora) {
@@ -162,6 +195,10 @@ public class Corrida {
   // Contato: a distância entre as "cascas" dos dois (a largura de cada um conta). De longe: 2 blocos dentro do alcance. Com o alvo
   // no ar e quem não voa: embaixo dele (só a distância no chão), e o bote sobe até ele
   private static boolean estaNoAlcance(Execucao execucao, PokemonEntity atacante, Entity alvo) {
+    if (FormaDoGolpe.de(execucao.getGolpe()) == FormaDoGolpe.AREA_TODOS) {
+      return ateACasca(atacante, alvo) <= (execucao.getMarcador() != null ? Balanceamento.RAIO_EM_VOLTA_DO_POKEMON
+          : PERTO_DA_AREA);
+    }
     if (!EfeitosDosGolpes.fazContato(execucao.getGolpe())) {
       return ve(atacante, alvo) && atacante.distanceTo(alvo)
           <= distanciaParaSoltar(execucao.getGolpe(), execucao.getMarcador() != null, PERTO_PARA_SOLTAR);

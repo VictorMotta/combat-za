@@ -483,6 +483,7 @@ public class ControleDeGolpes {
     Dano.Resultado resultado = Dano.calcular(pokemon, golpe, alvo, atacante.getRandom());
     if (resultado.efetividade() <= 0) {
       CobblemonCombatZA.LOGGER.info("IMUNE: {} não afeta {}", golpe.getName(), alvo.getName().getString());
+      Feedback.avisoNoAlvo(alvo, "imune");
       Feedback.historico(execucao.getJogador(), alvo, Component.translatable("cobblemon.battle.immune", alvo.getName()));
       return false;
     }
@@ -613,6 +614,7 @@ public class ControleDeGolpes {
 
   private static void caiuNoLocal(Execucao execucao, Vec3 ponto) {
     CobblemonCombatZA.LOGGER.info("MIRA: {} caiu no local marcado", execucao.getGolpe().getName());
+    Feedback.avisoNoAlvo(execucao.getJogador().serverLevel(), ponto, "errou");
     Feedback.particulas(execucao.getJogador().serverLevel(), ParticleTypes.POOF, ponto, 10);
     Feedback.historico(execucao.getJogador(), execucao.getPokemon(), Component.translatable("cobblemon.battle.missed"));
   }
@@ -622,6 +624,10 @@ public class ControleDeGolpes {
     CobblemonCombatZA.LOGGER.info("ERROU: {} usou {}: {}",
         execucao.getPokemon().getSpecies().getName(), execucao.getGolpe().getName(), porque.getString());
     Component frase = Component.translatable("cobblemon.battle.missed").append(" (").append(porque).append(")");
+    // 01/11: o aviso grande em cima do alvo (ou de quem usou, sem alvo)
+    Entity alvoDoAviso = execucao.alvoMirado();
+    Feedback.avisoNoAlvo(alvoDoAviso != null && alvoDoAviso.isAlive() ? alvoDoAviso : execucao.getEntidade(),
+        "pulou_para_o_lado".equals(motivo) ? "desviou" : "errou");
     // 01/11: o histórico só existe na batalha; fora dela, o erro aparece na barra de ação
     if (GerenciarCombates.estaEmCombate(execucao.getPokemon())) {
       Feedback.historico(execucao.getJogador(), execucao.getPokemon(), frase);

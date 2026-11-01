@@ -307,6 +307,12 @@ public final class BatalhasDeTreinador {
     return registro != null && registro.batalha().temProximo();
   }
 
+  // 01/11 (ia.IaDoSelvagem): o treinador deste Pokémon, a pessoa (null = não é de treinador)
+  public static LivingEntity treinador(PokemonEntity entidade) {
+    Registro registro = POR_ENTIDADE.get(entidade.getUUID());
+    return registro == null ? null : registro.batalha().treinador();
+  }
+
   // 01/11 (golpes.Saidas): o treinador dono deste Pokémon (null = não é de treinador)
   public static UUID treinadorDe(PokemonEntity entidade) {
     Registro registro = POR_ENTIDADE.get(entidade.getUUID());

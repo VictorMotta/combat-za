@@ -50,6 +50,8 @@ public class CobblemonCombatZAClient implements ClientModInitializer {
     PartyNaTela.registrar();
     TelaDaParty.registrar();
     SinalNaTela.registrar();
+    // 01/11: o aviso grande quando o golpe erra ou não pega
+    AvisosNaTela.registrar();
     // 21/10: a telinha "Tempo real / Por turnos" quando um treinador do RCT quer batalhar
     TelaDoTreinador.registrar();
     // 21/10 (PvP): a tela do duelo, "quantos Pokémon cada um usa?", para quem desafia pela roda do Cobblemon

@@ -23,6 +23,7 @@ import dev.victor.combatza.mega.GolpesZ;
 import dev.victor.combatza.mega.Tera;
 import dev.victor.combatza.SemDerrubar;
 import dev.victor.combatza.captura.ChanceDeCaptura;
+import dev.victor.combatza.combate.MesaDeCuraNaBatalha;
 import dev.victor.combatza.combate.Experiencia;
 import dev.victor.combatza.combate.GerenciarCombates;
 import dev.victor.combatza.combate.Lutadores;
@@ -155,6 +156,8 @@ public class CobblemonCombatZA implements ModInitializer {
     Configuracao.carregar();
     ComandoCombatZA.registrar();
     ComandoParty.registrar();
+    // 01/11: a mesa de cura não funciona na batalha
+    MesaDeCuraNaBatalha.registrar();
     AreaSemQueda.carregar();
     AnimacoesDeAtaque.carregar();
     ParticulasDosGolpes.carregar();

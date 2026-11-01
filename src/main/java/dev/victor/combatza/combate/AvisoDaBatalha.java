@@ -9,9 +9,14 @@ import com.cobblemon.mod.common.pokemon.Pokemon;
 import dev.victor.combatza.golpes.Feedback;
 import dev.victor.combatza.rede.AvisoDaBatalhaPayload;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 
 // Como a batalha acabou (pedido dele, 18/10: "em algum lugar tem que mostrar quem está no combate quando inicia e quando
 // terminou"; e onde: "acima dos históricos"). Quem está nela, do começo ao fim, é o PainelDaBatalha; aqui ficam o
@@ -23,6 +28,8 @@ public class AvisoDaBatalha {
   }
 
   private static final String FRASE = "cobblemon_combat_za.batalha.";
+  private static final ResourceLocation VITORIA = ResourceLocation.fromNamespaceAndPath("cobblemon", "gui.levelup");
+  private static final float VOLUME_DA_MUSICA = 1.0f;
   private static final int MAXIMO_DE_ROSTOS = 3;
 
   private AvisoDaBatalha() {
@@ -51,6 +58,7 @@ public class AvisoDaBatalha {
     };
     // 8.2b: embaixo do resultado, quanto cada Pokémon ganhou de XP na batalha (Experiencia)
     enviar(jogador, Component.translatable(FRASE + "fim"), texto, tipo, rostos, Experiencia.tirarOsGanhos(jogador));
+    musica(jogador, tipo);
   }
 
   // 8.2b: o XP chegou sem batalha nenhuma para terminar (a captura pelas costas, ou o selvagem de uma batalha que já
@@ -69,6 +77,7 @@ public class AvisoDaBatalha {
   // dele e o XP de cada um (treinadores.BatalhaDeTreinador)
   public static void doTreinador(ServerPlayer jogador, Component texto, String tipo, List<Pokemon> rostos) {
     enviar(jogador, Component.translatable(FRASE + "fim"), texto, tipo, rostos, Experiencia.tirarOsGanhos(jogador));
+    musica(jogador, tipo);
   }
 
   // 21/10 (PvP): o fim do duelo (pvp.Duelo), com a frase pronta. "tipo": "venceu", "perdeu" ou "acabou" (a cor do aviso).
@@ -76,6 +85,24 @@ public class AvisoDaBatalha {
   public static void doDuelo(ServerPlayer jogador, Component texto, String tipo, List<Pokemon> rostos) {
     enviar(jogador, Component.translatable("cobblemon_combat_za.duelo.fim"), texto, tipo, rostos,
         Experiencia.tirarOsGanhos(jogador));
+    musica(jogador, tipo);
+  }
+
+  // 01/11 (dele: "uma musiquinha de vitória e outra de derrota em todas as batalhas, para indicar que acabou"; escolheu
+  // "Cobblemon + Minecraft"): vencer toca o jingle de "subiu de nível" do Cobblemon; perder, o sinalizador desligando do
+  // Minecraft. Só para você. Fugir ou a batalha acabar de outro jeito ("acabou"): nada
+  private static void musica(ServerPlayer jogador, String tipo) {
+    SoundEvent som = switch (tipo) {
+      case "venceu" -> {
+        SoundEvent doCobblemon = BuiltInRegistries.SOUND_EVENT.get(VITORIA);
+        yield doCobblemon != null ? doCobblemon : SoundEvents.UI_TOAST_CHALLENGE_COMPLETE;
+      }
+      case "perdeu" -> SoundEvents.BEACON_DEACTIVATE;
+      default -> null;
+    };
+    if (som != null) {
+      jogador.playNotifySound(som, SoundSource.PLAYERS, VOLUME_DA_MUSICA, 1.0f);
+    }
   }
 
   // "Watchog", "Watchog e Mudbray", "Watchog, Mudbray e Zigzagoon"

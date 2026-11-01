@@ -556,7 +556,7 @@ public class Tutorial {
           texto("c.3.4"), texto("c.3.5"), texto("c.3.6")));
       paginas.add(curta(4, golpes, false, texto("c.4.1", TeclasDeGolpe.tecla(0), TeclasDeGolpe.tecla(1),
           TeclasDeGolpe.tecla(2), TeclasDeGolpe.tecla(3)), texto("c.4.2", cliente.options.keyUse), texto("c.4.3"),
-          texto("c.4.4"), texto("c.4.5"), texto("c.4.6")));
+          texto("c.4.4"), texto("c.4.5"), texto("c.4.6"), texto("c.4.7"), texto("c.4.8")));
       paginas.add(curta(5, List.of(oFoco, aRolar, oZoom), false, texto("c.5.1", Foco.tecla(), Foco.tecla()),
           rolar.isUnbound() ? texto("c.5.2_sem_tecla", cliente.options.keyShift)
               : texto("c.5.2", cliente.options.keyShift, rolar),

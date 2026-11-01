@@ -70,6 +70,8 @@ public class Execucao {
   // O golpe que este chamou (UsarOutroGolpe), e a mira dele: começa quando este acerta (AgendaDeGolpes)
   private Move chamado;
   private HitResult miraDoChamado;
+  // 01/11: há quantos ticks seguidos o seu Pokémon, correndo até o alvo, está fora da sua visão (Corrida)
+  private int ticksForaDaVisao = 0;
   // 01/11: a vaga da setinha quando você apertou o golpe (-1 = golpe da IA): a Bênção Ressuscitadora revive esse (Saidas)
   private int setinha = -1;
   private static final int FEIXE_RECOLHENDO = 3;
@@ -238,6 +240,15 @@ public class Execucao {
 
   public Move getChamado() {
     return chamado;
+  }
+
+  public void dentroDaVisao() {
+    ticksForaDaVisao = 0;
+  }
+
+  // Mais um tick fora da sua visão; devolve quantos já são
+  public int foraDaVisao() {
+    return ++ticksForaDaVisao;
   }
 
   public void definirSetinha(int vaga) {

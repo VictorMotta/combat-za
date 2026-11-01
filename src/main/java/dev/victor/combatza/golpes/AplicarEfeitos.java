@@ -179,8 +179,8 @@ public class AplicarEfeitos {
   }
 
   public static long quandoAcaba(Execucao execucao) {
-    int pp = execucao.getGolpe().getTemplate().getPp();
-    long duracao = Math.round(pp * Balanceamento.SEGUNDOS_POR_PP * SharedConstants.TICKS_PER_SECOND);
+    // 01/11: 10 s para todo golpe (antes, pelo PP do golpe; Estagios soma os 2 s de quem repete)
+    long duracao = Math.round(Balanceamento.SEGUNDOS_DO_ESTAGIO * SharedConstants.TICKS_PER_SECOND);
     return execucao.getJogador().server.getTickCount() + duracao;
   }
 

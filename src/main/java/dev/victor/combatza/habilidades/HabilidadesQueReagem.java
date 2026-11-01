@@ -25,6 +25,7 @@ import dev.victor.combatza.combate.Combate;
 import dev.victor.combatza.combate.GerenciarCombates;
 import dev.victor.combatza.combate.Lados;
 import dev.victor.combatza.combate.Lutadores;
+import dev.victor.combatza.golpes.Balanceamento;
 import dev.victor.combatza.golpes.AplicarEfeitos;
 import dev.victor.combatza.golpes.AplicarStatus;
 import dev.victor.combatza.golpes.Armadilhas;
@@ -110,8 +111,6 @@ public class HabilidadesQueReagem {
   private static final int TURNOS_DESABILITADO = 4;
   private static final int RESULTADO_TIRA = 4;
   private static final String ESPINHOS_TOXICOS = "toxicspikes";
-  // Fora da batalha, a mudança de atributo dura 30 s (na batalha, até ela acabar), como a dos itens
-  private static final long SEGUNDOS_FORA_DA_BATALHA = 30;
   private static final List<String> ORDEM_DOS_ESTAGIOS = List.of("atk", "def", "spa", "spd", "spe", "accuracy", "evasion");
   // O Ultraimpulso: o maior atributo (sem os estágios), e no empate o primeiro desta ordem, como no Showdown
   private static final List<String> ATRIBUTOS = List.of("atk", "def", "spa", "spd", "spe");
@@ -581,7 +580,8 @@ public class HabilidadesQueReagem {
   }
 
   private static long quandoAcaba(Pokemon pokemon) {
-    return agora(pokemon) + SEGUNDOS_FORA_DA_BATALHA * SharedConstants.TICKS_PER_SECOND;
+    // 01/11: os mesmos 10 s dos golpes (Balanceamento.SEGUNDOS_DO_ESTAGIO)
+    return agora(pokemon) + Math.round(Balanceamento.SEGUNDOS_DO_ESTAGIO * SharedConstants.TICKS_PER_SECOND);
   }
 
   private static long agora(Pokemon pokemon) {

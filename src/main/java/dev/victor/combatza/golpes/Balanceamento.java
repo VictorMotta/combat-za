@@ -33,6 +33,11 @@ public class Balanceamento {
   public static final double LIMITE_DO_CASTING = 0.25;
 
   public static final double SEGUNDOS_POR_PP = 1.0;
+  // 01/11 (dele: "os Pokémon usam Evasão 6 vezes e fica impossível de acertar; o tempo não pode resetar"): uma mudança de
+  // atributo dura 10 s, na batalha e fora dela; mais uma no mesmo sentido, com a de antes valendo, sobe o estágio (até 6) e só
+  // soma 2 s ao tempo que falta
+  public static final double SEGUNDOS_DO_ESTAGIO = 10.0;
+  public static final double SEGUNDOS_A_MAIS_DO_ESTAGIO = 2.0;
   public static final double SEGUNDOS_POR_TURNO = 3.5;
   // Quem entra trocando no meio da batalha fica este tempo sem atacar: a vez perdida da troca (escolha dele, 18/10)
   public static final double SEGUNDOS_DA_TROCA = 2.0;

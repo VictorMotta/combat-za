@@ -33,8 +33,11 @@ import org.joml.Vector3f;
 public class PreviaDoGolpe {
   private static final long PARA_MOSTRAR = 200;
   private static final int NENHUM = -1;
-  // Quanto o marcador anda por unidade do mouse (~1 pixel com a sensibilidade padrão)
-  private static final double BLOCOS_POR_UNIDADE_DO_MOUSE = 0.03;
+  // 01/11 (dele: "segurando, mover o mouse para cima ou para baixo não mexe a câmera, mexe para perto ou longe, algo bem
+  // dinâmico"): o mouse para cima aproxima o marcador do alvo e para baixo afasta (na linha entre os dois); para os lados,
+  // ele gira em volta do alvo. Quanto anda por unidade do mouse (~1 pixel com a sensibilidade padrão), e o mais perto do alvo
+  private static final double BLOCOS_POR_UNIDADE_DO_MOUSE = 0.05;
+  private static final double MAIS_PERTO_DO_ALVO = 1.5;
 
   private static int segurando = NENHUM;
   private static long desde = 0;
@@ -126,8 +129,8 @@ public class PreviaDoGolpe {
     return marcador != null && mostrando() != NENHUM;
   }
 
-  // O mouse em relação à tela: para a direita = para a direita; para cima = para a frente. Os números são os do giro do
-  // Minecraft: positivo = para a direita e para BAIXO (como a tela conta as linhas)
+  // O mouse: para cima = mais perto do alvo, para baixo = mais longe; para os lados = em volta dele, para o lado da tela
+  // em que o mouse foi. Os números são os do giro do Minecraft: positivo = para a direita e para BAIXO (como a tela conta)
   public static void moverMarcador(double paraADireita, double paraBaixo) {
     Move golpe = golpeSegurado();
     if (marcador == null || golpe == null) {
@@ -136,9 +139,17 @@ public class PreviaDoGolpe {
     double giro = Math.toRadians(Minecraft.getInstance().gameRenderer.getMainCamera().getYRot());
     Vec3 frente = new Vec3(-Math.sin(giro), 0, Math.cos(giro));
     Vec3 direita = new Vec3(-Math.cos(giro), 0, -Math.sin(giro));
-    Vec3 andou = direita.scale(paraADireita * BLOCOS_POR_UNIDADE_DO_MOUSE)
-        .add(frente.scale(-paraBaixo * BLOCOS_POR_UNIDADE_DO_MOUSE));
-    marcador = Marcador.limitar(golpe, marcador.add(andou));
+    // A linha do alvo até o marcador; com o marcador em cima do alvo, a linha do alvo até a câmera (de onde você olha)
+    double raio = marcador.length();
+    Vec3 paraFora = raio > 1.0E-3 ? marcador.scale(1 / raio) : frente.scale(-1);
+    Vec3 deLado = new Vec3(-paraFora.z, 0, paraFora.x);
+    if (deLado.dot(direita) < 0) {
+      deLado = deLado.scale(-1);
+    }
+    double novoRaio = Math.max(MAIS_PERTO_DO_ALVO, raio + paraBaixo * BLOCOS_POR_UNIDADE_DO_MOUSE);
+    Vec3 girado = paraFora.scale(Math.max(raio, MAIS_PERTO_DO_ALVO))
+        .add(deLado.scale(paraADireita * BLOCOS_POR_UNIDADE_DO_MOUSE));
+    marcador = Marcador.limitar(golpe, girado.normalize().scale(novoRaio));
   }
 
   // O marcador no mundo agora (no chão, perto do alvo que anda), ou null

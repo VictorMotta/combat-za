@@ -55,7 +55,11 @@ public class TelaDoTreinador extends Screen {
     int y = y0() + TOPO_DOS_BOTOES;
     int entre = LARGURA - 2 * MARGEM - 2 * LARGURA_DO_BOTAO;
     addRenderableWidget(Button.builder(Component.translatable(FRASE + "tempo_real").withStyle(ChatFormatting.GOLD),
-        botao -> responder(RespostaDoTreinadorPayload.TEMPO_REAL))
+        botao -> {
+          // 01/11: a batalha em tempo real começa com o foco travado no Pokémon do treinador (Foco)
+          Foco.travarNaProximaBatalha();
+          responder(RespostaDoTreinadorPayload.TEMPO_REAL);
+        })
         .bounds(x0() + MARGEM, y, LARGURA_DO_BOTAO, ALTURA_DO_BOTAO).build());
     addRenderableWidget(Button.builder(Component.translatable(FRASE + "por_turnos"),
         botao -> responder(RespostaDoTreinadorPayload.POR_TURNOS))

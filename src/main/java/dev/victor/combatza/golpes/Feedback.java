@@ -12,7 +12,9 @@ import com.cobblemon.mod.common.pokemon.Pokemon;
 import dev.victor.combatza.combate.GerenciarCombates;
 import dev.victor.combatza.combate.Lutadores;
 import dev.victor.combatza.pvp.Duelos;
+import dev.victor.combatza.rede.AvisoNoAlvoPayload;
 import dev.victor.combatza.rede.HistoricoPayload;
+import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.network.chat.Component;
@@ -27,6 +29,8 @@ import net.minecraft.world.phys.Vec3;
 
 public class Feedback {
   private static final double DISTANCIA_DOS_EFEITOS = 32.0;
+  private static final double DISTANCIA_DOS_AVISOS = 48.0;
+  private static final double ACIMA_DA_CABECA = 0.6;
 
   private Feedback() {
   }
@@ -111,6 +115,23 @@ public class Feedback {
       ServerPlayNetworking.send(jogador, new HistoricoPayload(mensagem, especie, aspectos, doSelvagem));
     } else {
       barraDeAcao(jogador, mensagem);
+    }
+  }
+
+  // 01/11 (dele: "algo mais visual quando não pega e errou"): o aviso grande no mundo, em cima de quem levou ("errou",
+  // "desviou", "imune"...: a chave cobblemon_combat_za.aviso.<aviso>), para os jogadores perto (client.AvisosNaTela)
+  public static void avisoNoAlvo(Entity onde, String aviso) {
+    if (onde != null && onde.level() instanceof ServerLevel nivel) {
+      avisoNoAlvo(nivel, onde.position().add(0, onde.getBbHeight() + ACIMA_DA_CABECA, 0), aviso);
+    }
+  }
+
+  public static void avisoNoAlvo(ServerLevel nivel, Vec3 ponto, String aviso) {
+    AvisoNoAlvoPayload pacote = new AvisoNoAlvoPayload(ponto.x, ponto.y, ponto.z, aviso);
+    for (ServerPlayer jogador : PlayerLookup.around(nivel, ponto, DISTANCIA_DOS_AVISOS)) {
+      if (ServerPlayNetworking.canSend(jogador, AvisoNoAlvoPayload.TIPO)) {
+        ServerPlayNetworking.send(jogador, pacote);
+      }
     }
   }
 

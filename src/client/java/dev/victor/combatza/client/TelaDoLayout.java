@@ -44,6 +44,8 @@ public class TelaDoLayout extends Screen {
   private static final int MARGEM = 8;
   private static final int BORDA_DA_TELA = 10;
   private static final int LINHA = 10;
+  // As linhas de botões da barra (dois por linha): restaurar, cores, concluir e o modo do foco
+  private static final int LINHAS_DE_BOTOES = 3;
   private static final float[] CANTOS_DA_BARRA = Formas.raios(5f);
   private static final float[] SEM_CANTOS = Formas.raios(0f);
   // As 8 alças, como na transformação do Photoshop: onde cada uma fica na caixa (0 = esquerda / em cima, 1 = direita /
@@ -137,7 +139,13 @@ public class TelaDoLayout extends Screen {
         botao -> minecraft.setScreen(new TelaDasCores(this))).size(larguraDoBotao, ALTURA_DO_BOTAO).build());
     Button concluir = addRenderableWidget(Button.builder(Component.translatable(FRASE + "concluir"), botao -> onClose())
         .size(larguraDoBotao, ALTURA_DO_BOTAO).build());
-    daBarra.addAll(List.of(restaurarBloco, restaurarTudo, cores, concluir));
+    // 01/11: o modo do foco (apertar alterna / segurar), guardado com o layout
+    Button foco = addRenderableWidget(Button.builder(textoDoFoco(), botao -> {
+      LayoutDaHud.focoSegurando = !LayoutDaHud.focoSegurando;
+      LayoutDaHud.salvar();
+      botao.setMessage(textoDoFoco());
+    }).size(larguraDoBotao, ALTURA_DO_BOTAO).tooltip(Tooltip.create(Component.translatable(FRASE + "foco_dica"))).build());
+    daBarra.addAll(List.of(restaurarBloco, restaurarTudo, cores, concluir, foco));
     recolher = addRenderableWidget(Button.builder(Component.literal("–"), botao -> recolherABarra(true))
         .size(PEQUENO, PEQUENO).tooltip(Tooltip.create(Component.translatable(FRASE + "recolher"))).build());
     Component textoDoAbrir = Component.literal("☰ ").append(title);
@@ -147,12 +155,16 @@ public class TelaDoLayout extends Screen {
     atualizarBotoes();
   }
 
+  private static Component textoDoFoco() {
+    return Component.translatable(FRASE + (LayoutDaHud.focoSegurando ? "foco_segurar" : "foco_alternar"));
+  }
+
   // Os botões acompanham a barra (onde ela está, aberta ou recolhida)
   private void posicionar() {
     int x = xDaBarra();
     int y = topoDaBarra();
     int larguraDoBotao = restaurarBloco.getWidth();
-    int yDosBotoes = y + alturaDaBarra() - MARGEM - 2 * ALTURA_DO_BOTAO - ESPACO;
+    int yDosBotoes = y + alturaDaBarra() - MARGEM - alturaDosBotoes();
     for (int i = 0; i < daBarra.size(); i++) {
       daBarra.get(i).setPosition(x + MARGEM + (i % 2) * (larguraDoBotao + ESPACO),
           yDosBotoes + (i / 2) * (ALTURA_DO_BOTAO + ESPACO));
@@ -175,7 +187,11 @@ public class TelaDoLayout extends Screen {
   }
 
   private int alturaDaBarra() {
-    return MARGEM + font.lineHeight + ESPACO + linhasDaDica.size() * LINHA + ESPACO + 2 * ALTURA_DO_BOTAO + ESPACO + MARGEM;
+    return MARGEM + font.lineHeight + ESPACO + linhasDaDica.size() * LINHA + ESPACO + alturaDosBotoes() + MARGEM;
+  }
+
+  private static int alturaDosBotoes() {
+    return LINHAS_DE_BOTOES * ALTURA_DO_BOTAO + (LINHAS_DE_BOTOES - 1) * ESPACO;
   }
 
   // Onde a barra está: a fração guardada do espaço livre (0,5 = no meio), para valer em qualquer tamanho de janela

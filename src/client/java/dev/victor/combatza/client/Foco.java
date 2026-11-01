@@ -63,6 +63,14 @@ public class Foco {
   private static double somaDoMouse = 0;
   private static long ultimoMouse = 0;
   private static long trocaLiberadaEm = 0;
+  // 01/11: no modo "segurar" (LayoutDaHud.focoSegurando), o foco travado pela tecla solta quando você solta a tecla; o que
+  // travou sozinho (o começo da batalha, o próximo depois de um desmaio) fica até você apertar e soltar
+  private static boolean travadoPelaTecla = false;
+  // 01/11 (dele: "sempre numa batalha de NPC e PvP já começa travando o lock on"): você escolheu "Tempo real" contra um
+  // treinador (TelaDoTreinador) até este momento; a batalha que começar até lá trava o foco sozinho no Pokémon dele
+  private static long travarNaBatalhaAte = 0;
+  private static final long ESPERA_PELA_BATALHA_MS = 20_000;
+  private static boolean estavaEmBatalha = false;
 
   private Foco() {
   }
@@ -84,9 +92,12 @@ public class Foco {
         soltar();
         return;
       }
-      if (apertou) {
+      if (LayoutDaHud.focoSegurando) {
+        segurando(cliente, apertou);
+      } else if (apertou) {
         alternar(cliente);
       }
+      comecoDaBatalha();
       conferirOAlvo(cliente);
       avisarOServidor();
     });
@@ -279,6 +290,41 @@ public class Foco {
     return new float[] { OMBRO_PARA_O_LADO * ombro, OMBRO_PARA_CIMA * ombro };
   }
 
+  // 01/11: o modo "segurar": apertou, trava no candidato; soltou, solta (só o que a tecla travou)
+  private static void segurando(Minecraft cliente, boolean apertou) {
+    if (apertou && alvo == SEM_ALVO) {
+      PokemonEntity candidato = candidato(cliente);
+      if (candidato != null) {
+        alvo = candidato.getId();
+        ticksSemVer = 0;
+        ultimoGiro = 0;
+        travadoPelaTecla = true;
+      }
+    } else if (apertou) {
+      travadoPelaTecla = true;
+    } else if (!tecla.isDown() && travadoPelaTecla) {
+      soltar();
+      voltarSozinho = false;
+    }
+  }
+
+  // 01/11: a batalha começou agora (o painel da batalha apareceu): no duelo, ou contra o treinador que você aceitou em
+  // tempo real, o foco trava sozinho no primeiro Pokémon dele que aparecer (o mesmo caminho de depois de um desmaio)
+  private static void comecoDaBatalha() {
+    boolean emBatalha = HistoricoDaBatalha.emBatalha();
+    if (emBatalha && !estavaEmBatalha && alvo == SEM_ALVO
+        && (HistoricoDaBatalha.emDuelo() || System.currentTimeMillis() < travarNaBatalhaAte)) {
+      voltarSozinho = true;
+      travarNaBatalhaAte = 0;
+    }
+    estavaEmBatalha = emBatalha;
+  }
+
+  // TelaDoTreinador: você escolheu lutar em tempo real
+  static void travarNaProximaBatalha() {
+    travarNaBatalhaAte = System.currentTimeMillis() + ESPERA_PELA_BATALHA_MS;
+  }
+
   private static void alternar(Minecraft cliente) {
     if (alvo != SEM_ALVO) {
       soltar();
@@ -334,6 +380,7 @@ public class Foco {
 
   private static void soltar() {
     alvo = SEM_ALVO;
+    travadoPelaTecla = false;
     ultimoGiro = 0;
     somaDoMouse = 0;
   }

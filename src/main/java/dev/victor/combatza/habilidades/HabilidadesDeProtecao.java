@@ -98,6 +98,7 @@ public class HabilidadesDeProtecao {
     }
     CobblemonCombatZA.LOGGER.info("HABILIDADE SEGUROU: {} não pegou em {} ({})", golpe.getName(),
         pokemon.getSpecies().getName(), segura);
+    Feedback.avisoNoAlvo(entidade, "bloqueou");
     if (ESPELHO_MAGICO.equals(segura)) {
       refletir(execucao, atacante, entidade);
     } else if (FILHO_DO_VENTO.equals(segura)) {

@@ -13,6 +13,7 @@ import dev.victor.combatza.CobblemonCombatZA;
 import dev.victor.combatza.combate.Combate;
 import dev.victor.combatza.combate.GerenciarCombates;
 import dev.victor.combatza.combate.Lutadores;
+import dev.victor.combatza.golpes.Balanceamento;
 import dev.victor.combatza.golpes.AplicarEfeitos;
 import dev.victor.combatza.golpes.Estagios;
 import dev.victor.combatza.habilidades.HabilidadesQueReagem;
@@ -31,8 +32,6 @@ import net.minecraft.server.level.ServerPlayer;
 // - Orbe de Adrenalina: intimidado → Velocidade +1 (o orbe some).
 // E a conta de todos os itens que mexem num atributo (as bagas de aperto, a Política de Fraqueza...): mudar(), com a frase
 public class ItensDeEstagio {
-  // Fora da batalha, a mudança que veio de um item dura 30 s (na batalha, os estágios ficam até ela acabar)
-  private static final long SEGUNDOS = 30;
   // A Erva Imitadora copiando: o que ela sobe não faz outra erva copiar de volta
   private static boolean copiando = false;
   private static final List<String> ORDEM = List.of("atk", "def", "spa", "spd", "spe", "accuracy", "evasion");
@@ -47,7 +46,8 @@ public class ItensDeEstagio {
 
   // Vários de uma vez (a Política de Fraqueza: Ataque e Ataque Especial): as reações (Erva Imitadora...) veem tudo junto
   public static Map<String, Integer> mudarVarios(Pokemon pokemon, Map<String, Integer> pedidos) {
-    long ate = agora(pokemon) + SEGUNDOS * SharedConstants.TICKS_PER_SECOND;
+    // 01/11: os 10 s de todo estágio (Balanceamento.SEGUNDOS_DO_ESTAGIO)
+    long ate = agora(pokemon) + Math.round(Balanceamento.SEGUNDOS_DO_ESTAGIO * SharedConstants.TICKS_PER_SECOND);
     Map<String, Integer> mudaram = new LinkedHashMap<>();
     for (String atributo : ORDEM) {
       Integer quanto = pedidos.get(atributo);

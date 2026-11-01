@@ -10,6 +10,7 @@ import com.cobblemon.mod.common.pokemon.Pokemon;
 import dev.victor.combatza.CobblemonCombatZA;
 import dev.victor.combatza.campo.CampoEBarreiras;
 import dev.victor.combatza.combate.Lados;
+import dev.victor.combatza.golpes.Balanceamento;
 import dev.victor.combatza.golpes.AplicarEfeitos;
 import dev.victor.combatza.golpes.Estagios;
 import dev.victor.combatza.itens.ItensDeEstagio;
@@ -38,8 +39,6 @@ public class HabilidadesDeEstagio {
   // O atributo que cada uma sobe quando um inimigo baixa algum
   private static final Map<String, String> DESAFIAM = Map.of("competitive", "spa", "defiant", "atk");
   private static final int DESAFIO = 2;
-  // Fora da batalha, a mudança que veio de uma habilidade dura 30 s, como a de um item (na batalha, até ela acabar)
-  private static final long SEGUNDOS = 30;
   private static final List<String> ORDEM = List.of("atk", "def", "spa", "spd", "spe", "accuracy", "evasion");
   private static final String FRASE = "cobblemon_combat_za.habilidade.";
 
@@ -186,6 +185,7 @@ public class HabilidadesDeEstagio {
   public static long ateQuando(Pokemon pokemon) {
     PokemonEntity entidade = pokemon.getEntity();
     long agora = entidade != null && entidade.getServer() != null ? entidade.getServer().getTickCount() : 0;
-    return agora + SEGUNDOS * SharedConstants.TICKS_PER_SECOND;
+    // 01/11: os mesmos 10 s dos golpes (Balanceamento.SEGUNDOS_DO_ESTAGIO)
+    return agora + Math.round(Balanceamento.SEGUNDOS_DO_ESTAGIO * SharedConstants.TICKS_PER_SECOND);
   }
 }

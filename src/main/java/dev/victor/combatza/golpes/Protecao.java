@@ -150,6 +150,7 @@ public final class Protecao {
       CobblemonCombatZA.LOGGER.info("PROTEÇÃO DO LADO: {} segurou {} ({})", pokemon.getSpecies().getName(),
           golpe.getName(), escudo.golpe());
       Feedback.particulas(protegido, ParticleTypes.END_ROD, PARTICULAS);
+      Feedback.avisoNoAlvo(protegido, "protegeu");
       Feedback.historico(execucao.getJogador(), pokemon, Component.translatable("cobblemon.battle.activate."
           + escudo.golpe(), pokemon.getDisplayName(false), "", execucao.getPokemon().getDisplayName(false)));
     }
@@ -199,6 +200,7 @@ public final class Protecao {
     CobblemonCombatZA.LOGGER.info("PROTEÇÃO: {} segurou {} de {}", pokemon.getSpecies().getName(), golpe.getName(),
         execucao.getPokemon().getSpecies().getName());
     Feedback.particulas(protegido, ParticleTypes.END_ROD, PARTICULAS);
+    Feedback.avisoNoAlvo(protegido, "protegeu");
     Feedback.historico(execucao.getJogador(), pokemon,
         Component.translatable("cobblemon.battle.activate.protect", pokemon.getDisplayName(false)));
     if (contato) {

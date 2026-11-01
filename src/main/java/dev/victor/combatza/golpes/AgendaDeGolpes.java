@@ -137,6 +137,7 @@ public class AgendaDeGolpes {
     if (EfeitosDosGolpes.fazContato(execucao.getGolpe()) || execucao.ehDaIa()) {
       recarregar(execucao, agora);
     }
+    Feedback.avisoNoAlvo(execucao.getEntidade(), "nao_alcancou");
     CobblemonCombatZA.LOGGER.info("NÃO ALCANÇOU: {} não chegou até o alvo com {}",
         execucao.getPokemon().getSpecies().getName(), execucao.getGolpe().getName());
     Feedback.historico(execucao.getJogador(), execucao.getPokemon(),
@@ -181,6 +182,11 @@ public class AgendaDeGolpes {
       // 21/10: quem não voa, num alvo de contato a mais de 3 blocos do chão
       if (Corrida.altoDemais(execucao)) {
         naoAlcancou(execucao, agora, "alto_demais");
+        return;
+      }
+      // 01/11: o seu Pokémon não sai da sua visão atrás do alvo
+      if (Corrida.foraDaSuaVisao(execucao)) {
+        naoAlcancou(execucao, agora, "fora_da_visao");
         return;
       }
       Corrida.atualizar(execucao, agora);
