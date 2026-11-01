@@ -221,8 +221,10 @@ public class ControleDeGolpes {
     }
     Vec3 noLimite = Marcador.limitar(golpe, new Vec3(deslocamento.x(), 0, deslocamento.z()));
     Vec3 ponto = Mira.noChao(jogador.serverLevel(), alvo.position().add(noLimite));
-    if (ponto.distanceTo(jogador.position()) > Mira.ALCANCE) {
-      CobblemonCombatZA.LOGGER.info("MARCADOR ignorado: longe de você");
+    // 01/11 (dele: "quando seguro o botão para ele se movimentar, muitas vezes ele não vai"): a distância conta do Pokémon, e
+    // não de você (o alvo a 20 blocos de você deixava o marcador "longe" e ele era ignorado)
+    if (ponto.distanceTo(entidade.position()) > Mira.ALCANCE) {
+      CobblemonCombatZA.LOGGER.info("MARCADOR ignorado: longe do Pokémon");
       return null;
     }
     CobblemonCombatZA.LOGGER.info("MARCADOR: {} vai para {} antes de {}", pokemon.getSpecies().getName(),

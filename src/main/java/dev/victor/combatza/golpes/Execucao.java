@@ -280,7 +280,7 @@ public class Execucao {
   // Chegou (ou desistiu de chegar): dali ele solta; se o alvo ficou longe demais, corre até ele (5.6b)
   public void chegouAoMarcador() {
     chegouAoMarcador = true;
-    aproximar = Corrida.longeDemais(golpe, entidade, mirada);
+    aproximar = Corrida.longeDemais(golpe, entidade, mirada, true);
   }
 
   public long getTickInicio() {

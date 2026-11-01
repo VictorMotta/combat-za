@@ -18,11 +18,19 @@ import net.minecraft.world.phys.Vec3;
 // Golpe de contato com alvo marcado: o Pokémon corre até o alvo, e o golpe só sai quando ele chega no alcance.
 // Chegou: dá o salto final (o bote, ou o avanço de quem tem animação) e o impacto vem logo depois.
 // 5.6b (escolha dele: "ele se aproxima"): o golpe de longe com o alvo além do alcance (24 blocos; 8 nos de prender) também
-// corre, até ficar 2 blocos dentro do alcance, e só então solta. Os mesmos 3 segundos para desistir ("não alcançou")
+// corre, até ficar 2 blocos dentro do alcance, e só então solta. Os mesmos 3 segundos para desistir ("não alcançou").
+// 01/11 (dele: "ele taca de longe ou erra ou taca com uma parede na frente, tem que deixar nossos Pokémon mais inteligentes";
+// escolheu "chegar perto e ver"): o golpe de longe só sai VENDO o alvo (sem bloco no meio) e a até 10 blocos dele. Mais longe
+// que 12 blocos, ou sem ver, ele anda até o alvo (o caminho contorna a parede) e solta quando chega lá. Com o marcador que você
+// pôs, vale o lugar do marcador: depois dele, só anda se não vê o alvo ou se ele está fora do alcance do golpe
 public class Corrida {
   private static final int TICKS_ENTRE_CAMINHOS = 4;
   private static final long TICKS_DO_SALTO = 4;
   private static final double FOLGA_DO_ALCANCE = 2.0;
+  private static final double LONGE_PARA_SOLTAR = 12.0;
+  private static final double PERTO_PARA_SOLTAR = 10.0;
+  // 01/11: até o marcador, ele tem 5 s (o marcador pode estar longe dele)
+  private static final double SEGUNDOS_ATE_O_MARCADOR = 5.0;
   // 8.6 (dele: "correndo muito atrás da gente, deslizando"): a corrida do selvagem até VOCÊ vai no máximo a 85% da sua
   // corrida (Andar.contraVoce) e desiste na metade do tempo (1,5 s): o bote fica curto, e correndo você escapa
   private static final double SEGUNDOS_DA_CORRIDA_ATE_VOCE = 1.5;
@@ -47,11 +55,29 @@ public class Corrida {
   // 5.6b: decidido uma vez, no começo do golpe (Execucao). Só os golpes que vão até um alvo (único ou área nele).
   // 7b: montado, o golpe de longe sai da montaria do lugar dela, sem se aproximar (quem pilota é você)
   public static boolean longeDemais(Move golpe, PokemonEntity atacante, HitResult mirada) {
+    return longeDemais(golpe, atacante, mirada, false);
+  }
+
+  // "doMarcador": ele já está no lugar que você escolheu; só anda se não vê o alvo ou se o alvo está fora do alcance
+  public static boolean longeDemais(Move golpe, PokemonEntity atacante, HitResult mirada, boolean doMarcador) {
     FormaDoGolpe forma = FormaDoGolpe.de(golpe);
-    return atacante != null && !atacante.isVehicle() && mirada instanceof EntityHitResult acerto
-        && !EfeitosDosGolpes.fazContato(golpe)
-        && (forma == FormaDoGolpe.UNICO || forma == FormaDoGolpe.AREA_INIMIGOS)
-        && atacante.distanceTo(acerto.getEntity()) > Mira.alcanceDo(golpe) - FOLGA_DO_ALCANCE;
+    if (atacante == null || atacante.isVehicle() || !(mirada instanceof EntityHitResult acerto)
+        || EfeitosDosGolpes.fazContato(golpe) || forma != FormaDoGolpe.UNICO && forma != FormaDoGolpe.AREA_INIMIGOS) {
+      return false;
+    }
+    Entity alvo = acerto.getEntity();
+    return !ve(atacante, alvo) || atacante.distanceTo(alvo) > distanciaParaSoltar(golpe, doMarcador, LONGE_PARA_SOLTAR);
+  }
+
+  // A distância máxima para soltar: a do golpe (menos a folga) ou a "boa" (10 ou 12 blocos), a menor das duas
+  private static double distanciaParaSoltar(Move golpe, boolean doMarcador, double boa) {
+    double doGolpe = Mira.alcanceDo(golpe) - FOLGA_DO_ALCANCE;
+    return doMarcador ? doGolpe : Math.min(boa, doGolpe);
+  }
+
+  // Ele enxerga o alvo (nenhum bloco entre os olhos dos dois)?
+  private static boolean ve(PokemonEntity atacante, Entity alvo) {
+    return atacante.hasLineOfSight(alvo);
   }
 
   public static boolean desistiu(Execucao execucao, long agora) {
@@ -102,7 +128,7 @@ public class Corrida {
     double distancia = Math.hypot(atacante.getX() - marcador.x, atacante.getZ() - marcador.z);
     long andando = agora - execucao.getTickInicio();
     boolean caminhoAcabou = andando > TICKS_ENTRE_CAMINHOS && atacante.getNavigation().isDone();
-    long limite = Math.round(Balanceamento.SEGUNDOS_MAXIMOS_DA_CORRIDA * SharedConstants.TICKS_PER_SECOND);
+    long limite = Math.round(SEGUNDOS_ATE_O_MARCADOR * SharedConstants.TICKS_PER_SECOND);
     if (distancia <= CHEGOU_AO_MARCADOR || caminhoAcabou && distancia <= PERTO_DO_MARCADOR || andando > limite) {
       Andar.parar(atacante);
       execucao.chegouAoMarcador();
@@ -137,7 +163,8 @@ public class Corrida {
   // no ar e quem não voa: embaixo dele (só a distância no chão), e o bote sobe até ele
   private static boolean estaNoAlcance(Execucao execucao, PokemonEntity atacante, Entity alvo) {
     if (!EfeitosDosGolpes.fazContato(execucao.getGolpe())) {
-      return atacante.distanceTo(alvo) <= Mira.alcanceDo(execucao.getGolpe()) - FOLGA_DO_ALCANCE;
+      return ve(atacante, alvo) && atacante.distanceTo(alvo)
+          <= distanciaParaSoltar(execucao.getGolpe(), execucao.getMarcador() != null, PERTO_PARA_SOLTAR);
     }
     double larguras = (atacante.getBbWidth() + alvo.getBbWidth()) / 2;
     if (noAr(alvo) && !voa(atacante) && !atacante.isVehicle()) {

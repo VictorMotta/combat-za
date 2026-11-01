@@ -133,7 +133,10 @@ public class AgendaDeGolpes {
     AvisoDoGolpeDoSelvagem.acabou(execucao);
     EM_EXECUCAO.remove(execucao.getPokemon().getUuid());
     execucao.getEntidade().getNavigation().stop();
-    recarregar(execucao, agora);
+    // 01/11: o seu golpe de longe que não achou de onde ver o alvo não gasta a vez (ele não saiu)
+    if (EfeitosDosGolpes.fazContato(execucao.getGolpe()) || execucao.ehDaIa()) {
+      recarregar(execucao, agora);
+    }
     CobblemonCombatZA.LOGGER.info("NÃO ALCANÇOU: {} não chegou até o alvo com {}",
         execucao.getPokemon().getSpecies().getName(), execucao.getGolpe().getName());
     Feedback.historico(execucao.getJogador(), execucao.getPokemon(),
