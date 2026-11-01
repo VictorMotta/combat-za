@@ -132,7 +132,9 @@ public class Combate {
       boolean caido = Desmaio.esta(selvagem) || BatalhasDeTreinador.desmaiou(selvagem);
       boolean sai = !selvagem.isAlive() || selvagem.isRemoved() || caido || selvagemFicouParaTras(selvagem);
       if (sai) {
-        (selvagem.isAlive() && !selvagem.isRemoved() && !caido ? fugiram : derrotados).add(selvagem.getPokemon());
+        // 31/10: o chefão de uma raid que some vivo (a raid falhou: o tempo acabou ou todos perderam) não foi derrotado
+        boolean vivo = selvagem.isAlive() && (!selvagem.isRemoved() || Raids.ehChefe(selvagem));
+        (vivo && !caido ? fugiram : derrotados).add(selvagem.getPokemon());
         CobblemonCombatZA.LOGGER.info("Selvagem {} saiu do combate!", selvagem.getName().getString());
         Estagios.zerar(selvagem.getPokemon());
         ItensSegurados.esquecer(selvagem.getPokemon());
@@ -144,6 +146,10 @@ public class Combate {
   public void removerJogadoresForaDeCombate() {
     jogadores.removeIf(jogador -> {
       boolean sai = !jogador.isAlive() || jogador.isRemoved() || jogadorFugiu(jogador) || timeTodoDesmaiado(jogador);
+      // 31/10: contra o chefão de uma raid, todos os seus Pokémon desmaiados (ou você caído) é a derrota da raid (Raids)
+      if (sai && !jogador.isRemoved() && (!jogador.isAlive() || timeTodoDesmaiado(jogador))) {
+        Raids.perdeu(jogador, selvagens);
+      }
       if (sai) {
         CobblemonCombatZA.LOGGER.info("Jogador {} saiu do combate!", jogador.getName().getString());
         zerarEstagiosDoTime(jogador);
@@ -205,8 +211,10 @@ public class Combate {
     return selvagens.stream().map(PokemonEntity::getPokemon).toList();
   }
 
+  // 31/10: do chefão de uma raid, só a 32 blocos (a arena é grande e ele é gigante: Raids)
   private boolean estaoPerto(ServerPlayer jogador, PokemonEntity selvagem, float distancia) {
-    return jogador.level() == selvagem.level() && jogador.distanceTo(selvagem) <= distancia;
+    float limite = Raids.ehChefe(selvagem) ? Math.max(distancia, Raids.LONGE_DO_CHEFE) : distancia;
+    return jogador.level() == selvagem.level() && jogador.distanceTo(selvagem) <= limite;
   }
 
   private boolean jogadorFugiu(ServerPlayer jogador) {

@@ -18,6 +18,7 @@ import dev.victor.combatza.combate.Captura;
 import dev.victor.combatza.combate.Combate;
 import dev.victor.combatza.combate.Experiencia;
 import dev.victor.combatza.combate.GerenciarCombates;
+import dev.victor.combatza.combate.Raids;
 import dev.victor.combatza.golpes.Confusao;
 import dev.victor.combatza.golpes.Estagios;
 import dev.victor.combatza.golpes.Feedback;
@@ -78,8 +79,9 @@ public class Desmaio {
   private static boolean cair(PokemonEntity selvagem, DamageSource fonte) {
     Pokemon pokemon = selvagem.getPokemon();
     Combate combate = GerenciarCombates.combateDe(pokemon);
+    // 31/10: o chefão de uma raid não cai no chão (quem decide o fim dele é o mod de raid: Raids)
     if (!pokemon.isWild() || combate == null || esta(selvagem) || fonte.is(DamageTypeTags.BYPASSES_INVULNERABILITY)
-        || !(selvagem.level() instanceof ServerLevel nivel)) {
+        || Raids.ehChefe(selvagem) || !(selvagem.level() instanceof ServerLevel nivel)) {
       return false;
     }
     long agora = nivel.getServer().getTickCount();

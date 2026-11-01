@@ -43,7 +43,9 @@ public class GerenciarCombates {
     // Etapa 8: caído no chão, ele não volta para batalha nenhuma (só espera a bola). 21/10 (PvP): quem está num duelo também
     // não entra em batalha com selvagem até o duelo acabar (pvp.Duelos)
     // 23/10: nem quem está numa batalha por turnos do Cobblemon (BatalhaDoCobblemon)
-    if (Desmaio.esta(selvagem) || Duelos.estaEmDuelo(jogador) || BatalhaDoCobblemon.esta(jogador)) {
+    // 31/10: com o chefão de uma raid, só quem está nela e ainda tem vidas (Raids)
+    if (Desmaio.esta(selvagem) || Duelos.estaEmDuelo(jogador) || BatalhaDoCobblemon.esta(jogador)
+        || (Raids.ehChefe(selvagem) && !Raids.podeLutar(jogador, selvagem))) {
       return;
     }
     // 21/10 (treinadores): a batalha contra um treinador do RCT é só sua e dele (ninguém entra, nenhum selvagem se mistura)
@@ -51,10 +53,14 @@ public class GerenciarCombates {
       return;
     }
     Combate combate = encontrarCombate(jogador, selvagem);
-    // Party: estranho não entra na batalha de outra pessoa
-    if (combate != null && !combate.getJogadores().contains(jogador) && !temAliado(combate, jogador)) {
+    // Party: estranho não entra na batalha de outra pessoa. 31/10: na raid, todos de lá lutam juntos contra o chefão
+    if (combate != null && !combate.getJogadores().contains(jogador) && !temAliado(combate, jogador)
+        && !Raids.ehChefe(selvagem)) {
       CobblemonCombatZA.LOGGER.info("PARTY: {} não entra na batalha de outra pessoa", jogador.getName().getString());
       return;
+    }
+    if (Raids.ehChefe(selvagem)) {
+      Raids.comecou(jogador, selvagem);
     }
     boolean selvagemNovo = true;
     if (combate == null) {

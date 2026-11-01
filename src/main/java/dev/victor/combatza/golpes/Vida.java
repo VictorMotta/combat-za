@@ -4,6 +4,7 @@ import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
 import com.cobblemon.mod.common.pokemon.Pokemon;
 
 import dev.victor.combatza.captura.Desmaio;
+import dev.victor.combatza.combate.Raids;
 import dev.victor.combatza.treinadores.BatalhasDeTreinador;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -12,8 +13,13 @@ public class Vida {
   private Vida() {
   }
 
-  // O PV de quem tem dono é exato; o do selvagem só a entidade sabe (o hurt do Cobblemon não copia para ele)
+  // O PV de quem tem dono é exato; o do selvagem só a entidade sabe (o hurt do Cobblemon não copia para ele). 31/10: o do
+  // chefão de uma raid é a fração da vida da raid (Raids)
   public static int pvAtual(Pokemon pokemon) {
+    Integer doChefe = Raids.pvDoChefe(pokemon);
+    if (doChefe != null) {
+      return doChefe;
+    }
     PokemonEntity entidade = pokemon.getEntity();
     if (pokemon.isWild() && entidade != null) {
       return (int) Math.ceil(pokemon.getMaxHealth() * entidade.getHealth() / entidade.getMaxHealth());
@@ -41,8 +47,12 @@ public class Vida {
     return entidade instanceof LivingEntity vivo ? vivo.getHealth() : 0f;
   }
 
-  // Contra mob, 1 ponto de vida vale 1 PV
+  // Contra mob, 1 ponto de vida vale 1 PV. 31/10: no chefão de uma raid, o corpo não perde vida: o dano foi para a raid (Raids)
   public static double pvTirados(Entity alvo, float vidaAntes) {
+    Double noChefe = Raids.ultimoDano(alvo);
+    if (noChefe != null) {
+      return noChefe;
+    }
     double perdeu = vidaAntes - vidaDe(alvo);
     if (alvo instanceof PokemonEntity entidade) {
       return perdeu * entidade.getPokemon().getMaxHealth() / entidade.getMaxHealth();
@@ -51,6 +61,10 @@ public class Vida {
   }
 
   public static int curar(PokemonEntity entidade, double pv) {
+    Integer noChefe = Raids.curarOChefe(entidade, pv);
+    if (noChefe != null) {
+      return noChefe;
+    }
     Pokemon pokemon = entidade.getPokemon();
     int antes = pvAtual(pokemon);
     int depois = (int) Math.min(pokemon.getMaxHealth(), antes + Math.round(pv));
@@ -62,6 +76,11 @@ public class Vida {
   // Dano nele mesmo (recuo, custo de vida, Pele Áspera) em PV exato. O hurt dá o piscar vermelho, mas sozinho erra:
   // a vida da entidade é arredondada para cima e o Fight or Flight corta parte do dano
   public static void ferir(PokemonEntity entidade, double pv) {
+    // 31/10: no chefão de uma raid, o hurt já leva o dano para a raid (Raids); ele nunca desmaia por aqui
+    if (Raids.ehChefe(entidade)) {
+      entidade.hurt(Dano.fonte(entidade, entidade), naVida(entidade, pv));
+      return;
+    }
     Pokemon pokemon = entidade.getPokemon();
     int depois = (int) Math.max(0, pvAtual(pokemon) - Math.round(pv));
     entidade.hurt(Dano.fonte(entidade, entidade), naVida(entidade, pv));
@@ -79,7 +98,11 @@ public class Vida {
   }
 
   // O desmaio do próprio Cobblemon: zera a entidade, tira o status e avisa o evento POKEMON_FAINTED
+  // 31/10: o chefão de uma raid não desmaia de uma vez (o golpe que derruba na hora não pega nele: Raids)
   public static void desmaiar(PokemonEntity entidade) {
+    if (Raids.ehChefe(entidade)) {
+      return;
+    }
     entidade.getPokemon().setCurrentHealth(0);
   }
 }

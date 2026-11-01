@@ -101,7 +101,9 @@ public class Experiencia {
   public static void registrar() {
     // O selvagem morreu (até no golpe que mata de uma vez, que não passa pelo AFTER_DAMAGE: achado da 4.4b-4)
     ServerLivingEntityEvents.AFTER_DEATH.register(SemDerrubar.depoisDaMorte("Experiencia.AFTER_DEATH", (entidade, fonte) -> {
-      if (entidade instanceof PokemonEntity selvagem && selvagem.getPokemon().isWild() && entidade.getServer() != null) {
+      // 31/10: o chefão de uma raid não dá XP (como nos jogos: o prêmio é o da raid)
+      if (entidade instanceof PokemonEntity selvagem && selvagem.getPokemon().isWild() && entidade.getServer() != null
+          && !Raids.ehChefe(selvagem)) {
         distribuir(entidade.getServer(), selvagem.getPokemon(), true, null);
       }
     }));

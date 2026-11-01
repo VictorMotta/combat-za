@@ -87,6 +87,7 @@ import dev.victor.combatza.rede.MegaPayload;
 import dev.victor.combatza.mega.Mega;
 import dev.victor.combatza.combate.EterEElixir;
 import dev.victor.combatza.combate.Mochila;
+import dev.victor.combatza.combate.Raids;
 import dev.victor.combatza.captura.Desmaio;
 import dev.victor.combatza.party.ComandoParty;
 import dev.victor.combatza.party.Parties;
@@ -208,6 +209,8 @@ public class CobblemonCombatZA implements ModInitializer {
       // 21/10 (habilidades, lote da entrada e das imunidades): climas fortes, Paradoxo, Ruminante, Fuga Automática...
       SemDerrubar.rodar("HabilidadesDeEntrada", () -> HabilidadesDeEntrada.atualizar(servidor, servidor.getTickCount()));
       SemDerrubar.rodar("Passivas", () -> Passivas.atualizar(servidor));
+      // 31/10: a party entra na raid do dono sem ele precisar aceitar
+      SemDerrubar.rodar("Raids", () -> Raids.atualizar(servidor));
     });
     ServerLifecycleEvents.SERVER_STOPPED.register(servidor -> {
       GerenciarCombates.encerrarTodos();
@@ -233,6 +236,7 @@ public class CobblemonCombatZA implements ModInitializer {
       CampoDeBolhas.limpar();
       Deteccao.limpar();
       IaDoSelvagem.limpar();
+      Raids.limpar();
       Guardas.limpar();
       Parceiro.limpar();
       Estagios.limpar();
@@ -319,6 +323,18 @@ public class CobblemonCombatZA implements ModInitializer {
     LOGGER.info("Batalha começando! Selvagem? {} | NPC? {} | PvP? {}",
         battle.isPvW(), battle.isPvN(), battle.isPvP());
 
+    // 31/10 (dele: "quero lutar usando o nosso mod"): a batalha da raid (Cobblemon Raid Dens) também vira a nossa, em tempo
+    // real. O mod de raid já conferiu tudo antes de abrir ela (se você está na raid, se o Pokémon pode lutar); aqui você entra
+    // na raid, e a vida, o tempo, as vidas e as recompensas continuam com ele (combate.Raids)
+    if (battle.isPvW() && Raids.daRaid(battle)) {
+      PokemonEntity chefe = encontrarSelvagem(battle);
+      if (chefe != null) {
+        for (ServerPlayer jogador : battle.getPlayers()) {
+          Raids.comecou(jogador, chefe);
+        }
+      }
+      LOGGER.info("Batalha de RAID: em tempo real, contra o chefão");
+    }
     if (battle.isPvW()) {
       event.cancel();
       event.setReason(Component.translatable(CHAVE_SILENCIO));

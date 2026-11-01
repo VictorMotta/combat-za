@@ -124,6 +124,10 @@ public class Lados {
     if (BatalhasDeTreinador.ehDoTreinador(atingido)) {
       return !BatalhasDeTreinador.ehOAdversario(dono, atingido);
     }
+    // 31/10: o chefão de uma raid leva o golpe de todos que estão nela (com vidas), da sua party ou não (Raids)
+    if (Raids.ehChefe(atingido)) {
+      return !Raids.podeLutar(dono, atingido);
+    }
     return daBatalhaDeOutro(dono, atingido);
   }
 

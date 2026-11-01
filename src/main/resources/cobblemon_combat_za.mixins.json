@@ -4,7 +4,8 @@
 	"compatibilityLevel": "JAVA_21",
 	"mixins": ["SensorDeSonoMixin", "TrocarAOrdemDosGolpesMixin", "TrocarGolpeGuardadoMixin", "DefesaDoPokemonMixin",
 		"CurativoNaBatalhaMixin", "MontariaSemCondutorMixin", "EstiloDaMontariaParadoMixin",
-		"SemTrocarItemNaBatalhaMixin", "EterNaBatalhaMixin", "ElixirNaBatalhaMixin"],
+		"SemTrocarItemNaBatalhaMixin", "EterNaBatalhaMixin", "ElixirNaBatalhaMixin",
+		"DanoNoChefeDaRaidMixin", "BolaAtravessaMixin"],
 	"injectors": {
 		"defaultRequire": 1
 	}

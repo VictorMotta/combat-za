@@ -5,6 +5,7 @@ import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
 import com.cobblemon.mod.common.pokemon.Pokemon;
 import com.cobblemon.mod.common.pokemon.activestate.SentOutState;
 
+import dev.victor.combatza.combate.Raids;
 import dev.victor.combatza.rede.EntrarNaLutaPayload;
 import dev.victor.combatza.rede.SoltarNoSelvagemPayload;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -27,9 +28,10 @@ public class RNoSelvagem {
     return true;
   }
 
-  // true = o pedido foi nosso, e o Cobblemon não faz mais nada com este R
+  // true = o pedido foi nosso, e o Cobblemon não faz mais nada com este R. 31/10: no chefão de uma raid, nunca (o R dele é o
+  // do mod de raid: RDoCobblemonMixin)
   public static boolean jogar(Pokemon pokemon, PokemonEntity selvagem) {
-    if (pokemon == null || selvagem == null || pokemon.getState() instanceof SentOutState
+    if (pokemon == null || selvagem == null || Raids.ehChefe(selvagem) || pokemon.getState() instanceof SentOutState
         || !ClientPlayNetworking.canSend(SoltarNoSelvagemPayload.TIPO)) {
       return false;
     }

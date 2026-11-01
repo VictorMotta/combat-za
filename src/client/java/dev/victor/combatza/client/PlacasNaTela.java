@@ -17,6 +17,7 @@ import com.cobblemon.mod.common.pokemon.Gender;
 import com.cobblemon.mod.common.pokemon.Pokemon;
 
 import dev.victor.combatza.combate.Captura;
+import dev.victor.combatza.combate.Raids;
 import dev.victor.combatza.rede.PlacasPayload;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -180,6 +181,11 @@ public class PlacasNaTela {
     PokemonEntity candidato = focado == null ? Foco.candidato(cliente) : null;
     for (PokemonEntity selvagem : cliente.level.getEntitiesOfClass(PokemonEntity.class,
         cliente.player.getBoundingBox().inflate(DISTANCIA), Foco::ehAlvo)) {
+      // 31/10: o chefão de uma raid fica sem a nossa placa: a vida dele é a barra da raid, no alto da tela (a placa que vem do
+      // servidor serve só para o foco travar nele)
+      if (Raids.ehChefe(selvagem)) {
+        continue;
+      }
       esconderORotuloDoCobblemon(selvagem);
       Vec3 cabeca = selvagem.getPosition(parcial).add(0, selvagem.getBbHeight() + ACIMA_DA_CABECA, 0);
       float[] naTela = projetar(cabeca.subtract(camera), tela, NA_TELA);

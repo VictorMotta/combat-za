@@ -14,6 +14,7 @@ import com.cobblemon.mod.common.pokemon.Pokemon;
 
 import dev.victor.combatza.client.Foco;
 import dev.victor.combatza.client.RNoSelvagem;
+import dev.victor.combatza.combate.Raids;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.LivingEntity;
 
@@ -35,10 +36,11 @@ public class RDoCobblemonMixin {
     }
   }
 
-  // Sem foco, a mira do Cobblemon achou alguém. Se for um selvagem: o nosso R, nunca a batalha por turnos
+  // Sem foco, a mira do Cobblemon achou alguém. Se for um selvagem: o nosso R, nunca a batalha por turnos. 31/10: o chefão de
+  // uma raid fica com o R do mod de raid (ele confere tudo e abre a batalha, que o servidor troca pela nossa: combate.Raids)
   @Inject(method = "processEntityTarget", at = @At("HEAD"), cancellable = true)
   private void naMira(LocalPlayer jogador, Pokemon pokemon, LivingEntity alvo, CallbackInfo info) {
-    if (!(alvo instanceof PokemonEntity selvagem) || !Foco.ehSelvagem(selvagem)) {
+    if (!(alvo instanceof PokemonEntity selvagem) || !Foco.ehSelvagem(selvagem) || Raids.ehChefe(selvagem)) {
       return;
     }
     if (!RNoSelvagem.jogar(pokemon, selvagem)) {

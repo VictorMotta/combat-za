@@ -19,6 +19,7 @@ import dev.victor.combatza.combate.Combate;
 import dev.victor.combatza.combate.GerenciarCombates;
 import dev.victor.combatza.combate.Lados;
 import dev.victor.combatza.combate.Lutadores;
+import dev.victor.combatza.combate.Raids;
 import dev.victor.combatza.config.Configuracao;
 import dev.victor.combatza.golpes.AgendaDeGolpes;
 import dev.victor.combatza.golpes.ControleDeGolpes;
@@ -140,13 +141,18 @@ public class IaDoSelvagem {
     selvagem.setTarget(null);
     segurarOCerebroDoCobblemon(selvagem);
     Bandos.largarOLider(selvagem);
-    ServerPlayer adversario = maisPerto(selvagem, jogadores);
+    // 31/10 (raid em tempo real, dele: "em quem mais deu dano"): o chefão de uma raid vai em quem mais o feriu nos últimos
+    // segundos (Raids); sem ninguém ainda, no mais perto
+    ServerPlayer adversario = Raids.alvoDoChefe(selvagem, jogadores);
+    if (adversario == null) {
+      adversario = maisPerto(selvagem, jogadores);
+    }
     if (adversario == null) {
       return;
     }
-    // 21/10 (treinadores): o Pokémon de um treinador nunca foge (nem o arisco, nem pelo Cartão Vermelho)
+    // 21/10 (treinadores): o Pokémon de um treinador nunca foge (nem o arisco, nem pelo Cartão Vermelho). 31/10: nem o chefão
     boolean doTreinador = BatalhasDeTreinador.ehDoTreinador(selvagem);
-    if (!doTreinador && (cerebro.fugindo || comecouAFugir(selvagem, jogadores, cerebro))) {
+    if (!doTreinador && !Raids.ehChefe(selvagem) && (cerebro.fugindo || comecouAFugir(selvagem, jogadores, cerebro))) {
       if (agora >= cerebro.seMexerNoTick) {
         cerebro.seMexerNoTick = agora + SharedConstants.TICKS_PER_SECOND;
         Andar.longeDe(selvagem, adversario, DISTANCIA_DA_FUGA, VELOCIDADE_DA_FUGA);

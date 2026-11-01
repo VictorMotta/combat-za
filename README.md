@@ -25,7 +25,7 @@ Put the mod in the `mods` folder of **both the game and the server**, together w
 Optional: [Radical Cobblemon Trainers](https://modrinth.com/mod/rctmod) (real-time trainer battles),
 [Cobblemon: Mega Showdown](https://modrinth.com/mod/cobblemon-mega-showdown) (Mega Evolution),
 [Xaero's Minimap](https://modrinth.com/mod/xaeros-minimap) (party on the map), [Open Parties and Claims](https://modrinth.com/mod/open-parties-and-claims)
-(its party is used). ❌ Not compatible with **Cobblemon Fight or Flight Reborn**.
+(its party is used), [Cobblemon Raid Dens](https://modrinth.com/mod/cobblemonraiddens) (real-time raids). ❌ Not compatible with **Cobblemon Fight or Flight Reborn**.
 
 Full guide, in English and Portuguese: the [Wiki](../../wiki) ([Installation](../../wiki/Installation) ·
 [Instalação](../../wiki/Instalação)). Made and tested with the **Cobbleverse** modpack (1.7.42).
