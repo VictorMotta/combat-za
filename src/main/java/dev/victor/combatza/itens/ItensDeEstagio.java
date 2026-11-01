@@ -174,9 +174,11 @@ public class ItensDeEstagio {
     List<Pokemon> inimigos = new ArrayList<>();
     if (pokemon.isWild()) {
       for (ServerPlayer jogador : combate.getJogadores()) {
-        Pokemon lutador = Lutadores.de(jogador);
-        if (lutador != null && lutador.getEntity() != null) {
-          inimigos.add(lutador);
+        // Na dupla, os dois dele
+        for (Pokemon naLuta : Lutadores.naLuta(jogador)) {
+          if (naLuta.getEntity() != null) {
+            inimigos.add(naLuta);
+          }
         }
       }
     } else if (pokemon.getOwnerPlayer() != null) {

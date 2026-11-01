@@ -9,6 +9,7 @@ import com.cobblemon.mod.common.api.moves.Move;
 import com.cobblemon.mod.common.pokemon.Pokemon;
 
 import dev.victor.combatza.CobblemonCombatZA;
+import dev.victor.combatza.campo.ClimaNosGolpes;
 import dev.victor.combatza.habilidades.HabilidadesDaBatalha;
 import dev.victor.combatza.habilidades.LacoFamiliar;
 import dev.victor.combatza.habilidades.QuebraMolde;
@@ -17,6 +18,7 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
 public class AgendaDeGolpes {
@@ -91,7 +93,7 @@ public class AgendaDeGolpes {
     execucao.esconderBarra();
     AvisoDoGolpeDoSelvagem.acabou(execucao);
     EM_EXECUCAO.remove(pokemon.getUuid());
-    Recargas.iniciarRecarga(pokemon, execucao.getSlot(), execucao.getGolpe(), agora);
+    recarregar(execucao, agora);
     CobblemonCombatZA.LOGGER.info("CANCELADO: {} perdeu o {} durante a carga",
         pokemon.getSpecies().getName(), execucao.getGolpe().getName());
     Feedback.particulas(execucao.getEntidade(), ParticleTypes.SMOKE, 20);
@@ -131,7 +133,7 @@ public class AgendaDeGolpes {
     AvisoDoGolpeDoSelvagem.acabou(execucao);
     EM_EXECUCAO.remove(execucao.getPokemon().getUuid());
     execucao.getEntidade().getNavigation().stop();
-    Recargas.iniciarRecarga(execucao.getPokemon(), execucao.getSlot(), execucao.getGolpe(), agora);
+    recarregar(execucao, agora);
     CobblemonCombatZA.LOGGER.info("NÃO ALCANÇOU: {} não chegou até o alvo com {}",
         execucao.getPokemon().getSpecies().getName(), execucao.getGolpe().getName());
     Feedback.historico(execucao.getJogador(), execucao.getPokemon(),
@@ -187,16 +189,65 @@ public class AgendaDeGolpes {
       // 21/10 (habilidades, lote da conta do dano): ele agiu (o Analisar de quem bater nele agora) e o impacto acontece
       // "durante o golpe" (o Quebra-Molde e o Infiltrado valem nele)
       HabilidadesDaBatalha.agiu(execucao.getPokemon(), agora);
+      // 01/11: o último golpe de cada um (o Imitador, o Ataque Espelhado, a Instrução... leem: UsarOutroGolpe)
+      UsarOutroGolpe.usou(execucao);
       QuebraMolde.durante(execucao, () -> ControleDeGolpes.aplicarImpacto(execucao));
       execucao.esconderBarra();
+      // 01/11: o Dançarino de quem está na batalha copia a dança
+      UsarOutroGolpe.dancarino(execucao, agora);
+      // 01/11: o golpe chamou outro (Metrônomo, Imitador...): o chamado começa agora, no lugar dele
+      if (execucao.getChamado() != null && EM_EXECUCAO.get(uuid) == execucao) {
+        Execucao chamado = Execucao.chamadoPor(execucao, agora);
+        EM_EXECUCAO.put(uuid, chamado);
+        comecar(chamado, agora);
+        return;
+      }
     }
 
     if (agora >= execucao.getTickFim()) {
       EM_EXECUCAO.remove(uuid);
+      // 01/11: o golpe chamado ou de graça não tem fúria nem cargas guardadas
+      if (execucao.getOrigem() != Execucao.Origem.NORMAL) {
+        recarregar(execucao, agora);
+        return;
+      }
       // 5.4d: a fúria ataca de novo sozinha (Furia); 5.4b: com cargas sobrando, a recarga espera a última (Cargas)
       if (!Furia.continuar(execucao, agora) && !Cargas.guardarParaDepois(execucao, agora)) {
         Recargas.iniciarRecarga(execucao.getPokemon(), execucao.getSlot(), execucao.getGolpe(), agora);
       }
+    }
+  }
+
+  private static void recarregar(Execucao execucao, long agora) {
+    if (execucao.temRecarga()) {
+      Recargas.iniciarRecarga(execucao.getPokemon(), execucao.getSlot(), execucao.getGolpe(), agora);
+    }
+  }
+
+  // 01/11: o golpe de graça (a Instrução, o Dançarino: UsarOutroGolpe), se ele estiver livre. null = não começou
+  public static Execucao iniciarDeGraca(ServerPlayer quemVe, Pokemon pokemon, Move golpe, int slot, long agora,
+      HitResult mira, Execucao.Origem origem) {
+    if (estaOcupado(pokemon) || pokemon.getEntity() == null) {
+      return null;
+    }
+    Execucao execucao = Execucao.deGraca(quemVe, pokemon, golpe, slot, agora, mira, origem);
+    EM_EXECUCAO.put(pokemon.getUuid(), execucao);
+    comecar(execucao, agora);
+    return execucao;
+  }
+
+  // O começo de um golpe que não passou pela sua tecla nem pela IA: a barra, o visual, a carga e a corrida
+  private static void comecar(Execucao execucao, long agora) {
+    execucao.mostrarBarra();
+    VisualDosGolpes.alinharNoCliente(execucao, agora);
+    if (execucao.ehDaIa()) {
+      AvisoDoGolpeDoSelvagem.comecou(execucao, agora);
+    }
+    HabilidadesDeForma.aoComecarGolpe(execucao);
+    ClimaNosGolpes.aoCarregar(execucao);
+    VisualDosGolpes.aoCarregar(execucao);
+    if (!Corrida.precisaCorrer(execucao)) {
+      VisualDosGolpes.irAteOAlvo(execucao);
     }
   }
 }

@@ -1,6 +1,7 @@
 package dev.victor.combatza.campo;
 
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -28,6 +29,8 @@ public class CampoDaBatalha {
   // 21/10 (golpes de status que faltavam): o Truque de Agilidade (Trick Room), que vale para os dois lados (SalaTrick); null =
   // sem sala
   private Prazo prazoDaSalaTrick = null;
+  // 01/11: os outros golpes de campo (Gravidade, Sala Mágica, Zona Estranha, os Esportes...: CampoDosGolpes), pelo nome do golpe
+  private final Map<String, Prazo> efeitos = new HashMap<>();
 
   public Clima clima() {
     return doGolpe != Clima.NENHUM ? doGolpe : doMundo;
@@ -89,6 +92,10 @@ public class CampoDaBatalha {
     prazoDaSalaTrick = prazo;
   }
 
+  public Map<String, Prazo> efeitos() {
+    return efeitos;
+  }
+
   // As barreiras de um lado (true = o seu lado, o dos jogadores)
   public Map<Barreira, Prazo> barreiras(boolean doSeuLado) {
     return doSeuLado ? this.doSeuLado : dosSelvagens;
@@ -117,10 +124,12 @@ public class CampoDaBatalha {
         && (prazoDaSalaTrick == null || outro.prazoDaSalaTrick.fim() > prazoDaSalaTrick.fim())) {
       prazoDaSalaTrick = outro.prazoDaSalaTrick;
     }
+    outro.efeitos.forEach((efeito, prazo) -> efeitos.merge(efeito, prazo, (meu, dele) -> meu.fim() >= dele.fim() ? meu : dele));
   }
 
   public boolean temEfeitoDeGolpe() {
-    return doGolpe != Clima.NENHUM || terreno != Terreno.NENHUM || !doSeuLado.isEmpty() || prazoDaSalaTrick != null;
+    return doGolpe != Clima.NENHUM || terreno != Terreno.NENHUM || !doSeuLado.isEmpty() || prazoDaSalaTrick != null
+        || !efeitos.isEmpty();
   }
 
   // Os efeitos dos golpes foram para a batalha: o campo pessoal fica só com o clima do mundo
@@ -130,5 +139,6 @@ public class CampoDaBatalha {
     doSeuLado.clear();
     dosSelvagens.clear();
     prazoDaSalaTrick = null;
+    efeitos.clear();
   }
 }

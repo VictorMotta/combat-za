@@ -196,6 +196,8 @@ public class HabilidadesDoTurno {
     for (PokemonEntity entidade : antes) {
       if (!naLuta.contains(entidade) && HabilidadesQueReagem.caiu(entidade)) {
         cairam++;
+        // 01/11: a Reação Química e o Receptor de um aliado pegam a habilidade dele (HabilidadesDaDupla)
+        HabilidadesDaDupla.caiu(entidade, naLuta);
       }
     }
     if (cairam == 0) {

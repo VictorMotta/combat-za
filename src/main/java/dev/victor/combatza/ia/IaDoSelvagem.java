@@ -16,6 +16,7 @@ import dev.victor.combatza.CobblemonCombatZA;
 import dev.victor.combatza.captura.Desmaio;
 import dev.victor.combatza.combate.Captura;
 import dev.victor.combatza.combate.Combate;
+import dev.victor.combatza.combate.Dupla;
 import dev.victor.combatza.combate.GerenciarCombates;
 import dev.victor.combatza.combate.Lados;
 import dev.victor.combatza.combate.Lutadores;
@@ -25,6 +26,7 @@ import dev.victor.combatza.golpes.AgendaDeGolpes;
 import dev.victor.combatza.golpes.ControleDeGolpes;
 import dev.victor.combatza.golpes.EfeitosDosGolpes;
 import dev.victor.combatza.golpes.Feedback;
+import dev.victor.combatza.golpes.GolpesQueMarcam;
 import dev.victor.combatza.golpes.Execucao;
 import dev.victor.combatza.golpes.FormaDoGolpe;
 import dev.victor.combatza.golpes.Furia;
@@ -33,7 +35,9 @@ import dev.victor.combatza.golpes.Mira;
 import dev.victor.combatza.golpes.Preso;
 import dev.victor.combatza.golpes.Projetil;
 import dev.victor.combatza.golpes.SonoECongelado;
+import dev.victor.combatza.habilidades.HabilidadesDaDupla;
 import dev.victor.combatza.habilidades.HabilidadesDeFuga;
+import dev.victor.combatza.mega.Mega;
 import dev.victor.combatza.treinadores.BatalhasDeTreinador;
 import net.minecraft.SharedConstants;
 import net.minecraft.core.particles.ParticleTypes;
@@ -122,6 +126,16 @@ public class IaDoSelvagem {
         Cerebro cerebro = CEREBROS.computeIfAbsent(selvagem.getUUID(), uuid -> new Cerebro(selvagem, agora));
         lutar(selvagem, jogadores, cerebro, agora);
       }
+      // A dupla (combate.Dupla): o segundo de cada jogador luta sozinho, com este mesmo cérebro
+      for (ServerPlayer jogador : jogadores) {
+        Pokemon segundo = Lutadores.emDupla(jogador) ? Lutadores.segundo(jogador) : null;
+        PokemonEntity entidade = segundo == null ? null : segundo.getEntity();
+        if (entidade != null) {
+          naLuta.add(entidade.getUUID());
+          Cerebro cerebro = CEREBROS.computeIfAbsent(entidade.getUUID(), uuid -> new Cerebro(entidade, agora));
+          lutarDoLado(entidade, jogador, cerebro, agora);
+        }
+      }
     }
     CEREBROS.keySet().retainAll(naLuta);
   }
@@ -133,8 +147,9 @@ public class IaDoSelvagem {
 
   private static void lutar(PokemonEntity selvagem, List<ServerPlayer> jogadores, Cerebro cerebro, long agora) {
     Pokemon pokemon = selvagem.getPokemon();
-    // Dentro da Pokébola (a captura), ele não faz nada: se escapar, volta a lutar
-    if (!selvagem.isAlive() || pokemon.isFainted() || Captura.dentroDaBola(selvagem) || Desmaio.esta(selvagem)) {
+    // Dentro da Pokébola (a captura), ele não faz nada: se escapar, volta a lutar. 01/11: nem escondido na boca do Dondozo
+    if (!selvagem.isAlive() || pokemon.isFainted() || Captura.dentroDaBola(selvagem) || Desmaio.esta(selvagem)
+        || HabilidadesDaDupla.escondido(selvagem)) {
       return;
     }
     // O Fight or Flight (e o "se defender" do Cobblemon) mandam pelo alvo do Minecraft: na nossa luta, quem escolhe é aqui
@@ -182,6 +197,47 @@ public class IaDoSelvagem {
     seMexer(selvagem, principal, cerebro, agora);
   }
 
+  // A dupla (dele, 31/10: "o nosso outro luta sozinho; a inteligência do nosso extra teria que ser igual à do selvagem, para
+  // não ficar muito apelão"): o segundo do jogador luta como um selvagem, com o mesmo tempo de reação, o mesmo respiro entre
+  // um golpe e outro, a mesma escolha de golpe e o mesmo jeito de se posicionar, só que do seu lado: o alvo é o do seu foco
+  // (sem foco, o inimigo mais perto dele: combate.Dupla). Ele nunca foge nem mira em ninguém além do alvo
+  private static void lutarDoLado(PokemonEntity aliado, ServerPlayer dono, Cerebro cerebro, long agora) {
+    Pokemon pokemon = aliado.getPokemon();
+    if (!aliado.isAlive() || pokemon.isFainted() || aliado.getBeamMode() != 0 || Mega.transformando(pokemon)
+        || HabilidadesDaDupla.escondido(aliado)) {
+      return;
+    }
+    segurarOCerebroDoCobblemon(aliado);
+    if (ocupado(pokemon)) {
+      cerebro.estavaOcupado = true;
+      return;
+    }
+    if (cerebro.estavaOcupado) {
+      cerebro.estavaOcupado = false;
+      cerebro.pensarNoTick = Math.max(cerebro.pensarNoTick,
+          agora + PAUSA_MINIMA + aliado.getRandom().nextInt(PAUSA_MAXIMA - PAUSA_MINIMA + 1));
+    }
+    desviarDeProjeteis(aliado);
+    Entity alvo = Dupla.alvoDoSegundo(aliado, dono);
+    if (alvo == null) {
+      return;
+    }
+    aliado.getLookControl().setLookAt(alvo, GIRO_DA_CABECA, GIRO_DA_CABECA);
+    if (agora >= cerebro.pensarNoTick) {
+      int slot = EscolhaDoGolpe.melhor(aliado, alvo, cerebro.usados, cerebro.entrouNoTick, agora, false);
+      if (slot >= 0) {
+        Move golpe = pokemon.getMoveSet().get(slot);
+        Andar.parar(aliado);
+        if (ControleDeGolpes.usarGolpeDaIa(aliado, slot, alvo, dono, agora)) {
+          cerebro.usados.add(golpe.getName());
+          cerebro.estavaOcupado = true;
+          return;
+        }
+      }
+    }
+    seMexer(aliado, alvo, cerebro, agora);
+  }
+
   // Executando um golpe, jorrando, em fúria, preso, dormindo ou congelado: não escolhe nada agora
   static boolean ocupado(Pokemon pokemon) {
     return AgendaDeGolpes.estaOcupado(pokemon) || Jatos.estaJorrando(pokemon) || Furia.emFuria(pokemon)
@@ -200,8 +256,21 @@ public class IaDoSelvagem {
   }
 
   // Com quem ele luta (e se posiciona, e para quem olha): o seu lutador; sem lutador, o seu Pokémon fora mais perto dele,
-  // que vira o lutador (7.2b); sem nenhum seu fora, você
+  // que vira o lutador (7.2b); sem nenhum seu fora, você. Na dupla (combate.Dupla), o mais perto dele dos seus dois na luta
   private static Entity principal(ServerPlayer adversario, PokemonEntity selvagem) {
+    if (Lutadores.emDupla(adversario)) {
+      PokemonEntity maisPerto = null;
+      for (Pokemon pokemon : Lutadores.naLuta(adversario)) {
+        PokemonEntity entidade = pokemon.getEntity();
+        if (entidade != null && entidade.isAlive() && !pokemon.isFainted() && entidade.level() == selvagem.level()
+            && (maisPerto == null || selvagem.distanceToSqr(entidade) < selvagem.distanceToSqr(maisPerto))) {
+          maisPerto = entidade;
+        }
+      }
+      if (maisPerto != null) {
+        return maisPerto;
+      }
+    }
     Pokemon lutador = Lutadores.de(adversario);
     PokemonEntity entidade = lutador == null ? null : lutador.getEntity();
     if (entidade != null && entidade.isAlive() && !lutador.isFainted()) {
@@ -336,7 +405,8 @@ public class IaDoSelvagem {
       return false;
     }
     // 21/10 (habilidades, lote da entrada e das imunidades): preso pelo Fio de Sombra (ou outra) do seu lutador
-    if (HabilidadesDeFuga.selvagemPreso(selvagem, jogadores)) {
+    // 01/11: ou por um golpe (Olhar Malvado, Teia de Aranha, Chave de Polvo...: GolpesQueMarcam)
+    if (HabilidadesDeFuga.selvagemPreso(selvagem, jogadores) || GolpesQueMarcam.naoFoge(pokemon)) {
       return false;
     }
     cerebro.fugindo = true;
@@ -369,6 +439,7 @@ public class IaDoSelvagem {
         continue;
       }
       pularDaLinha(selvagem, direcao, foraDaLinha);
+      projetil.pulou(selvagem);
       CobblemonCombatZA.LOGGER.info("IA: {} pulou para fora do caminho de {}",
           selvagem.getPokemon().getSpecies().getName(), projetil.golpe());
       return;

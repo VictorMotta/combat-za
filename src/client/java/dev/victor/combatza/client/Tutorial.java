@@ -518,6 +518,7 @@ public class Tutorial {
       KeyMapping guardas = RodaDosGuardas.tecla();
       KeyMapping mega = MegaNoCliente.tecla();
       KeyMapping party = TelaDaParty.tecla();
+      KeyMapping dupla = TeclasDoTime.dupla();
       Tecla anterior = new Tecla(frase("tecla.anterior"), TeclasDoTime.anterior());
       Tecla proximo = new Tecla(frase("tecla.proximo"), TeclasDoTime.proximo());
       Tecla aSoltar = new Tecla(frase("tecla.soltar"), soltar);
@@ -532,11 +533,15 @@ public class Tutorial {
       Tecla oZoom = new Tecla(frase("tecla.zoom"), ZoomDaCamera.tecla());
       Tecla aMega = new Tecla(frase("tecla.mega"), mega);
       Tecla aParty = new Tecla(frase("tecla.party"), party);
+      Tecla aDupla = new Tecla(frase("tecla.dupla"), dupla);
+      KeyMapping sinal = SinalNaTela.tecla();
+      Tecla oSinal = new Tecla(frase("tecla.sinal"), sinal);
       List<Tecla> todas = new ArrayList<>(List.of(anterior, proximo, aSoltar, oLado));
       todas.addAll(golpes);
       // A Mega só existe com o Mega Showdown: sem ele, nem a página nem a tecla aparecem (como a do OPAC e a do Xaero)
       boolean comMega = FabricLoader.getInstance().isModLoaded("mega_showdown");
-      todas.addAll(comMega ? List.of(oFoco, aRolar, osGuardas, aMega, oZoom, aParty) : List.of(oFoco, aRolar, osGuardas, oZoom, aParty));
+      todas.addAll(comMega ? List.of(oFoco, aRolar, osGuardas, aMega, oZoom, aParty, aDupla, oSinal)
+          : List.of(oFoco, aRolar, osGuardas, oZoom, aParty, aDupla, oSinal));
 
       List<Pagina> paginas = new ArrayList<>();
       // 21/10 (dele: "deveríamos resumir esse tutorial, 22 páginas tá ruim"; escolheu "umas 12 páginas curtas + wiki"): no jogo,
@@ -548,10 +553,10 @@ public class Tutorial {
           texto("c.2.1", TeclasDoTime.anterior(), TeclasDoTime.proximo(), soltar), texto("c.2.2", soltar),
           lado.isUnbound() ? texto("c.2.3_sem_tecla") : texto("c.2.3", lado)));
       paginas.add(curta(3, List.of(aSoltar), false, texto("c.3.1", soltar), texto("c.3.2"), texto("c.3.3"),
-          texto("c.3.4"), texto("c.3.5")));
+          texto("c.3.4"), texto("c.3.5"), texto("c.3.6")));
       paginas.add(curta(4, golpes, false, texto("c.4.1", TeclasDeGolpe.tecla(0), TeclasDeGolpe.tecla(1),
           TeclasDeGolpe.tecla(2), TeclasDeGolpe.tecla(3)), texto("c.4.2", cliente.options.keyUse), texto("c.4.3"),
-          texto("c.4.4"), texto("c.4.5")));
+          texto("c.4.4"), texto("c.4.5"), texto("c.4.6")));
       paginas.add(curta(5, List.of(oFoco, aRolar, oZoom), false, texto("c.5.1", Foco.tecla(), Foco.tecla()),
           rolar.isUnbound() ? texto("c.5.2_sem_tecla", cliente.options.keyShift)
               : texto("c.5.2", cliente.options.keyShift, rolar),
@@ -562,20 +567,24 @@ public class Tutorial {
       paginas.add(curta(9, List.of(), false, texto("c.9.1"), texto("c.9.2"), texto("c.9.3")));
       if (comMega) {
         paginas.add(curta(10, List.of(aMega), false, mega.isUnbound() ? texto("c.10.1_sem_tecla") : texto("c.10.1", mega),
-            texto("c.10.2")));
+            texto("c.10.2"), texto("c.10.3")));
       }
       List<Component> daParty = new ArrayList<>(List.of(party.isUnbound() ? texto("c.11.1_sem_tecla")
-          : texto("c.11.1", party), texto("c.11.2")));
+          : texto("c.11.1", party), texto("c.11.2"),
+          sinal.isUnbound() ? texto("c.11.4_sem_tecla") : texto("c.11.4", sinal)));
       if (FabricLoader.getInstance().isModLoaded("xaerominimap")) {
         daParty.add(texto("c.11.3_xaero"));
       }
       if (PartyNoCliente.doOpac()) {
         daParty.add(texto("17.5_opac"));
       }
-      paginas.add(curta(11, List.of(aParty), false, daParty.toArray(new Component[0])));
+      paginas.add(curta(11, List.of(aParty, oSinal), false, daParty.toArray(new Component[0])));
       // 21/10 (PvP): o duelo em tempo real pelo desafio do Cobblemon
       paginas.add(curta(13, List.of(aSoltar), false, texto("c.13.1", soltar), texto("c.13.2", soltar),
           texto("c.13.3")));
+      // 31/10: a dupla em tempo real (os treinadores em dupla e o duelo em dupla)
+      paginas.add(curta(14, List.of(aDupla), false, texto("c.14.1"),
+          dupla.isUnbound() ? texto("c.14.2_sem_tecla") : texto("c.14.2", dupla), texto("c.14.3"), texto("c.14.4")));
       paginas.add(curta(12, List.of(), false, texto("c.12.1"), texto("c.12.2")));
       paginas.add(pagina(9, todas, texto("9.1")));
       return paginas;

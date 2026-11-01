@@ -134,7 +134,7 @@ public class Bagas {
   // 1/4 da vida ou menos (com Gula, metade)
   private static boolean noAperto(Pokemon pokemon) {
     int parte = Habilidades.tem(pokemon, GULA) ? APERTO_COM_GULA : APERTO;
-    return Vida.pvAtual(pokemon) * parte <= pokemon.getMaxHealth();
+    return Vida.pvAtual(pokemon) * parte <= pokemon.getMaxHealth() || ItensDeVida.comendoAgora();
   }
 
   private static void comer(Pokemon pokemon, String item) {

@@ -6,9 +6,11 @@ import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
 import com.mojang.blaze3d.platform.InputConstants;
 
 import dev.victor.combatza.combate.Captura;
+import dev.victor.combatza.rede.FocoPayload;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.Util;
 import net.minecraft.client.Camera;
 import net.minecraft.client.CameraType;
@@ -49,6 +51,9 @@ public class Foco {
   private static KeyMapping tecla;
   private static ApertoDeTecla aperto;
   private static int alvo = SEM_ALVO;
+  // O último foco que o servidor ficou sabendo (ao entrar num mundo, vai de novo)
+  private static final int NAO_AVISADO = -2;
+  private static int alvoAvisado = NAO_AVISADO;
   private static int ticksSemVer = 0;
   // 23/10: o travado caiu no meio da batalha; o foco espera o próximo Pokémon dela para travar sozinho
   private static boolean voltarSozinho = false;
@@ -83,8 +88,22 @@ public class Foco {
         alternar(cliente);
       }
       conferirOAlvo(cliente);
+      avisarOServidor();
     });
-    ClientPlayConnectionEvents.DISCONNECT.register((conexao, cliente) -> soltar());
+    ClientPlayConnectionEvents.DISCONNECT.register((conexao, cliente) -> {
+      soltar();
+      alvoAvisado = NAO_AVISADO;
+    });
+  }
+
+  // 31/10 (a dupla): o servidor fica sabendo quando o foco muda (o Pokémon da dupla que luta sozinho ataca esse alvo:
+  // combate.Dupla)
+  private static void avisarOServidor() {
+    int agora = idDoAlvo();
+    if (agora != alvoAvisado && Minecraft.getInstance().player != null && ClientPlayNetworking.canSend(FocoPayload.TIPO)) {
+      ClientPlayNetworking.send(new FocoPayload(agora));
+      alvoAvisado = agora;
+    }
   }
 
   // O número da entidade travada, que vai junto quando você usa um golpe (o servidor mira nela); -1 = sem foco

@@ -14,11 +14,14 @@ import com.cobblemon.mod.common.pokemon.Pokemon;
 import com.cobblemon.mod.common.item.components.HeldItemEffectComponent;
 import com.cobblemon.mod.common.pokemon.helditem.CobblemonHeldItemManager;
 
+import dev.victor.combatza.campo.CampoDosGolpes;
 import dev.victor.combatza.combate.Combate;
 import dev.victor.combatza.combate.GerenciarCombates;
 import dev.victor.combatza.golpes.EfeitosDosGolpes;
 import dev.victor.combatza.golpes.Feedback;
+import dev.victor.combatza.golpes.GolpesQueMarcam;
 import dev.victor.combatza.habilidades.HabilidadesDaConta;
+import dev.victor.combatza.habilidades.HabilidadesDaDupla;
 import dev.victor.combatza.habilidades.HabilidadesDeBaga;
 import dev.victor.combatza.habilidades.HabilidadesDeEntrada;
 import dev.victor.combatza.habilidades.HabilidadesDosItens;
@@ -88,7 +91,9 @@ public class ItensSegurados {
   public static String id(Pokemon pokemon) {
     String id = CobblemonHeldItemManager.INSTANCE.showdownId(pokemon.heldItem());
     // 21/10 (habilidades, lote da entrada e das imunidades): com o Desajeitado, o item não faz nada na batalha
-    return id == null || HabilidadesDeEntrada.desajeitado(pokemon, id) ? NENHUM : id;
+    // 01/11: no Embargo (e na Sala Mágica), também não (GolpesQueMarcam, campo.CampoDosGolpes)
+    return id == null || HabilidadesDeEntrada.desajeitado(pokemon, id) || GolpesQueMarcam.semItem(pokemon)
+        || CampoDosGolpes.semItem(pokemon) ? NENHUM : id;
   }
 
   // O mesmo id sem a lista do Showdown, que só existe no servidor (no seu jogo conectado a um servidor ela vem vazia): o efeito
@@ -121,6 +126,8 @@ public class ItensSegurados {
     // batalha", um suco novo dado no meio da luta é bebido quando a vida cair da metade (dele: "não tá usando o suco de baga")
     if (someAoGastar(pokemon) || SUCO_DE_BAGA.equals(id)) {
       pokemon.removeHeldItem();
+      // 01/11: a Simbiose de um aliado passa o item dele (HabilidadesDaDupla)
+      HabilidadesDaDupla.simbiose(pokemon);
     } else {
       USADOS.computeIfAbsent(pokemon.getUuid(), uuid -> new HashSet<>()).add(id);
     }

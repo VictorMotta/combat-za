@@ -41,6 +41,16 @@ public class PontosNoXaero {
   public static final String CONJUNTO = "Party";
   private static final ResourceLocation ORIGEM = ResourceLocation.fromNamespaceAndPath(CobblemonCombatZA.MOD_ID, "party");
   private static final int A_CADA_TICKS = 20;
+  // 01/11: os sinais da party (SinalNaTela) também aparecem no mapa, por 15 segundos
+  private static final ResourceLocation ORIGEM_DOS_SINAIS = ResourceLocation.fromNamespaceAndPath(CobblemonCombatZA.MOD_ID,
+      "sinais");
+  private static final long SINAL_DURA_MS = 15_000;
+
+  private record Sinal(String quem, int x, int y, int z, long ateMs) {
+  }
+
+  private static final List<Sinal> SINAIS = new ArrayList<>();
+  private static boolean sinaisMudaram = false;
 
   private static List<PontosDaPartyPayload.Marca> marcas = List.of();
   // Chegou lista nova (ou o Xaero trocou de servidor): pôr no mapa no próximo segundo
@@ -76,6 +86,7 @@ public class PontosNoXaero {
     ClientPlayConnectionEvents.DISCONNECT.register((conexao, cliente) -> {
       marcas = List.of();
       mudou = false;
+      SINAIS.clear();
       mundosComPontos.clear();
       mandados.clear();
       raizAnterior = null;
@@ -103,6 +114,33 @@ public class PontosNoXaero {
     if (mudou) {
       mostrarOsDaParty(sessao, raiz);
       mudou = false;
+    }
+    long agora = System.currentTimeMillis();
+    if (SINAIS.removeIf(sinal -> agora >= sinal.ateMs()) || sinaisMudaram) {
+      mostrarOsSinais(sessao);
+      sinaisMudaram = false;
+    }
+  }
+
+  // 01/11: um sinal da party chegou (SinalNaTela): vai para o mapa no próximo segundo
+  public static void sinal(String quem, double x, double y, double z) {
+    SINAIS.add(new Sinal(quem, (int) Math.floor(x), (int) Math.floor(y), (int) Math.floor(z),
+        System.currentTimeMillis() + SINAL_DURA_MS));
+    sinaisMudaram = true;
+  }
+
+  // Os sinais no mundo em que você está, amarelos, com um "!"
+  private static void mostrarOsSinais(MinimapSession sessao) {
+    MinimapWorld mundo = sessao.getWorldManager().getCurrentWorld();
+    if (mundo == null || mundo.getContainer() == null) {
+      return;
+    }
+    ThirdPartyWaypoints sinais = mundo.getContainer().getThirdPartyWaypointManager().get(ORIGEM_DOS_SINAIS);
+    sinais.clear();
+    for (int i = 0; i < SINAIS.size(); i++) {
+      Sinal sinal = SINAIS.get(i);
+      sinais.add(sinal.quem() + "/" + i, new Waypoint(sinal.x(), sinal.y(), sinal.z(), "Sinal (" + sinal.quem() + ")", "!",
+          WaypointColor.YELLOW));
     }
   }
 

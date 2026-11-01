@@ -20,6 +20,7 @@ import net.minecraft.world.entity.Entity;
 
 public class AplicarStatus {
   private static final String FRASE = "cobblemon_combat_za.status.";
+  private static final String CORROSAO = "corrosion";
 
   private AplicarStatus() {
   }
@@ -82,7 +83,8 @@ public class AplicarStatus {
     if (pokemon.getStatus() != null) {
       return Component.translatable(FRASE + "ja_tem_outro");
     }
-    if (imunePeloTipo(pokemon, sigla) || (golpeDePo(execucao) && imuneAoPo(pokemon))) {
+    // 01/11: a Corrosão envenena até os tipos Aço e Veneno
+    if (imunePeloTipo(pokemon, sigla) && !corrosao(execucao, sigla) || (golpeDePo(execucao) && imuneAoPo(pokemon))) {
       return Component.translatable(FRASE + "nao_e_afetado");
     }
     // 21/10 (habilidades, lote das reações): o golpe de status do Poder do Micélio passa pela habilidade do alvo
@@ -126,6 +128,10 @@ public class AplicarStatus {
       case "psn", "tox" -> temTipo(pokemon, ElementalTypes.POISON) || temTipo(pokemon, ElementalTypes.STEEL);
       default -> false;
     };
+  }
+
+  private static boolean corrosao(Execucao execucao, String sigla) {
+    return ("psn".equals(sigla) || "tox".equals(sigla)) && Habilidades.tem(execucao.getPokemon(), CORROSAO);
   }
 
   private static boolean golpeDePo(Execucao execucao) {

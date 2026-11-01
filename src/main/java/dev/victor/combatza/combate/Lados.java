@@ -6,6 +6,7 @@ import com.cobblemon.mod.common.pokemon.Pokemon;
 
 import dev.victor.combatza.captura.Desmaio;
 import dev.victor.combatza.golpes.Execucao;
+import dev.victor.combatza.habilidades.HabilidadesDaDupla;
 import dev.victor.combatza.party.Parties;
 import dev.victor.combatza.treinadores.BatalhasDeTreinador;
 import dev.victor.combatza.pvp.Duelos;
@@ -53,7 +54,11 @@ public class Lados {
 
   // Etapa 8: o selvagem caído no chão (Desmaio) não é mais inimigo: os golpes passam por ele. 21/10 (treinadores): nem o
   // Pokémon do treinador que ainda está saindo da bola ou que já caiu (BatalhasDeTreinador)
+  // 01/11: nem o Tatsugiri escondido na boca do Dondozo (o Comandante, HabilidadesDaDupla)
   public static boolean ehInimigo(Entity entidade) {
+    if (HabilidadesDaDupla.escondido(entidade)) {
+      return false;
+    }
     return entidade instanceof Enemy || (entidade instanceof PokemonEntity pokemon && pokemon.getPokemon().isWild()
         && !Desmaio.esta(pokemon) && !BatalhasDeTreinador.foraDaLuta(pokemon));
   }
@@ -61,6 +66,9 @@ public class Lados {
   // 7.2: do ponto de vista de quem ataca. Para o SELVAGEM, o inimigo é o lado de cá: os jogadores e os Pokémon deles (os
   // outros selvagens são aliados dele). Para o seu Pokémon, o de sempre (ehInimigo)
   public static boolean ehInimigoDe(PokemonEntity atacante, Entity entidade) {
+    if (HabilidadesDaDupla.escondido(entidade)) {
+      return false;
+    }
     // 21/10 (treinadores, dele: "no duelo, os Pokémon do treinador não atacam o jogador nem NPC"): só os Pokémon de quem
     // batalha com ele
     if (atacante != null && BatalhasDeTreinador.ehDoTreinador(atacante)) {
@@ -113,10 +121,19 @@ public class Lados {
     if (doDuelo != null) {
       return doDuelo;
     }
-    if (pokemon.isWild() || !(alvo instanceof PokemonEntity atingido)) {
+    // 01/11 (dele: "selvagem de fora não atrapalha"): na batalha contra um treinador, o golpe de um selvagem de fora (um que
+    // passa perto) não pega em você nem nos seus Pokémon, e o seu golpe passa por ele
+    if (pokemon.isWild()) {
+      return !BatalhasDeTreinador.ehDoTreinador(execucao.getPokemon().getEntity()) && daBatalhaDeTreinador(alvo);
+    }
+    if (!(alvo instanceof PokemonEntity atingido)) {
       return false;
     }
     ServerPlayer dono = pokemon.getOwnerPlayer();
+    if (atingido.getPokemon().isWild() && !BatalhasDeTreinador.ehDoTreinador(atingido) && dono != null
+        && BatalhasDeTreinador.estaEmBatalha(dono)) {
+      return true;
+    }
     if (!atingido.getPokemon().isWild()) {
       return !Parties.saoAliados(dono, atingido.getPokemon().getOwnerPlayer());
     }
@@ -129,6 +146,14 @@ public class Lados {
       return !Raids.podeLutar(dono, atingido);
     }
     return daBatalhaDeOutro(dono, atingido);
+  }
+
+  // Você, ou um Pokémon seu, numa batalha contra um treinador
+  private static boolean daBatalhaDeTreinador(Entity alvo) {
+    ServerPlayer jogador = alvo instanceof ServerPlayer pessoa ? pessoa
+        : alvo instanceof PokemonEntity pokemon && !pokemon.getPokemon().isWild() ? pokemon.getPokemon().getOwnerPlayer()
+            : null;
+    return jogador != null && BatalhasDeTreinador.estaEmBatalha(jogador);
   }
 
   // O selvagem está numa batalha em que não há ninguém da sua party

@@ -101,7 +101,7 @@ public class Experiencia {
   public static void registrar() {
     // O selvagem morreu (até no golpe que mata de uma vez, que não passa pelo AFTER_DAMAGE: achado da 4.4b-4)
     ServerLivingEntityEvents.AFTER_DEATH.register(SemDerrubar.depoisDaMorte("Experiencia.AFTER_DEATH", (entidade, fonte) -> {
-      // 31/10: o chefão de uma raid não dá XP (como nos jogos: o prêmio é o da raid)
+      // 31/10: o chefão de uma raid não dá XP por aqui: o XP dele sai quando ele sai da batalha derrotado (Combate), uma vez só
       if (entidade instanceof PokemonEntity selvagem && selvagem.getPokemon().isWild() && entidade.getServer() != null
           && !Raids.ehChefe(selvagem)) {
         distribuir(entidade.getServer(), selvagem.getPokemon(), true, null);
@@ -150,9 +150,9 @@ public class Experiencia {
   private static void anotarJogadores(Combate combate, Map<UUID, Set<UUID>> enfrentaram) {
     for (ServerPlayer jogador : combate.getJogadores()) {
       Set<UUID> deste = enfrentaram.computeIfAbsent(jogador.getUUID(), uuid -> new HashSet<>());
-      Pokemon lutador = Lutadores.de(jogador);
-      if (lutador != null) {
-        deste.add(lutador.getUuid());
+      // A dupla: os dois que estão na luta
+      for (Pokemon naLuta : Lutadores.naLuta(jogador)) {
+        deste.add(naLuta.getUuid());
       }
     }
   }

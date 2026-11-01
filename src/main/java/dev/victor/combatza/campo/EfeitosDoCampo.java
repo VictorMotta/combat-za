@@ -182,7 +182,9 @@ public class EfeitosDoCampo {
       quemEntrou(arena, agora);
     }
     Clima vale = climaQueVale(arena);
-    if (virouTurno && vale == Clima.AREIA) {
+    // 01/11 (dele: "a tempestade de areia do meu Tyranitar tá dando dano nos meus Pokémon"; escolheu "fora da batalha, não
+    // fere"): a areia só tira vida na batalha. Andando por aí, ela fica no visual e nos bônus (Pedra, Lançareia...)
+    if (virouTurno && vale == Clima.AREIA && arena.naBatalha()) {
       areia(arena);
     }
     if (virouTurno && vale != Clima.NENHUM) {

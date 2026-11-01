@@ -95,7 +95,8 @@ public class PreviaDoGolpe {
   private static void enviar(int slot) {
     int slotPokemon = LutadorNoCliente.vagaDoComandado();
     if (slotPokemon >= 0 && ClientPlayNetworking.canSend(UsarGolpePayload.TIPO)) {
-      ClientPlayNetworking.send(new UsarGolpePayload(slot, slotPokemon, Foco.idDoAlvo(), marcadorParaEnviar()));
+      ClientPlayNetworking.send(new UsarGolpePayload(slot, slotPokemon, Foco.idDoAlvo(), marcadorParaEnviar(),
+          CobblemonClient.INSTANCE.getStorage().getSelectedSlot()));
     }
   }
 

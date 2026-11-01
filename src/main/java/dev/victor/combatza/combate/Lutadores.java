@@ -1,7 +1,9 @@
 package dev.victor.combatza.combate;
 
 import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -49,6 +51,11 @@ public class Lutadores {
   // A troca em dois tempos: os jogadores com o lutador voltando, e os Pokémon cuja saída já é a segunda metade da troca
   private static final Set<UUID> TROCANDO = new HashSet<>();
   private static final Set<UUID> PODE_SAIR = new HashSet<>();
+  // A DUPLA (decisões dele, 31/10: as batalhas em dupla contra treinador e no duelo): cada jogador tem DOIS Pokémon na luta. O
+  // lutador é o que as suas teclas comandam; o SEGUNDO luta sozinho, com a mesma IA dos selvagens (IaDoSelvagem.lutarDoLado),
+  // no alvo do seu foco. Um botão troca os dois (alternar); quem desmaia dá lugar ao próximo do time em 2 s (Dupla)
+  private static final Set<UUID> EM_DUPLA = new HashSet<>();
+  private static final Map<UUID, UUID> SEGUNDO_DO_JOGADOR = new HashMap<>();
 
   private Lutadores() {
   }
@@ -65,6 +72,102 @@ public class Lutadores {
       }
     }
     return null;
+  }
+
+  // A dupla: o segundo do jogador, se ele tem um e o segundo está fora da bola
+  public static Pokemon segundo(ServerPlayer jogador) {
+    UUID segundo = SEGUNDO_DO_JOGADOR.get(jogador.getUUID());
+    if (segundo == null) {
+      return null;
+    }
+    for (Pokemon pokemon : Cobblemon.INSTANCE.getStorage().getParty(jogador)) {
+      if (pokemon.getUuid().equals(segundo) && pokemon.getEntity() != null) {
+        return pokemon;
+      }
+    }
+    return null;
+  }
+
+  public static boolean emDupla(ServerPlayer jogador) {
+    return jogador != null && EM_DUPLA.contains(jogador.getUUID());
+  }
+
+  // A batalha em dupla começou para este jogador (BatalhaDeTreinador, Duelo): a partir de agora ele tem duas vagas
+  public static void ligarADupla(ServerPlayer jogador) {
+    if (EM_DUPLA.add(jogador.getUUID())) {
+      CobblemonCombatZA.LOGGER.info("DUPLA: {} luta em dupla", jogador.getGameProfile().getName());
+    }
+  }
+
+  // A batalha em dupla acabou (BatalhaDeTreinador; a de sempre limpa tudo no esquecer)
+  public static void desligarADupla(ServerPlayer jogador) {
+    EM_DUPLA.remove(jogador.getUUID());
+    SEGUNDO_DO_JOGADOR.remove(jogador.getUUID());
+  }
+
+  // Quem do jogador está na luta: o lutador e, na dupla, o segundo (os que estão fora da bola)
+  public static List<Pokemon> naLuta(ServerPlayer jogador) {
+    List<Pokemon> naLuta = new ArrayList<>();
+    Pokemon lutador = de(jogador);
+    if (lutador != null) {
+      naLuta.add(lutador);
+    }
+    Pokemon segundo = emDupla(jogador) ? segundo(jogador) : null;
+    if (segundo != null) {
+      naLuta.add(segundo);
+    }
+    return naLuta;
+  }
+
+  public static boolean ehOSegundo(ServerPlayer jogador, Pokemon pokemon) {
+    return jogador != null && pokemon.getUuid().equals(SEGUNDO_DO_JOGADOR.get(jogador.getUUID()));
+  }
+
+  // A tecla da dupla (Dupla): as suas teclas passam para o segundo, e o lutador de antes passa a lutar sozinho. Sem os dois
+  // na luta, nada. true = trocou
+  public static boolean alternar(ServerPlayer jogador) {
+    Pokemon lutador = de(jogador);
+    Pokemon segundo = emDupla(jogador) ? segundo(jogador) : null;
+    if (lutador == null || segundo == null) {
+      return false;
+    }
+    LUTADOR_DO_JOGADOR.put(jogador.getUUID(), segundo.getUuid());
+    SEGUNDO_DO_JOGADOR.put(jogador.getUUID(), lutador.getUuid());
+    avisar(jogador, segundo.getUuid());
+    CobblemonCombatZA.LOGGER.info("DUPLA: {} agora comanda {}; {} luta sozinho", jogador.getGameProfile().getName(),
+        segundo.getSpecies().getName(), lutador.getSpecies().getName());
+    return true;
+  }
+
+  // A dupla (Dupla): um Pokémon do time que já está fora entra na vaga que sobra (a do segundo; sem ninguém na luta, a do
+  // lutador), sem voltar para a bola. true = entrou
+  public static boolean preencherAVaga(ServerPlayer jogador, Pokemon pokemon) {
+    PokemonEntity entidade = pokemon.getEntity();
+    if (!emDupla(jogador) || entidade == null || !entidade.isAlive() || pokemon.isFainted()
+        || entidade.getBeamMode() != SEM_FEIXE || ehOSegundo(jogador, pokemon)) {
+      return false;
+    }
+    Pokemon lutador = de(jogador);
+    if (lutador != null && lutador.getUuid().equals(pokemon.getUuid())) {
+      return false;
+    }
+    if (lutador == null) {
+      definir(jogador, pokemon, false);
+    } else if (segundo(jogador) == null) {
+      AgendaDeGolpes.largar(pokemon);
+      definirSegundo(jogador, pokemon);
+    } else {
+      return false;
+    }
+    Feedback.historicoDoLutador(jogador, pokemon,
+        Component.translatable("cobblemon.battle.switch.self", pokemon.getDisplayName(false)));
+    return true;
+  }
+
+  private static void definirSegundo(ServerPlayer jogador, Pokemon pokemon) {
+    SEGUNDO_DO_JOGADOR.put(jogador.getUUID(), pokemon.getUuid());
+    CobblemonCombatZA.LOGGER.info("DUPLA: {} luta sozinho por {}", pokemon.getSpecies().getName(),
+        jogador.getName().getString());
   }
 
   // GerenciarCombates.entrarEmCombate: no começo da batalha, quem começou vira o lutador. Depois do começo, nada muda
@@ -93,6 +196,10 @@ public class Lutadores {
     if (antigo == null || antigo.getUuid().equals(novo.getUuid())) {
       return false;
     }
+    // A dupla: com uma vaga sobrando, quem sai da bola entra nela, sem ninguém voltar
+    if (emDupla(dono) && segundo(dono) == null) {
+      return false;
+    }
     if (!TROCANDO.add(dono.getUUID())) {
       return true;
     }
@@ -114,7 +221,14 @@ public class Lutadores {
       return;
     }
     Pokemon antigo = de(dono);
-    if (antigo != null && antigo.getUuid().equals(novo.getUuid())) {
+    if (antigo != null && antigo.getUuid().equals(novo.getUuid()) || ehOSegundo(dono, novo)) {
+      return;
+    }
+    // A dupla: quem sai da bola com uma vaga sobrando entra nela (o lugar do segundo, ou o do lutador), pronto para lutar
+    if (emDupla(dono) && antigo != null && segundo(dono) == null) {
+      definirSegundo(dono, novo);
+      Feedback.historicoDoLutador(dono, novo,
+          Component.translatable("cobblemon.battle.switch.self", novo.getDisplayName(false)));
       return;
     }
     boolean trocou = antigo != null;
@@ -160,6 +274,18 @@ public class Lutadores {
     if (antigo != null && antigo.getUuid().equals(novo.getUuid())) {
       return;
     }
+    // A dupla: o R no segundo é o mesmo que a tecla da dupla; num guarda com uma vaga sobrando, ele entra nela
+    if (ehOSegundo(jogador, novo)) {
+      alternar(jogador);
+      return;
+    }
+    if (emDupla(jogador) && antigo != null && segundo(jogador) == null) {
+      AgendaDeGolpes.largar(novo);
+      definirSegundo(jogador, novo);
+      Feedback.historicoDoLutador(jogador, novo,
+          Component.translatable("cobblemon.battle.switch.self", novo.getDisplayName(false)));
+      return;
+    }
     AgendaDeGolpes.largar(novo);
     boolean trocou = antigo != null;
     definir(jogador, novo, trocou || LUGAR_VAGO.get(jogador.getUUID()) == Vago.POR_RECOLHER);
@@ -187,9 +313,25 @@ public class Lutadores {
 
   // Voltou para a bola ou desmaiou: se era o lutador, o lugar fica vago (a volta da troca não passa daqui: quando ela
   // chega, o lutador já é o novo)
+  // A dupla: o segundo que sai deixa a vaga dele; o lutador que sai dá o lugar ao segundo (as suas teclas passam para quem
+  // ficou), e a vaga que sobra é a do segundo
   public static void saiu(Pokemon pokemon) {
     ServerPlayer dono = pokemon.getOwnerPlayer();
+    if (dono != null && ehOSegundo(dono, pokemon)) {
+      SEGUNDO_DO_JOGADOR.remove(dono.getUUID());
+      CobblemonCombatZA.LOGGER.info("DUPLA: {} saiu ({}); a vaga do segundo está livre", pokemon.getSpecies().getName(),
+          pokemon.isFainted() ? "desmaiou" : "voltou para a bola");
+      return;
+    }
     if (dono == null || !pokemon.getUuid().equals(LUTADOR_DO_JOGADOR.get(dono.getUUID()))) {
+      return;
+    }
+    Pokemon segundo = emDupla(dono) ? segundo(dono) : null;
+    if (segundo != null && !segundo.isFainted()) {
+      SEGUNDO_DO_JOGADOR.remove(dono.getUUID());
+      definir(dono, segundo, false);
+      CobblemonCombatZA.LOGGER.info("DUPLA: {} saiu; {} fica com as suas teclas", pokemon.getSpecies().getName(),
+          segundo.getSpecies().getName());
       return;
     }
     LUTADOR_DO_JOGADOR.remove(dono.getUUID());
@@ -249,6 +391,8 @@ public class Lutadores {
 
   // O combate acabou para o jogador: sem lutador, a HUD volta a seguir a setinha
   public static void esquecer(ServerPlayer jogador) {
+    EM_DUPLA.remove(jogador.getUUID());
+    SEGUNDO_DO_JOGADOR.remove(jogador.getUUID());
     boolean tinhaLutador = LUTADOR_DO_JOGADOR.remove(jogador.getUUID()) != null;
     boolean tinhaLugarVago = LUGAR_VAGO.remove(jogador.getUUID()) != null;
     if (tinhaLutador || tinhaLugarVago) {
@@ -261,6 +405,8 @@ public class Lutadores {
     LUGAR_VAGO.clear();
     TROCANDO.clear();
     PODE_SAIR.clear();
+    EM_DUPLA.clear();
+    SEGUNDO_DO_JOGADOR.clear();
   }
 
   private static void definir(ServerPlayer jogador, Pokemon pokemon, boolean esperar) {

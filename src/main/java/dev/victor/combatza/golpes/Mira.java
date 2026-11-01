@@ -21,6 +21,9 @@ public class Mira {
 
   public static final double ALCANCE = 24.0;
   private static final double RAIO_ASSISTENCIA_MIRA = 0.75;
+  // 01/11 (a mira puxar para o alvo pequeno): quem é mais estreito que 1 bloco ganha folga a mais, metade do que falta (um
+  // Joltik de 0,4 ganha 0,3 a mais)
+  private static final double LARGURA_DE_ALVO_PEQUENO = 1.0;
   private static final double TOLERANCIA_DE_CHEGADA = 0.5;
 
   private Mira() {
@@ -72,7 +75,8 @@ public class Mira {
 
     for (Entity candidato : quemLanca.level().getEntities(quemLanca, regiao,
         e -> e instanceof LivingEntity && e.isAlive() && !e.isSpectator() && e.isPickable() && podeAcertar.test(e))) {
-      Optional<Vec3> ponto = candidato.getBoundingBox().inflate(raio).clip(inicio, fimReal);
+      double paraOPequeno = Math.max(0, LARGURA_DE_ALVO_PEQUENO - candidato.getBbWidth()) / 2;
+      Optional<Vec3> ponto = candidato.getBoundingBox().inflate(raio + paraOPequeno).clip(inicio, fimReal);
       if (ponto.isPresent()) {
         double distancia = inicio.distanceToSqr(ponto.get());
         if (distancia < menorDistancia) {

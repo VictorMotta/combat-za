@@ -50,8 +50,10 @@ import net.minecraft.world.entity.Entity;
 // 2. O outro aceita pela roda do Cobblemon. O Cobblemon vai começar a batalha por turnos e avisa antes
 //    (BATTLE_STARTED_PRE, isPvP): a batalha dele é cancelada sem mensagem (a mesma chave de silêncio da batalha contra
 //    selvagem) e começa o Duelo;
-// 3. Sem o nosso mod num dos dois, nas duplas/triplas/multi, num desafio que não passou pela conferência, ou se algo der
-//    errado ao montar o duelo: fica a batalha por turnos do Cobblemon (e um aviso no log).
+// 3. Sem o nosso mod num dos dois, nas triplas/multi, num desafio que não passou pela conferência, ou se algo der errado ao
+//    montar o duelo: fica a batalha por turnos do Cobblemon (e um aviso no log).
+// 31/10 (decisão dele): o desafio "Duplas" também vira o nosso duelo, em dupla (Duelo, combate.Dupla). Cada um usa pelo
+// menos 2; com menos de 2 Pokémon com vida num dos dois, fica a batalha por turnos
 // Daqui também saem as regras de "quem pega em quem" no duelo (Lados e Mira perguntam aqui): o golpe de quem duela só pega
 // nos Pokémon do adversário, e os Pokémon do duelo só levam o golpe dele
 public class Duelos {
@@ -205,7 +207,7 @@ public class Duelos {
     for (ServerPlayer jogador : servidor.getPlayerList().getPlayers()) {
       ChallengeManager.BattleChallenge desafio = ChallengeManager.INSTANCE.getOutboundRequest(jogador.getUUID());
       if (!(desafio instanceof ChallengeManager.SinglesBattleChallenge umContraUm)
-          || desafio.getBattleFormat().getBattleType().getPokemonPerSide() != 1) {
+          || porLado(desafio.getBattleFormat().getBattleType().getPokemonPerSide()) == 0) {
         continue;
       }
       abertos.add(desafio.getRequestID());
@@ -226,8 +228,9 @@ public class Duelos {
   private static void novoDesafio(ChallengeManager.SinglesBattleChallenge desafio) {
     ServerPlayer desafiante = desafio.getSender();
     ServerPlayer desafiado = desafio.getReceiver();
-    boolean tempoReal = temOMod(desafiante) && temOMod(desafiado);
+    int porLado = porLado(desafio.getBattleFormat().getBattleType().getPokemonPerSide());
     int maximo = Math.min(comVida(desafiante), comVida(desafiado));
+    boolean tempoReal = temOMod(desafiante) && temOMod(desafiado) && maximo >= porLado;
     int quantos = Math.clamp(ULTIMA_ESCOLHA.getOrDefault(desafiante.getUUID(), SUGERIDO_DA_PRIMEIRA_VEZ), 1, Math.max(1,
         maximo));
     DESAFIOS.put(desafio.getRequestID(), new Desafio(desafio.getRequestID(), desafiante.getUUID(), desafiado.getUUID(),
@@ -272,8 +275,8 @@ public class Duelos {
   // 2. O desafio foi aceito e o Cobblemon vai começar a batalha por turnos
   private static void aoComecarBatalha(BattleStartedEvent.Pre evento) {
     PokemonBattle batalha = evento.getBattle();
-    if (!batalha.isPvP() || batalha.getPlayers().size() != 2
-        || batalha.getFormat().getBattleType().getPokemonPerSide() != 1) {
+    int porLado = porLado(batalha.getFormat().getBattleType().getPokemonPerSide());
+    if (!batalha.isPvP() || batalha.getPlayers().size() != 2 || porLado == 0) {
       return;
     }
     ServerPlayer um = batalha.getPlayers().get(0);
@@ -299,7 +302,8 @@ public class Duelos {
     List<UUID> timeDoDesafiado;
     int quantos;
     try {
-      quantos = Math.min(desafio.quantos, Math.min(comVida(desafiante), comVida(desafiado)));
+      // Na dupla, cada um usa pelo menos 2
+      quantos = Math.min(Math.max(desafio.quantos, porLado), Math.min(comVida(desafiante), comVida(desafiado)));
       timeDoDesafiante = time(desafiante, daFrente(batalha, desafiante), quantos);
       timeDoDesafiado = time(desafiado, daFrente(batalha, desafiado), quantos);
     } catch (RuntimeException erro) {
@@ -307,14 +311,14 @@ public class Duelos {
           + "Cobblemon", erro);
       return;
     }
-    if (quantos < 1 || timeDoDesafiante.isEmpty() || timeDoDesafiado.isEmpty()) {
+    if (quantos < porLado || timeDoDesafiante.isEmpty() || timeDoDesafiado.isEmpty()) {
       CobblemonCombatZA.LOGGER.warn("DUELO: um dos times está vazio; fica a batalha por turnos do Cobblemon");
       return;
     }
     // A batalha do Cobblemon só é cancelada depois que o duelo está de pé: se algo der errado ao montar, ela segue
     Duelo duelo = null;
     try {
-      duelo = new Duelo(desafiante, desafiado, quantos, timeDoDesafiante, timeDoDesafiado);
+      duelo = new Duelo(desafiante, desafiado, quantos, porLado, timeDoDesafiante, timeDoDesafiado);
       GerenciarCombates.adicionar(duelo);
       duelo.comecar();
     } catch (RuntimeException erro) {
@@ -395,6 +399,11 @@ public class Duelos {
       }
     }
     return time;
+  }
+
+  // Os formatos que viram o nosso duelo: 1 (Simples) e 2 (Duplas) por lado; 0 = qualquer outro (fica por turnos)
+  private static int porLado(int pokemonPorLado) {
+    return pokemonPorLado == 1 || pokemonPorLado == 2 ? pokemonPorLado : 0;
   }
 
   private static int comVida(ServerPlayer jogador) {

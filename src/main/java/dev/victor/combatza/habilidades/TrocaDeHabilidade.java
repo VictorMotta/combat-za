@@ -64,6 +64,11 @@ public class TrocaDeHabilidade {
   private TrocaDeHabilidade() {
   }
 
+  // 01/11: a Reação Química e o Receptor (HabilidadesDaDupla) pegam a habilidade do aliado que caiu, menos estas
+  public static boolean podeSerCopiada(String habilidade) {
+    return habilidade != null && !habilidade.isEmpty() && !NAO_COPIAM.contains(habilidade);
+  }
+
   // A habilidade que vale agora na batalha; null = a de sempre (a do Cobblemon)
   public static String trocada(Pokemon pokemon) {
     if (TROCADAS.isEmpty()) {

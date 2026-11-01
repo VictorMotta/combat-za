@@ -79,6 +79,10 @@ public class Habilidades {
     if (HabilidadesDeForma.imuneATodoStatus(pokemon)) {
       return true;
     }
+    // 01/11: o Véu Doce e o Véu de Flores protegem o lado todo (HabilidadesDaDupla)
+    if (HabilidadesDaDupla.imuneAoStatus(pokemon, sigla)) {
+      return true;
+    }
     Set<String> siglas = IMUNES_AO_STATUS.get(QuebraMolde.queVale(pokemon));
     return siglas != null && siglas.contains(sigla);
   }
@@ -86,7 +90,9 @@ public class Habilidades {
   // Showdown, onTryBoost: só vale para a queda que vem de OUTRO Pokémon
   public static boolean naoDeixaCair(Pokemon pokemon, String atributo) {
     String habilidade = QuebraMolde.queVale(pokemon);
-    return NAO_DEIXAM_CAIR_NADA.contains(habilidade) || atributo.equals(NAO_DEIXAM_CAIR_UM.get(habilidade));
+    // 01/11: o Véu de Flores protege os de Planta do lado (HabilidadesDaDupla)
+    return NAO_DEIXAM_CAIR_NADA.contains(habilidade) || atributo.equals(NAO_DEIXAM_CAIR_UM.get(habilidade))
+        || HabilidadesDaDupla.naoDeixaCair(pokemon);
   }
 
   public static boolean ignoraIntimidacao(Pokemon pokemon) {

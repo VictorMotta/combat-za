@@ -22,6 +22,7 @@ import dev.victor.combatza.combate.Lutadores;
 import dev.victor.combatza.golpes.AplicarStatus;
 import dev.victor.combatza.golpes.Armadilhas;
 import dev.victor.combatza.golpes.Feedback;
+import dev.victor.combatza.golpes.GolpesQueMarcam;
 import dev.victor.combatza.golpes.Vida;
 import dev.victor.combatza.ia.IaDoSelvagem;
 import dev.victor.combatza.itens.ItensDeEstagio;
@@ -100,7 +101,9 @@ public class HabilidadesDeFuga {
 
   // Combate: a distância para o jogador fugir. Preso: 24 blocos
   public static float distanciaDeFuga(ServerPlayer jogador, Combate combate, float normal) {
-    return quemPrende(jogador, combate) != null ? Math.max(normal, DISTANCIA_PRESO) : normal;
+    // 01/11: e o lutador preso por um golpe (Olhar Malvado, Chave de Polvo, Sem Recuo, Enraizar: golpes.GolpesQueMarcam)
+    boolean preso = quemPrende(jogador, combate) != null || GolpesQueMarcam.naoFoge(Lutadores.de(jogador));
+    return preso ? Math.max(normal, DISTANCIA_PRESO) : normal;
   }
 
   // Combate: o selvagem que prende o lutador de alguém da batalha só sai dela a 24 blocos (senão ele "ficava para trás" a

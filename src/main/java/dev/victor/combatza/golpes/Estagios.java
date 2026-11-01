@@ -106,6 +106,20 @@ public class Estagios {
     return estagio >= 0 ? (2.0 + estagio) / 2.0 : 2.0 / (2.0 - estagio);
   }
 
+  // 01/11: os golpes que copiam, trocam ou invertem estágios (GolpesNaHora): os novos valem como estão, sem o Contrário nem o
+  // Simplificar (nos jogos, também não)
+  public static void definir(Pokemon pokemon, Map<String, Integer> novos, long acabaNoTick) {
+    Ficha ficha = PLACAR.computeIfAbsent(pokemon.getUuid(), uuid -> new Ficha(pokemon, new HashMap<>()));
+    ficha.estagios().clear();
+    novos.forEach((atributo, valor) -> {
+      int limitado = Math.clamp(valor, MINIMO, MAXIMO);
+      if (limitado != 0) {
+        ficha.estagios().put(atributo, new Estagio(limitado, acabaNoTick));
+      }
+    });
+    atualizarVelocidadeDeAndar(pokemon);
+  }
+
   public static void zerar(Pokemon pokemon) {
     if (PLACAR.remove(pokemon.getUuid()) != null) {
       CobblemonCombatZA.LOGGER.info("ESTÁGIOS ZERADOS: {}", pokemon.getSpecies().getName());

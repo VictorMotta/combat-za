@@ -20,6 +20,7 @@ import dev.victor.combatza.golpes.Dano;
 import dev.victor.combatza.golpes.EfeitosDosGolpes;
 import dev.victor.combatza.golpes.Execucao;
 import dev.victor.combatza.golpes.Feedback;
+import dev.victor.combatza.golpes.GolpesQueMarcam;
 import dev.victor.combatza.golpes.Precisao;
 import dev.victor.combatza.golpes.Vida;
 import dev.victor.combatza.itens.ItensSegurados;
@@ -88,6 +89,10 @@ public class HabilidadesDeProtecao {
     }
     // O golpe de status de quem tem Poder do Micélio passa pela habilidade do alvo (HabilidadesDePrioridade)
     String segura = HabilidadesDePrioridade.ignoraHabilidade(execucao) ? null : quemSegura(doAtacante, golpe, pokemon);
+    // 01/11: a Capa Mágica devolve como o Espelho Mágico (golpes.GolpesQueMarcam)
+    if (segura == null && GolpesQueMarcam.capaMagica(pokemon, golpe)) {
+      segura = ESPELHO_MAGICO;
+    }
     if (segura == null || ESPELHO_MAGICO.equals(segura) && refletindo) {
       return false;
     }

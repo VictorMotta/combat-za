@@ -23,6 +23,7 @@ import dev.victor.combatza.campo.ClimasFortes;
 import dev.victor.combatza.combate.Combate;
 import dev.victor.combatza.combate.GerenciarCombates;
 import dev.victor.combatza.combate.Lados;
+import dev.victor.combatza.golpes.Saidas;
 import dev.victor.combatza.golpes.Dano;
 import dev.victor.combatza.golpes.Estagios;
 import dev.victor.combatza.golpes.Feedback;
@@ -87,6 +88,8 @@ public class HabilidadesDeEntrada {
     if (!pokemon.isWild()) {
       LUTARAM.put(pokemon.getUuid(), combate);
     }
+    // 01/11: o que o Passar o Bastão, a Cauda Descendente, o Desejo de Cura e a Dança Lunar deixaram para quem entrasse
+    Saidas.aoEntrar(entidade);
     List<Pokemon> inimigos = inimigos(arena, pokemon);
     String habilidade = Habilidades.atual(pokemon);
     switch (habilidade) {
@@ -112,6 +115,9 @@ public class HabilidadesDeEntrada {
         // sem habilidade de entrada desta leva
       }
     }
+    // 01/11: as de dupla (Dupla Dinâmica, Remédio Estranho, Hospitalidade, Comandante) e os disfarces (Ilusão, Impostor)
+    HabilidadesDaDupla.aoEntrar(entidade);
+    Disfarces.aoEntrar(entidade);
   }
 
   // CobblemonCombatZA.aoRecolher: voltou para a bola. A Regeneração cura 1/3 de quem lutou nesta batalha (lutar de novo

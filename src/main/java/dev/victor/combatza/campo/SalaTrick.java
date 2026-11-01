@@ -1,5 +1,6 @@
 package dev.victor.combatza.campo;
 
+import java.util.Map;
 import java.util.function.ToDoubleFunction;
 
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
@@ -8,6 +9,8 @@ import com.cobblemon.mod.common.pokemon.Pokemon;
 import dev.victor.combatza.CobblemonCombatZA;
 import dev.victor.combatza.golpes.EfeitosDeStatus;
 import dev.victor.combatza.golpes.Execucao;
+import dev.victor.combatza.habilidades.HabilidadesQueReagem;
+import dev.victor.combatza.itens.ItensSegurados;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -27,6 +30,7 @@ public class SalaTrick {
   // A etiqueta da passiva ("cobblemon_combat_za.campo.sala_trick")
   public static final String NOME = "sala_trick";
   private static final String GOLPE = "trickroom";
+  private static final String SERVICO_DE_QUARTO = "roomservice";
   private static final int TURNOS = 5;
   private static final int PARTICULAS = 12;
   private static final double ESPALHAR = 6.0;
@@ -63,7 +67,21 @@ public class SalaTrick {
     CobblemonCombatZA.LOGGER.info("TRUQUE DE AGILIDADE: {} virou a velocidade por {} turnos ({})",
         pokemon.getSpecies().getName(), TURNOS, arena.naBatalha() ? "na batalha" : "fora da batalha");
     arena.avisar(pokemon, Component.translatable("cobblemon.battle.fieldstart.trickroom", pokemon.getDisplayName(false)));
+    servicoDeQuarto(arena);
     return true;
+  }
+
+  // 01/11: o Serviço de Quarto (Room Service): quando a sala começa, quem segura gasta o item e perde 1 de Velocidade
+  private static void servicoDeQuarto(Arena arena) {
+    for (PokemonEntity entidade : arena.pokemons()) {
+      Pokemon pokemon = entidade.getPokemon();
+      if (pokemon.isFainted() || !ItensSegurados.tem(pokemon, SERVICO_DE_QUARTO)) {
+        continue;
+      }
+      Component nome = ItensSegurados.gastarComNome(pokemon, SERVICO_DE_QUARTO);
+      CobblemonCombatZA.LOGGER.info("ITEM: {} usou o Serviço de Quarto", pokemon.getSpecies().getName());
+      HabilidadesQueReagem.mudar(pokemon, Map.of("spe", -1), nome);
+    }
   }
 
   // A cada tick (CampoEBarreiras.atualizar): o fim da sala e, a cada segundo, as partículas em volta de quem está na arena

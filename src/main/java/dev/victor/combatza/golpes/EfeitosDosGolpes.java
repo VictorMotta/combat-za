@@ -83,6 +83,11 @@ public class EfeitosDosGolpes {
     return marcas.getOrDefault(marca, Set.of()).contains(golpe.getName());
   }
 
+  // 01/11: os golpes com a marca (o Metrônomo sorteia entre os de "metronome": UsarOutroGolpe)
+  public static Set<String> comMarca(String marca) {
+    return marcas.getOrDefault(marca, Set.of());
+  }
+
   public static boolean ehSoco(Move golpe) {
     return temMarca(golpe, "punch");
   }

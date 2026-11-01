@@ -5,6 +5,8 @@ import org.lwjgl.glfw.GLFW;
 import com.cobblemon.mod.common.client.CobblemonClient;
 import com.mojang.blaze3d.platform.InputConstants;
 
+import dev.victor.combatza.combate.Dupla;
+import dev.victor.combatza.rede.AlternarNaDuplaPayload;
 import dev.victor.combatza.rede.SetinhaPayload;
 import dev.victor.combatza.rede.TrocarOLadoPayload;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -18,7 +20,10 @@ import net.minecraft.client.Minecraft;
 // direita = o próximo. As ↑ e ↓ do Cobblemon continuam valendo.
 // 7.7: o servidor fica sabendo onde está a setinha (o Pokémon dela anda ao seu lado, ia.Parceiro), e a tecla "Trocar o
 // lado do Pokémon" passa ele da direita para a esquerda e de volta. Sem tecla padrão (escolha dele): no perfil dele, todas
-// as letras já têm dono
+// as letras já têm dono.
+// 31/10 (a dupla, dele: "com um botão alterar entre um e outro"): a tecla "Trocar o controle na dupla" passa as suas teclas de
+// golpe para o outro Pokémon da dupla (combate.Dupla). Escolha minha (vetável): o apóstrofo (') do teclado americano, ao lado
+// do ; da party (no teclado brasileiro, a tecla logo à direita do Ç), que estava livre no perfil dele
 public class TeclasDoTime {
   // Nenhuma vaga avisada ainda (ao entrar num mundo, a setinha vai de novo)
   private static final int NAO_AVISADA = -2;
@@ -26,6 +31,7 @@ public class TeclasDoTime {
   private static KeyMapping anterior;
   private static KeyMapping proximo;
   private static KeyMapping lado;
+  private static KeyMapping dupla;
   private static int setinhaAvisada = NAO_AVISADA;
 
   private TeclasDoTime() {
@@ -44,6 +50,10 @@ public class TeclasDoTime {
     return lado;
   }
 
+  static KeyMapping dupla() {
+    return dupla;
+  }
+
   public static void registrar() {
     anterior = KeyBindingHelper.registerKeyBinding(new KeyMapping("key.cobblemon_combat_za.pokemon_anterior",
         InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_LEFT, TeclasDeGolpe.CATEGORIA));
@@ -51,6 +61,8 @@ public class TeclasDoTime {
         InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_RIGHT, TeclasDeGolpe.CATEGORIA));
     lado = KeyBindingHelper.registerKeyBinding(new KeyMapping("key.cobblemon_combat_za.lado_do_pokemon",
         InputConstants.Type.KEYSYM, InputConstants.UNKNOWN.getValue(), TeclasDeGolpe.CATEGORIA));
+    dupla = KeyBindingHelper.registerKeyBinding(new KeyMapping(Dupla.TECLA, InputConstants.Type.KEYSYM,
+        GLFW.GLFW_KEY_APOSTROPHE, TeclasDeGolpe.CATEGORIA));
     ClientPlayConnectionEvents.JOIN.register((conexao, remetente, cliente) -> setinhaAvisada = NAO_AVISADA);
 
     // O mesmo que as teclas do Cobblemon fazem (UpShiftPartyBinding e DownShiftPartyBinding): andar uma vaga no
@@ -65,6 +77,11 @@ public class TeclasDoTime {
       while (lado.consumeClick()) {
         if (ClientPlayNetworking.canSend(TrocarOLadoPayload.TIPO)) {
           ClientPlayNetworking.send(new TrocarOLadoPayload());
+        }
+      }
+      while (dupla.consumeClick()) {
+        if (ClientPlayNetworking.canSend(AlternarNaDuplaPayload.TIPO)) {
+          ClientPlayNetworking.send(new AlternarNaDuplaPayload());
         }
       }
       avisarASetinha();

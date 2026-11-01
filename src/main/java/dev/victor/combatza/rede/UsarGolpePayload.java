@@ -14,8 +14,10 @@ import net.minecraft.resources.ResourceLocation;
 // "alvoTravado" = o número da entidade do foco (lock-on) do cliente, ou -1 sem foco: com ele, o golpe vai nesse alvo
 // mesmo que o jogador não esteja virado para ele (na 3ª pessoa, a câmera e o jogador podem olhar para lados diferentes).
 // 6.11: "marcador" = para onde o Pokémon vai antes de soltar o golpe, com o foco: um deslocamento no chão a partir dos pés do
-// alvo travado (o y não conta). Vazio = o golpe sai de onde ele está, como sempre
-public record UsarGolpePayload(int slotGolpe, int slotPokemon, int alvoTravado, Optional<Vector3f> marcador)
+// alvo travado (o y não conta). Vazio = o golpe sai de onde ele está, como sempre.
+// 01/11: "setinha" = a vaga do time com a setinha do Cobblemon (na batalha, o golpe é do lutador, mas a Bênção Ressuscitadora
+// revive o da setinha)
+public record UsarGolpePayload(int slotGolpe, int slotPokemon, int alvoTravado, Optional<Vector3f> marcador, int setinha)
     implements CustomPacketPayload {
 
   public static final CustomPacketPayload.Type<UsarGolpePayload> TIPO = new CustomPacketPayload.Type<>(
@@ -26,6 +28,7 @@ public record UsarGolpePayload(int slotGolpe, int slotPokemon, int alvoTravado, 
       ByteBufCodecs.VAR_INT, UsarGolpePayload::slotPokemon,
       ByteBufCodecs.VAR_INT, UsarGolpePayload::alvoTravado,
       ByteBufCodecs.optional(ByteBufCodecs.VECTOR3F), UsarGolpePayload::marcador,
+      ByteBufCodecs.VAR_INT, UsarGolpePayload::setinha,
       UsarGolpePayload::new);
 
   @Override

@@ -38,14 +38,16 @@ import net.minecraft.world.entity.LivingEntity;
 //    anota nada: para ele, a batalha nem começou (o makeBattle devolve false e o treinador não muda);
 // 2. o seu jogo abre a telinha (PerguntaDoTreinadorPayload → client.TelaDoTreinador);
 // 3. "Por turnos": o RCT começa de novo, do jeito dele (TrainerMob.startBattleWith), e desta vez o aviso passa direto;
-//    "Tempo real": a nossa batalha (BatalhasDeTreinador.comecar); fechou a tela (Esc): nada começa. As duplas do RCT, as
-//    batalhas com nível ajustado e quem joga sem o nosso mod no cliente continuam por turnos, sem pergunta
+//    "Tempo real": a nossa batalha (BatalhasDeTreinador.comecar); fechou a tela (Esc): nada começa. As batalhas com nível
+//    ajustado, as de mais de um treinador e quem joga sem o nosso mod no cliente continuam por turnos, sem pergunta.
+//    31/10 (decisão dele): as duplas do RCT (um treinador, dois Pokémon de cada lado) também perguntam, e em tempo real viram a
+//    nossa dupla (combate.Dupla)
 final class EscolhaDoModo {
   // A escolha vale por 30 s; depois disso, a resposta é ignorada (fale com o treinador de novo)
   private static final int SEGUNDOS_PARA_ESCOLHER = 30;
   private static final String FRASE = "cobblemon_combat_za.treinador.";
 
-  private record Pendente(LivingEntity treinador, List<Pokemon> time, long ateOTick) {
+  private record Pendente(LivingEntity treinador, List<Pokemon> time, int porLado, long ateOTick) {
   }
 
   private static final Map<UUID, Pendente> PENDENTES = new HashMap<>();
@@ -55,7 +57,7 @@ final class EscolhaDoModo {
   private static final int TICKS_ENTRE_AVISOS = 10 * SharedConstants.TICKS_PER_SECOND;
   private static final Map<UUID, Long> ULTIMO_AVISO = new HashMap<>();
 
-  private record Duelo(ServerPlayer jogador, LivingEntity treinador, List<Pokemon> time) {
+  private record Duelo(ServerPlayer jogador, LivingEntity treinador, List<Pokemon> time, int porLado) {
   }
 
   private EscolhaDoModo() {
@@ -116,17 +118,19 @@ final class EscolhaDoModo {
     if (aberta != null && agora <= aberta.ateOTick()) {
       return;
     }
-    PENDENTES.put(jogador.getUUID(), new Pendente(treinador, duelo.time(),
+    PENDENTES.put(jogador.getUUID(), new Pendente(treinador, duelo.time(), duelo.porLado(),
         agora + (long) SEGUNDOS_PARA_ESCOLHER * SharedConstants.TICKS_PER_SECOND));
     ServerPlayNetworking.send(jogador, new PerguntaDoTreinadorPayload(treinador.getDisplayName()));
     CobblemonCombatZA.LOGGER.info("TREINADOR: {} quer batalhar com {} ({} Pokémon); perguntando o modo",
         PonteDoRct.id(treinador), jogador.getGameProfile().getName(), duelo.time().size());
   }
 
-  // Um duelo 1 contra 1, sem nível ajustado, entre um jogador e um treinador do RCT; null = qualquer outra batalha
+  // Um duelo entre um jogador e um treinador do RCT, de um ou dois Pokémon por lado (a dupla), sem nível ajustado; null =
+  // qualquer outra batalha
   private static Duelo dueloComTreinador(PokemonBattle batalha) {
     BattleFormat formato = batalha.getFormat();
-    if (formato.getBattleType().getPokemonPerSide() != 1 || formato.getAdjustLevel() > 0) {
+    int porLado = formato.getBattleType().getPokemonPerSide();
+    if (porLado < 1 || porLado > 2 || formato.getAdjustLevel() > 0) {
       return null;
     }
     ServerPlayer jogador = null;
@@ -146,7 +150,8 @@ final class EscolhaDoModo {
         }
       }
     }
-    return atores == 2 && jogador != null && treinador != null && !time.isEmpty() ? new Duelo(jogador, treinador, time)
+    return atores == 2 && jogador != null && treinador != null && !time.isEmpty()
+        ? new Duelo(jogador, treinador, time, porLado)
         : null;
   }
 
@@ -159,7 +164,7 @@ final class EscolhaDoModo {
     if (escolha == RespostaDoTreinadorPayload.TEMPO_REAL) {
       CobblemonCombatZA.LOGGER.info("TREINADOR: {} escolheu TEMPO REAL contra {}", jogador.getGameProfile().getName(),
           PonteDoRct.id(treinador));
-      BatalhasDeTreinador.comecar(jogador, treinador, pendente.time());
+      BatalhasDeTreinador.comecar(jogador, treinador, pendente.time(), pendente.porLado());
     } else if (escolha == RespostaDoTreinadorPayload.POR_TURNOS) {
       // A telinha não pausa o jogo: se nesse meio tempo começou outra batalha nossa (um selvagem, um duelo), nada de batalha
       // por turnos por cima dela

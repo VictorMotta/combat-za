@@ -523,9 +523,11 @@ public class HabilidadesQueReagem {
       }
     }
     for (ServerPlayer jogador : combate.getJogadores()) {
-      Pokemon lutador = Lutadores.de(jogador);
-      if (lutador != null && lutador.getEntity() != null && dePe(lutador.getEntity())) {
-        todos.add(lutador.getEntity());
+      // Na dupla, os dois dele
+      for (Pokemon naLuta : Lutadores.naLuta(jogador)) {
+        if (naLuta.getEntity() != null && dePe(naLuta.getEntity())) {
+          todos.add(naLuta.getEntity());
+        }
       }
     }
     return todos;

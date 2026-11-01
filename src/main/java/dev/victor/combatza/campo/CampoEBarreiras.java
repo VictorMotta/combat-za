@@ -159,6 +159,8 @@ public class CampoEBarreiras {
     acabarOsQueVenceram(arena, agora);
     // 21/10: o Truque de Agilidade (o fim e as partículas)
     SalaTrick.atualizar(arena, agora, virouSegundo);
+    // 01/11: Gravidade, Sala Mágica, Zona Estranha, os Esportes...
+    CampoDosGolpes.atualizar(arena, agora);
     CampoDaBatalha campo = arena.campo();
     if (virouSegundo && campo.getTerreno() != Terreno.NENHUM) {
       for (ServerPlayer jogador : arena.jogadores()) {

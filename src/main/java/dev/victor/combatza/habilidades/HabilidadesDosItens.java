@@ -65,6 +65,11 @@ public class HabilidadesDosItens {
     return pokemon.getEntity() != null && BatalhasDeTreinador.ehDoTreinador(pokemon.getEntity());
   }
 
+  // 01/11 (golpes.TrocaDeItens): a Pedra Mega e o Cristal Z não saem da mão (Travessura, Oferenda)
+  public static boolean naoSaiDaMao(ItemStack item) {
+    return item.is(PEDRAS_MEGA) || item.is(CRISTAIS_Z);
+  }
+
   // Furto e Mágico: o ladrão sem item fica com o item da vítima. "deOnde": a habilidade do ladrão, para a frase
   public static void roubar(Pokemon ladrao, Pokemon vitima, Component deOnde) {
     ItemStack daVitima = vitima.heldItem();
@@ -173,6 +178,12 @@ public class HabilidadesDosItens {
       return null;
     }
     return gasto.item().copy();
+  }
+
+  // 01/11: a Reciclagem: o último item que ele gastou nesta batalha (null = nenhum)
+  public static ItemStack ultimoGasto(Pokemon pokemon) {
+    ItemGasto gasto = GASTOS.get(pokemon.getUuid());
+    return gasto == null ? null : gasto.item().copy();
   }
 
   // A baga replantada ou o item apanhado: o gasto já foi usado (como o "lastItem" do Showdown, que fica vazio)

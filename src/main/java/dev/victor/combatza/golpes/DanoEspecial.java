@@ -7,6 +7,7 @@ import com.cobblemon.mod.common.api.moves.Move;
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
 import com.cobblemon.mod.common.pokemon.Pokemon;
 
+import dev.victor.combatza.mega.GolpesZ;
 import dev.victor.combatza.CobblemonCombatZA;
 import dev.victor.combatza.habilidades.HabilidadesDaConta;
 import dev.victor.combatza.habilidades.HabilidadesDeForma;
@@ -33,6 +34,14 @@ public class DanoEspecial {
     if (DEVORADOR_DE_SONHOS.equals(golpe.getName())) {
       return !(alvo instanceof PokemonEntity entidade && ("slp".equals(EfeitosDeStatus.siglaDoStatus(entidade.getPokemon()))
           || HabilidadesDeForma.contaComoDormindo(entidade.getPokemon())));
+    }
+    // 01/11: o Ronco só sai dormindo (UsarOutroGolpe deixa usar dormindo)
+    // 01/11: o Cuspir sem nada estocado falha (GolpesQueMarcam)
+    if ("spitup".equals(golpe.getName())) {
+      return GolpesQueMarcam.cuspido(atacante) == 0;
+    }
+    if ("snore".equals(golpe.getName())) {
+      return !"slp".equals(EfeitosDeStatus.siglaDoStatus(atacante)) && !HabilidadesDeForma.contaComoDormindo(atacante);
     }
     if (ESFORCO.equals(golpe.getName()) && alvo instanceof PokemonEntity entidade) {
       return Vida.pvAtual(atacante) >= Vida.pvAtual(entidade.getPokemon());
@@ -66,6 +75,11 @@ public class DanoEspecial {
   // Showdown: "basePowerCallback". Sem regra, vale o poder dos dados. Contra mob não há defensor: quem depende do
   // alvo usa o poder de reserva
   public static double poder(Pokemon atacante, Move golpe, Pokemon defensor, RandomSource sorte) {
+    // 01/11: o golpe Z tem o poder dele (GolpesZ)
+    Integer doGolpeZ = GolpesZ.poder(atacante, golpe);
+    if (doGolpeZ != null) {
+      return doGolpeZ;
+    }
     String nome = golpe.getName();
     if (defensor == null && PODER_PELO_ALVO.contains(nome)) {
       return Balanceamento.PODER_CONTRA_MOB;
@@ -84,6 +98,7 @@ public class DanoEspecial {
       case "return" -> Math.max(1, Math.floor(atacante.getFriendship() * 10 / 25.0));
       case "frustration" -> Math.max(1, Math.floor((255 - atacante.getFriendship()) * 10 / 25.0));
       case "magnitude" -> magnitude(sorte);
+      case "spitup" -> 100.0 * GolpesQueMarcam.cuspido(atacante);
       // 5.4b: cada carga do Chute Triplo e do Pinote Triplo é mais forte (10, 20, 30; 20, 40, 60)
       case "triplekick", "tripleaxel" -> golpe.getPower() * Cargas.acertoAtual(atacante, golpe);
       default -> golpe.getPower();
@@ -97,7 +112,9 @@ public class DanoEspecial {
   // Em hectogramas, a mesma unidade do Showdown (Snorlax = 4600)
   private static double massa(Pokemon pokemon) {
     // 21/10 (habilidades, lote da conta do dano): Metal Pesado e Metal Leve
-    return pokemon.getForm().getWeight() * ItensDeDano.peso(pokemon) * HabilidadesDaConta.peso(pokemon);
+    // 01/11: a Autotomia tira 100 kg (GolpesQueMarcam), no mínimo 0,1 kg
+    return Math.max(1, pokemon.getForm().getWeight() * ItensDeDano.peso(pokemon) * HabilidadesDaConta.peso(pokemon)
+        - GolpesQueMarcam.pesoTirado(pokemon));
   }
 
   private static double pelaMassa(double massa) {

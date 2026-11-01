@@ -70,6 +70,12 @@ public class Mega {
     private boolean megando;
     private int falta;
     private UUID megado;
+    // 01/11: o que ele já usou nesta batalha (a Mega, o Tera ou o golpe Z: um só, como nos jogos); null = nada
+    private Usou usou;
+  }
+
+  private enum Usou {
+    MEGA, TERA, Z
   }
 
   private static final Map<UUID, Medidor> MEDIDORES = new HashMap<>();
@@ -97,6 +103,9 @@ public class Mega {
   // O aviso de desmaio do Cobblemon sai sempre que a vida chega a zero (Pokemon.setCurrentHealth), na nossa batalha também
   private static void aoDesmaiar(PokemonFaintedEvent evento) {
     Pokemon pokemon = evento.getPokemon();
+    // 01/11: desmaiou terastalizado: volta ao normal
+    Tera.esquecer(pokemon);
+    GolpesZ.esquecer(pokemon);
     try {
       if (instalado() && PonteDoMegaShowdown.ehMega(pokemon)) {
         PonteDoMegaShowdown.desmegar(pokemon);
@@ -108,7 +117,7 @@ public class Mega {
   }
 
   // O Mega Showdown está no jogo (e a ponte com ele funciona)? Sem ele, a tecla só avisa
-  private static boolean instalado() {
+  static boolean instalado() {
     return !ponteQuebrada && FabricLoader.getInstance().isModLoaded(MOD_DA_MEGA);
   }
 
@@ -175,16 +184,54 @@ public class Mega {
       avisar(jogador, Component.translatable(FRASE + "em_uso"));
       return;
     }
+    Motivo motivo = PonteDoMegaShowdown.podeMegar(jogador, alvo);
+    // 01/11 (o Tera e o golpe Z, decisões dele: "igual à Mega"): sem Mega para este lutador, a tecla é a do golpe Z (com o
+    // Cristal Z na mão e o Anel Z) ou a do Tera (com o Orbe Tera)
+    Usou outro = motivo == Motivo.PODE ? null : outroQuePode(jogador, alvo);
+    if (outro != null) {
+      pedirOutro(jogador, alvo, medidor, outro);
+      return;
+    }
+    if (medidor.usou == Usou.TERA || medidor.usou == Usou.Z) {
+      avisar(jogador, Component.translatable(FRASE + "ja_usou"));
+      return;
+    }
     if (medidor.carga < 1f) {
       avisar(jogador, Component.translatable(FRASE + "nao_encheu", Math.round(medidor.carga * 100)));
       return;
     }
-    Motivo motivo = PonteDoMegaShowdown.podeMegar(jogador, alvo);
     if (motivo != Motivo.PODE) {
       avisar(jogador, porque(motivo, alvo));
       return;
     }
     PonteDoMegaShowdown.megar(jogador, alvo);
+  }
+
+  // O golpe Z (o cristal na mão) vem antes do Tera; null = nenhum dos dois
+  private static Usou outroQuePode(ServerPlayer jogador, Pokemon alvo) {
+    if (GolpesZ.podeArmar(jogador, alvo)) {
+      return Usou.Z;
+    }
+    return Tera.temOOrbe(jogador) && alvo.getTeraType() != null ? Usou.TERA : null;
+  }
+
+  // O Tera e o golpe Z: com o medidor cheio, uma vez por batalha (e nada se a Mega já foi usada nela). Gastam o medidor
+  private static void pedirOutro(ServerPlayer jogador, Pokemon alvo, Medidor medidor, Usou qual) {
+    if (medidor.usou != null) {
+      avisar(jogador, Component.translatable(FRASE + "ja_usou"));
+      return;
+    }
+    if (medidor.carga < 1f) {
+      avisar(jogador, Component.translatable(FRASE + "nao_encheu", Math.round(medidor.carga * 100)));
+      return;
+    }
+    if (qual == Usou.Z) {
+      GolpesZ.armar(jogador, alvo);
+    } else {
+      Tera.terastalizar(jogador, alvo);
+    }
+    medidor.usou = qual;
+    medidor.carga = 0f;
   }
 
   // Fora da batalha não há medidor nem relógio: Mega à vontade (como a roda do Cobblemon)
@@ -280,6 +327,9 @@ public class Mega {
   }
 
   private static void comecarOMinuto(ServerPlayer jogador, Medidor medidor, Pokemon lutador) {
+    if (medidor.usou == null) {
+      medidor.usou = Usou.MEGA;
+    }
     medidor.megando = true;
     medidor.megado = lutador.getUuid();
     medidor.falta = DURACAO;
@@ -308,6 +358,11 @@ public class Mega {
   // Mega (fora da batalha, sem limite). Logo depois vale o medidor de fora. A próxima batalha começa com ele cheio
   public static void fimDaBatalha(ServerPlayer jogador) {
     MEDIDORES.remove(jogador.getUUID());
+    // 01/11: o Tera acaba com a batalha, e o Poder Z armado e não usado se perde
+    GolpesZ.fimDaBatalha(jogador);
+    for (Pokemon pokemon : Cobblemon.INSTANCE.getStorage().getParty(jogador)) {
+      Tera.esquecer(pokemon);
+    }
   }
 
   // Na batalha: só aparece com o minuto valendo, ou com um lutador que pode megar (o bracelete e a pedra dele: 8.4f, dele:
@@ -316,10 +371,14 @@ public class Mega {
   private static MedidorDaMegaPayload naBatalha(ServerPlayer jogador, Medidor medidor) {
     Pokemon lutador = Lutadores.de(jogador);
     boolean megaLutando = lutador != null && PonteDoMegaShowdown.ehMega(lutador);
-    boolean lutadorPodeMegar = lutador != null && PonteDoMegaShowdown.podeMegar(jogador, lutador) == Motivo.PODE;
-    boolean visivel = medidor.megando || lutadorPodeMegar;
+    boolean lutadorPodeMegar = lutador != null && PonteDoMegaShowdown.podeMegar(jogador, lutador) == Motivo.PODE
+        && medidor.usou != Usou.TERA && medidor.usou != Usou.Z;
+    // 01/11: o medidor também aparece para o golpe Z e o Tera que ainda não foram usados na batalha
+    boolean outroPode = lutador != null && medidor.usou == null && !lutadorPodeMegar
+        && outroQuePode(jogador, lutador) != null;
+    boolean visivel = medidor.megando || lutadorPodeMegar || outroPode;
     boolean pausado = medidor.megando && !megaLutando;
-    boolean pronto = !medidor.megando && medidor.carga >= 1f && lutadorPodeMegar;
+    boolean pronto = !medidor.megando && medidor.carga >= 1f && (lutadorPodeMegar || outroPode);
     return visivel ? new MedidorDaMegaPayload(true, medidor.carga, medidor.megando, pausado, pronto)
         : MedidorDaMegaPayload.ESCONDIDO;
   }

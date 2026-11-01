@@ -86,8 +86,13 @@ public class Feedback {
     if (sobreQuem.isWild()) {
       return GerenciarCombates.selvagensNoCombateDe(jogador).contains(sobreQuem.getEntity());
     }
-    Pokemon lutador = Lutadores.de(jogador);
-    return lutador != null && lutador.getUuid().equals(sobreQuem.getUuid());
+    // Na dupla, os dois que estão na luta
+    for (Pokemon naLuta : Lutadores.naLuta(jogador)) {
+      if (naLuta.getUuid().equals(sobreQuem.getUuid())) {
+        return true;
+      }
+    }
+    return false;
   }
 
   // 21/10 (PvP): o cartão do Pokémon do adversário do duelo é vermelho, como o do selvagem

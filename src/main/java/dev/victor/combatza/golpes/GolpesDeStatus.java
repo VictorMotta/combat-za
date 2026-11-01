@@ -13,6 +13,7 @@ import dev.victor.combatza.CobblemonCombatZA;
 import dev.victor.combatza.SemDerrubar;
 import dev.victor.combatza.campo.Arena;
 import dev.victor.combatza.campo.Arenas;
+import dev.victor.combatza.campo.CampoDosGolpes;
 import dev.victor.combatza.campo.LimpezaDoCampo;
 import dev.victor.combatza.campo.SalaTrick;
 import dev.victor.combatza.combate.Combate;
@@ -55,6 +56,17 @@ public class GolpesDeStatus {
 
   // Depois do acerto (AplicarEfeitos.depoisDeAcertar): os golpes de status no alvo e os giros que limpam o chão
   public static void depoisDeAcertar(Execucao execucao, PokemonEntity atacante, Entity alvo) {
+    // 01/11: os que usam ou copiam outro golpe (UsarOutroGolpe)
+    if (UsarOutroGolpe.noAlvo(execucao, atacante, alvo)) {
+      return;
+    }
+    // 01/11: os que deixam uma marca e os que agem na hora (GolpesQueMarcam, GolpesNaHora)
+    GolpesQueMarcam.noAlvo(execucao, atacante, alvo);
+    GolpesNaHora.noAlvo(execucao, atacante, alvo);
+    GolpesDeAliado.noAlvo(execucao, alvo);
+    AtributosTrocados.noAlvo(execucao, alvo);
+    Saidas.noAlvo(execucao, atacante, alvo);
+    TrocaDeItens.noAlvo(execucao, atacante, alvo);
     switch (execucao.getGolpe().getName()) {
       case "taunt" -> Provocacao.tentar(execucao, alvo);
       case "encore" -> Bis.tentar(execucao, alvo);
@@ -71,7 +83,11 @@ public class GolpesDeStatus {
 
   // O golpe sem alvo (ControleDeGolpes.usouSemAlvo): o Truque de Agilidade e o Arrumar. true = era um deles
   public static boolean semAlvo(Execucao execucao, PokemonEntity atacante) {
-    return SalaTrick.aoUsarGolpe(execucao, atacante) || LimpezaDoCampo.arrumar(execucao, atacante);
+    return SalaTrick.aoUsarGolpe(execucao, atacante) || LimpezaDoCampo.arrumar(execucao, atacante)
+        || UsarOutroGolpe.semAlvo(execucao, atacante) || GolpesQueMarcam.semAlvo(execucao, atacante)
+        || GolpesNaHora.semAlvo(execucao, atacante) || GolpesDeAliado.semAlvo(execucao, atacante)
+        || CampoDosGolpes.aoUsarGolpe(execucao, atacante) || AtributosTrocados.semAlvo(execucao)
+        || Substituto.semAlvo(execucao, atacante) || Saidas.semAlvo(execucao, atacante);
   }
 
   // A IA (EscolhaDoGolpe): o golpe de status serve contra este alvo agora? false = nota zero (não gasta a vez com a Atração
@@ -155,11 +171,16 @@ public class GolpesDeStatus {
     Bis.atualizar(agora);
     Atracao.atualizar(agora);
     TrocaDeHabilidade.atualizar(agora);
+    Marcas.atualizar(agora);
+    TrocaDeItens.atualizar(agora);
+    GolpesNaHora.atualizar(agora);
     // Saiu da batalha (fugiu, a batalha acabou): os efeitos no Pokémon acabam, como numa troca
     if (agora % CONFERIR_A_CADA_TICKS == 0) {
       Provocacao.semBatalha();
       Bis.semBatalha();
       Atracao.semBatalha();
+      Marcas.semBatalha();
+      AtributosTrocados.semBatalha();
     }
   }
 
@@ -169,6 +190,9 @@ public class GolpesDeStatus {
     Bis.acabar(pokemon, false);
     Atracao.acabar(pokemon, false);
     TrocaDeHabilidade.esquecer(pokemon);
+    Marcas.esquecer(pokemon);
+    AtributosTrocados.esquecer(pokemon);
+    Substituto.esquecer(pokemon);
   }
 
   // Voltou para a bola ou desmaiou: o mesmo, e o "último golpe" do Bis começa do zero
@@ -183,6 +207,7 @@ public class GolpesDeStatus {
   private static void saiu(Pokemon pokemon) {
     esquecer(pokemon);
     Bis.esquecerOUltimo(pokemon);
+    UsarOutroGolpe.esquecer(pokemon);
   }
 
   public static void esquecerTime(ServerPlayer jogador) {
@@ -197,5 +222,11 @@ public class GolpesDeStatus {
     Atracao.limpar();
     TrocaDeHabilidade.limpar();
     GolpesDesligados.limpar();
+    UsarOutroGolpe.limpar();
+    Marcas.limpar();
+    AtributosTrocados.limpar();
+    Substituto.limpar();
+    Saidas.limpar();
+    GolpesNaHora.limpar();
   }
 }

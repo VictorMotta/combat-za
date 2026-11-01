@@ -1,5 +1,6 @@
 package dev.victor.combatza.combate;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -10,15 +11,22 @@ import java.util.UUID;
 import com.cobblemon.mod.common.api.battles.model.PokemonBattle;
 import com.cobblemon.mod.common.api.battles.model.actor.BattleActor;
 import com.cobblemon.mod.common.battles.pokemon.BattlePokemon;
+import com.cobblemon.mod.common.api.pokemon.feature.StringSpeciesFeature;
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
+import com.cobblemon.mod.common.pokemon.FormData;
 import com.cobblemon.mod.common.pokemon.Pokemon;
 
 import dev.victor.combatza.CobblemonCombatZA;
+import dev.victor.combatza.golpes.Feedback;
 import dev.victor.combatza.golpes.SonoECongelado;
 import dev.victor.combatza.party.Parties;
 import net.minecraft.SharedConstants;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 
@@ -34,6 +42,9 @@ import net.minecraft.world.entity.Entity;
 // - ALVO: o chefão bate em quem mais o feriu nos últimos segundos (alvoDoChefe);
 // - ENTRAR: quem é da party do dono da raid entra sem ele precisar aceitar (aceitarAParty).
 // Quem está na raid luta junto, mesmo fora da sua party (GerenciarCombates, Lados)
+// 01/11 (dele: "lá na raid, quero que os Pokémon que tenham Mega Evolução mega evoluam"; escolheu "ao começar a luta"): o
+// chefão cuja espécie tem forma Mega vira Mega quando a luta começa e fica até o fim da raid (megarOChefe). Ele continua
+// gigante: o tamanho é o multiplicador que o mod de raid pôs nele ao nascer (setScaleModifier), e a Mega só troca a forma
 public final class Raids {
   private static final String ASPECTO_DO_CHEFE = "raid";
   // A raiva do chefão: o dano de cada jogador nele, que cai pela metade a cada 5 segundos
@@ -41,6 +52,10 @@ public final class Raids {
   // A arena da raid é grande e o chefão é gigante: só a 32 blocos dele você fugiu (dos selvagens, 16: Combate)
   public static final float LONGE_DO_CHEFE = 32.0f;
   private static final int A_CADA_TICKS = SharedConstants.TICKS_PER_SECOND;
+  // As formas Mega (a escolha "mega_evolution" do Cobblemon; o "mega_z" é das Megas do Z-A, do Zamega)
+  private static final String MEGA = "mega_evolution";
+  private static final Set<String> FORMAS_MEGA = Set.of("mega", "mega_x", "mega_y", "mega_z");
+  private static final int PARTICULAS_DA_MEGA = 40;
 
   private record Raiva(double valor, long tick) {
     double em(long agora) {
@@ -95,6 +110,38 @@ public final class Raids {
     Object raid = raidDoChefe(chefe);
     if (raid != null) {
       PonteDaRaid.entrar(raid, jogador);
+      megarOChefe(chefe);
+    }
+  }
+
+  // A espécie tem forma Mega e ele ainda não é Mega: vira (quem tem duas, como o Charizard X e Y, sorteia). O mesmo jeito do
+  // mod de raid nas raids Mega dele (a escolha "mega_evolution" do Cobblemon)
+  private static void megarOChefe(PokemonEntity chefe) {
+    Pokemon pokemon = chefe.getPokemon();
+    for (String aspecto : pokemon.getAspects()) {
+      if (FORMAS_MEGA.contains(aspecto)) {
+        return;
+      }
+    }
+    List<String> formas = new ArrayList<>();
+    for (FormData forma : pokemon.getSpecies().getForms()) {
+      for (String aspecto : forma.getAspects()) {
+        if (FORMAS_MEGA.contains(aspecto) && !formas.contains(aspecto)) {
+          formas.add(aspecto);
+        }
+      }
+    }
+    if (formas.isEmpty()) {
+      return;
+    }
+    String forma = formas.get(chefe.getRandom().nextInt(formas.size()));
+    new StringSpeciesFeature(MEGA, forma).apply(pokemon);
+    Feedback.particulas(chefe, ParticleTypes.END_ROD, PARTICULAS_DA_MEGA);
+    chefe.level().playSound(null, chefe.blockPosition(), SoundEvents.BEACON_POWER_SELECT, SoundSource.HOSTILE, 1f, 1f);
+    CobblemonCombatZA.LOGGER.info("RAID: o chefão {} mega evoluiu ({})", pokemon.getSpecies().getName(), forma);
+    for (ServerPlayer quemLuta : GerenciarCombates.jogadoresNoCombateDe(chefe)) {
+      Feedback.historicoDaBatalha(quemLuta, pokemon, Component.translatable("cobblemon.battle.mega",
+          pokemon.getDisplayName(false)));
     }
   }
 
@@ -167,6 +214,12 @@ public final class Raids {
     }
     List<ServerPlayer> naLuta = GerenciarCombates.jogadoresNoCombateDe(chefe);
     return naLuta.isEmpty() ? null : naLuta.get(0);
+  }
+
+  // ApoiosDaRaid: gasta uma das vezes que o jogador pode torcer nesta raid. false = acabaram
+  public static boolean gastarUmApoio(ServerPlayer jogador, PokemonEntity chefe) {
+    Object raid = raidDoChefe(chefe);
+    return raid != null && PonteDaRaid.gastarUmApoio(raid, jogador);
   }
 
   // O PV que o último dano tirou do chefão (Vida.pvTirados: a Drenagem, a Orbe da Vida, o histórico...). null = o último dano
@@ -245,6 +298,7 @@ public final class Raids {
     }
     RAIVA.keySet().retainAll(naLuta);
     ULTIMO_DANO.keySet().retainAll(naLuta);
+    ApoiosDaRaid.manterSo(naLuta);
     aceitarAParty(servidor);
   }
 

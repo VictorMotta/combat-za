@@ -1,5 +1,6 @@
 package dev.victor.combatza.treinadores;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -12,8 +13,10 @@ import com.cobblemon.mod.common.pokemon.Pokemon;
 import dev.victor.combatza.CobblemonCombatZA;
 import dev.victor.combatza.combate.AvisoDaBatalha;
 import dev.victor.combatza.combate.Combate;
+import dev.victor.combatza.combate.Dupla;
 import dev.victor.combatza.combate.Experiencia;
 import dev.victor.combatza.combate.GerenciarCombates;
+import dev.victor.combatza.combate.Lutadores;
 import dev.victor.combatza.combate.SoltarNoSelvagem;
 import dev.victor.combatza.golpes.AgendaDeGolpes;
 import dev.victor.combatza.golpes.Confusao;
@@ -49,6 +52,8 @@ import net.minecraft.world.phys.Vec3;
 //   aviso). Saiu do jogo ou morreu: quem conta é o próprio RCT (o treinador vê o adversário fora e conta a vitória dele,
 //   como faz na batalha por turnos);
 // - a parte 2: a bolsa do RCT (BolsaDoTreinador), a Mega (MegaDoTreinador) e o item reserva no lugar do Cristal Z (CristalZ)
+// 31/10 (a dupla, decisões dele): o treinador do RCT em dupla manda DOIS de uma vez, e cada um que cai dá lugar ao próximo
+// dele em 2 s; do seu lado, dois também (combate.Dupla: você comanda um, o outro luta sozinho)
 final class BatalhaDeTreinador {
   // Como o Pokémon do treinador que está fora está agora: saindo da bola (o feixe), na animação da Mega ou lutando
   enum Fase {
@@ -77,6 +82,8 @@ final class BatalhaDeTreinador {
   private static final double FRACAO_DO_CAMINHO = 0.4;
   private static final double SOLTAR_MAIS_PERTO = 1.5;
   private static final double SOLTAR_MAIS_LONGE = 4.0;
+  // Na dupla, o segundo Pokémon dele cai ao lado do primeiro, a 2,5 blocos (um para cada lado do caminho)
+  private static final double AO_LADO = 2.5;
   private static final String FRASE = "cobblemon_combat_za.treinador.";
 
   private final UUID jogador;
@@ -87,19 +94,33 @@ final class BatalhaDeTreinador {
   private final BolsaDoTreinador bolsa;
   private final long comecouNoTick;
   private final Set<UUID> desmaiados = new HashSet<>();
+  // Quantos dele lutam ao mesmo tempo: 1, ou 2 na dupla
+  private final int porLado;
   private int proximo;
-  private PokemonEntity atual;
-  private Fase fase;
-  private long faseDesde;
-  private long proximoNoTick = -1;
+  // Os dele que estão fora da bola agora (um, ou dois na dupla), e quando sai cada próximo
+  private final List<Fora> fora = new ArrayList<>();
+  private final List<Long> proximosNoTick = new ArrayList<>();
   private Combate combate;
   private boolean megou;
   private boolean avisouLonge;
   private Fim fim;
 
+  // Um Pokémon dele fora da bola: saindo dela, na animação da Mega ou lutando, e desde quando
+  private static final class Fora {
+    private final PokemonEntity entidade;
+    private Fase fase = Fase.SAINDO_DA_BOLA;
+    private long faseDesde;
+
+    private Fora(PokemonEntity entidade, long agora) {
+      this.entidade = entidade;
+      this.faseDesde = agora;
+    }
+  }
+
   BatalhaDeTreinador(ServerPlayer jogador, LivingEntity treinador, List<Pokemon> time, PonteDoRct.DadosDoTime dados,
-      long agora) {
+      int porLado, long agora) {
     this.jogador = jogador.getUUID();
+    this.porLado = porLado;
     this.nomeDoJogador = jogador.getGameProfile().getName();
     this.treinador = treinador;
     this.nome = treinador.getDisplayName();
@@ -126,7 +147,12 @@ final class BatalhaDeTreinador {
 
   // O Pokémon dele que está lutando agora (não o que está saindo da bola, na animação da Mega ou caído)
   boolean estaLutando(PokemonEntity entidade) {
-    return entidade == atual && fase == Fase.LUTANDO;
+    for (Fora umDeles : fora) {
+      if (umDeles.entidade == entidade) {
+        return umDeles.fase == Fase.LUTANDO;
+      }
+    }
+    return false;
   }
 
   boolean todosDesmaiaram() {
@@ -152,17 +178,28 @@ final class BatalhaDeTreinador {
   }
 
   // O começo: o primeiro Pokémon dele sai da bola, e o seu também, se você não tem nenhum fora (como nos jogos, os dois
-  // juntos)
+  // juntos). Na dupla, dois de cada lado
   void comecar(ServerPlayer quem, long agora) {
     Feedback.historicoDaBatalha(quem, null, Component.translatable(FRASE + "comecou", nome));
-    soltarOProximo(quem, agora);
-    if (atual != null && seuPokemonFora(quem) == null) {
+    if (porLado > 1) {
+      Lutadores.ligarADupla(quem);
+      Dupla.avisarOComeco(quem);
+    }
+    for (int i = 0; i < porLado; i++) {
+      soltarOProximo(quem, agora);
+    }
+    if (fora.isEmpty()) {
+      return;
+    }
+    PokemonEntity primeiroDele = fora.get(0).entidade;
+    for (int seus = seusFora(quem); seus < porLado; seus++) {
       Pokemon seu = primeiroApto(quem);
-      Vec3 onde = seu == null ? null : SoltarNoSelvagem.onde(quem, atual);
-      if (onde != null) {
-        Parceiro.desligar(quem);
-        SoltarNoSelvagem.jogar(quem, seu, onde);
+      Vec3 onde = seu == null ? null : SoltarNoSelvagem.onde(quem, primeiroDele);
+      if (onde == null) {
+        return;
       }
+      Parceiro.desligar(quem);
+      SoltarNoSelvagem.jogar(quem, seu, onde);
     }
   }
 
@@ -176,14 +213,24 @@ final class BatalhaDeTreinador {
       finalizar(quem, agora);
       return true;
     }
-    acompanharOAtual(quem, agora);
-    if (atual == null && proximoNoTick >= 0 && agora >= proximoNoTick && fim == null) {
-      proximoNoTick = -1;
-      soltarOProximo(quem, agora);
+    for (Fora umDeles : List.copyOf(fora)) {
+      acompanhar(quem, umDeles, agora);
     }
+    proximosNoTick.removeIf(tick -> {
+      if (agora < tick) {
+        return false;
+      }
+      if (fim == null && fora.size() < porLado) {
+        soltarOProximo(quem, agora);
+      }
+      return true;
+    });
     avisarSeEstaLonge(quem);
-    if (atual != null && fase == Fase.LUTANDO) {
-      bolsa.talvezUsar(quem, nome, atual, agora);
+    // Um item por vez, mesmo na dupla
+    for (Fora umDeles : List.copyOf(fora)) {
+      if (umDeles.fase == Fase.LUTANDO && bolsa.talvezUsar(quem, nome, umDeles.entidade, agora)) {
+        break;
+      }
     }
     return false;
   }
@@ -257,10 +304,16 @@ final class BatalhaDeTreinador {
     if (combate == null && quem != null && fim != Fim.SAIU_DO_JOGO) {
       Feedback.barraDeAcao(quem, Component.translatable(FRASE + (fim == Fim.DESISTIU ? "desistiu" : "nao_comecou"), nome));
     }
-    if (atual != null && !atual.isRemoved()) {
-      BatalhasDeTreinador.voltarParaABola(atual, treinador, agora, false);
+    for (Fora umDeles : fora) {
+      if (!umDeles.entidade.isRemoved()) {
+        BatalhasDeTreinador.voltarParaABola(umDeles.entidade, treinador, agora, false);
+      }
     }
-    atual = null;
+    fora.clear();
+    // A dupla acaba com a batalha (até a que nem chegou a começar)
+    if (porLado > 1 && quem != null) {
+      Lutadores.desligarADupla(quem);
+    }
     CobblemonCombatZA.LOGGER.info("TREINADOR: a batalha de {} contra {} acabou: {} ({} de {} Pokémon dele caíram)",
         nomeDoJogador, PonteDoRct.id(treinador), fim, desmaiados.size(), time.size());
   }
@@ -268,51 +321,49 @@ final class BatalhaDeTreinador {
   // O feixe da bola acabou: a Mega (uma por batalha, como nos jogos) ou direto para a luta. Caiu ou sumiu sem passar pelo
   // desmaio (o Gambito Final zera a vida sem golpe; o /kill e o vazio matam de verdade): conta como desmaiado. O XP só sai
   // aqui se ninguém deu antes (a morte de verdade já deu o XP pelo AFTER_DEATH da Experiencia)
-  private void acompanharOAtual(ServerPlayer quem, long agora) {
-    if (atual == null) {
-      return;
-    }
-    if (atual.isRemoved() || !atual.isAlive() || atual.isDeadOrDying()) {
-      DamageSource ultima = atual.getLastDamageSource();
+  private void acompanhar(ServerPlayer quem, Fora umDeles, long agora) {
+    PokemonEntity entidade = umDeles.entidade;
+    if (entidade.isRemoved() || !entidade.isAlive() || entidade.isDeadOrDying()) {
+      DamageSource ultima = entidade.getLastDamageSource();
       boolean morteDeVerdade = ultima != null && ultima.is(DamageTypeTags.BYPASSES_INVULNERABILITY);
-      desmaiou(atual, agora, !atual.isRemoved() && fase == Fase.LUTANDO && !morteDeVerdade);
+      desmaiou(entidade, agora, !entidade.isRemoved() && umDeles.fase == Fase.LUTANDO && !morteDeVerdade);
       return;
     }
-    if (fase == Fase.SAINDO_DA_BOLA && agora - faseDesde >= TICKS_DO_FEIXE && atual.getBeamMode() == 0) {
-      Pokemon pokemon = atual.getPokemon();
+    if (umDeles.fase == Fase.SAINDO_DA_BOLA && agora - umDeles.faseDesde >= TICKS_DO_FEIXE && entidade.getBeamMode() == 0) {
+      Pokemon pokemon = entidade.getPokemon();
       if (!megou && MegaDoTreinador.podeMegar(pokemon) && MegaDoTreinador.megar(pokemon)) {
         megou = true;
-        fase = Fase.MEGANDO;
-        faseDesde = agora;
+        umDeles.fase = Fase.MEGANDO;
+        umDeles.faseDesde = agora;
         Feedback.historicoDaBatalha(quem, pokemon,
             Component.translatable("cobblemon.battle.mega", pokemon.getDisplayName(false)));
         CobblemonCombatZA.LOGGER.info("TREINADOR: {} mega-evoluiu", pokemon.getSpecies().getName());
         return;
       }
-      entrarNaLuta(quem);
-    } else if (fase == Fase.MEGANDO && agora - faseDesde >= TICKS_MINIMOS_DA_MEGA
-        && (!Mega.transformando(atual.getPokemon()) || agora - faseDesde >= TICKS_MAXIMOS_DA_MEGA)) {
-      entrarNaLuta(quem);
+      entrarNaLuta(quem, umDeles);
+    } else if (umDeles.fase == Fase.MEGANDO && agora - umDeles.faseDesde >= TICKS_MINIMOS_DA_MEGA
+        && (!Mega.transformando(entidade.getPokemon()) || agora - umDeles.faseDesde >= TICKS_MAXIMOS_DA_MEGA)) {
+      entrarNaLuta(quem, umDeles);
     }
   }
 
   // O primeiro abre a batalha (o mesmo caminho de quando você bate num selvagem); os outros entram na que já existe
-  private void entrarNaLuta(ServerPlayer quem) {
-    fase = Fase.LUTANDO;
+  private void entrarNaLuta(ServerPlayer quem, Fora umDeles) {
+    umDeles.fase = Fase.LUTANDO;
     if (quem == null) {
       return;
     }
     if (combate == null) {
-      GerenciarCombates.entrarEmCombate(quem, atual, seuPokemonFora(quem));
+      GerenciarCombates.entrarEmCombate(quem, umDeles.entidade, seuPokemonFora(quem));
       // A batalha do jogador tem de ser esta, com o Pokémon do treinador nela (um duelo no meio do caminho não serve)
       Combate dele = GerenciarCombates.combateDoJogador(quem);
-      combate = dele != null && dele.getSelvagens().contains(atual) ? dele : null;
+      combate = dele != null && dele.getSelvagens().contains(umDeles.entidade) ? dele : null;
       if (combate == null) {
         fim = Fim.NAO_COMECOU;
       }
       return;
     }
-    combate.adicionarSelvagem(atual);
+    combate.adicionarSelvagem(umDeles.entidade);
   }
 
   // A bola sai da mão do treinador (sendOutWithAnimation, com o grito), no caminho entre ele e você
@@ -325,15 +376,14 @@ final class BatalhaDeTreinador {
       BatalhasDeTreinador.registrarEntidade(entidade, this);
       return Unit.INSTANCE;
     });
-    atual = pokemon.getEntity();
-    fase = Fase.SAINDO_DA_BOLA;
-    faseDesde = agora;
-    if (atual == null) {
+    PokemonEntity entidade = pokemon.getEntity();
+    if (entidade == null) {
       CobblemonCombatZA.LOGGER.warn("TREINADOR: {} não conseguiu sair da bola", pokemon.getSpecies().getName());
       desmaiados.add(pokemon.getUuid());
-      proximoNoTick = agora + TICKS_ATE_O_PROXIMO;
+      proximosNoTick.add(agora + TICKS_ATE_O_PROXIMO);
       return;
     }
+    fora.add(new Fora(entidade, agora));
     if (quem != null) {
       Feedback.historicoDaBatalha(quem, pokemon,
           Component.translatable("cobblemon.battle.switch.other", nome, pokemon.getDisplayName(false)));
@@ -342,6 +392,7 @@ final class BatalhaDeTreinador {
         pokemon.getSpecies().getName(), pokemon.getLevel(), proximo, time.size());
   }
 
+  // Na dupla, cada um de um lado do caminho (o próximo vai para o lado oposto ao do outro que está fora)
   private Vec3 ondeSoltar(ServerPlayer quem) {
     Vec3 deLa = treinador.position();
     if (quem == null || quem.level() != treinador.level()) {
@@ -354,7 +405,13 @@ final class BatalhaDeTreinador {
     }
     double distancia = Math.min(Math.clamp(total * FRACAO_DO_CAMINHO, SOLTAR_MAIS_PERTO, SOLTAR_MAIS_LONGE),
         Math.max(0, total - SOLTAR_MAIS_PERTO));
-    return Mira.noChao(treinador.level(), deLa.add(caminho.scale(distancia / total)));
+    Vec3 ponto = deLa.add(caminho.scale(distancia / total));
+    if (porLado > 1) {
+      Vec3 lado = new Vec3(-caminho.z, 0, caminho.x).normalize();
+      boolean outroNaDireita = !fora.isEmpty() && fora.get(0).entidade.position().subtract(ponto).dot(lado) > 0;
+      ponto = ponto.add(lado.scale(outroNaDireita ? -AO_LADO : AO_LADO));
+    }
+    return Mira.noChao(treinador.level(), ponto);
   }
 
   // O Pokémon dele desmaiou (BatalhasDeTreinador, no lugar da morte; ou visto aqui): o XP sai agora, ele deita e volta para
@@ -379,17 +436,40 @@ final class BatalhaDeTreinador {
     EfeitosDeStatus.esquecer(pokemon);
     Confusao.esquecer(pokemon);
     PrimeiroTurno.esquecer(pokemon);
-    if (entidade == atual) {
-      atual = null;
-    }
+    fora.removeIf(umDeles -> umDeles.entidade == entidade);
     if (!entidade.isRemoved()) {
       BatalhasDeTreinador.voltarParaABola(entidade, treinador, agora, true);
     }
-    if (!todosDesmaiaram()) {
-      proximoNoTick = agora + TICKS_ATE_O_PROXIMO;
+    // Ainda há quem mandar (na dupla, o outro dele pode seguir lutando sem ninguém para entrar)
+    if (proximo < time.size()) {
+      proximosNoTick.add(agora + TICKS_ATE_O_PROXIMO);
     }
     CobblemonCombatZA.LOGGER.info("TREINADOR: {} de {} desmaiou ({} de {}){}", pokemon.getSpecies().getName(),
         PonteDoRct.id(treinador), desmaiados.size(), time.size(), darXp ? "" : " sem XP");
+  }
+
+  // 01/11 (golpes.Saidas): ainda tem Pokémon para mandar?
+  boolean temProximo() {
+    return proximo < time.size();
+  }
+
+  // 01/11: o Rugido, o Ataque de Vento e o Teletransporte (golpes.Saidas): este volta para a bola sem desmaiar, vai para o fim
+  // da fila e o próximo sai em 2 s. Sem outro para mandar (ou ele não está lutando): false, o golpe falha
+  boolean trocarAForca(PokemonEntity entidade, long agora) {
+    Pokemon pokemon = entidade.getPokemon();
+    if (proximo >= time.size() || !estaLutando(entidade) || !time.remove(pokemon)) {
+      return false;
+    }
+    proximo--;
+    time.add(pokemon);
+    AgendaDeGolpes.largar(pokemon);
+    Estagios.zerar(pokemon);
+    fora.removeIf(umDeles -> umDeles.entidade == entidade);
+    BatalhasDeTreinador.voltarParaABola(entidade, treinador, agora, false);
+    proximosNoTick.add(agora + TICKS_ATE_O_PROXIMO);
+    CobblemonCombatZA.LOGGER.info("TREINADOR: {} de {} voltou para a bola à força", pokemon.getSpecies().getName(),
+        PonteDoRct.id(treinador));
+    return true;
   }
 
   // Aos 16 blocos do treinador, o aviso (uma vez; de novo só depois de voltar para perto)
@@ -423,6 +503,17 @@ final class BatalhaDeTreinador {
       }
     }
     return null;
+  }
+
+  // Quantos seus estão fora da bola e podem lutar
+  private static int seusFora(ServerPlayer quem) {
+    int seus = 0;
+    for (Pokemon pokemon : Cobblemon.INSTANCE.getStorage().getParty(quem)) {
+      if (pokemon.getEntity() != null && !pokemon.isFainted()) {
+        seus++;
+      }
+    }
+    return seus;
   }
 
   private static Pokemon primeiroApto(ServerPlayer quem) {

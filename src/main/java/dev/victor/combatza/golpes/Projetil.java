@@ -123,6 +123,8 @@ public class Projetil extends Entity {
   // 5.3: os golpes que nunca erram perseguem o alvo marcado; quem desviou a bola passa direto por ele
   private boolean teleguiado;
   private final Set<Entity> desviaram = new HashSet<>();
+  // 01/11: quem pulou para fora do caminho dele (IaDoSelvagem): o "errou" diz que ele pulou
+  private final Set<UUID> pularam = new HashSet<>();
   // 7.2: quem já pensou em sair da frente desta bola (IaDoSelvagem): uma chance só por bola
   private final Set<UUID> olharam = new HashSet<>();
 
@@ -196,6 +198,10 @@ public class Projetil extends Entity {
 
   public boolean ehTeleguiado() {
     return teleguiado;
+  }
+
+  public void pulou(Entity quem) {
+    pularam.add(quem.getUUID());
   }
 
   public boolean primeiraOlhadaDe(Entity quem) {
@@ -367,7 +373,8 @@ public class Projetil extends Entity {
     Feedback.particulas((ServerLevel) level(), ParticleTypes.POOF, ponto, 6);
     // Se ele desviou, o "desviou!" já apareceu
     if (!desviaram.contains(marcado)) {
-      ControleDeGolpes.projetilErrou(execucao, "alvo_saiu_da_frente");
+      ControleDeGolpes.projetilErrou(execucao, pularam.contains(marcado.getUUID()) ? "pulou_para_o_lado"
+          : "alvo_saiu_da_frente");
     }
   }
 

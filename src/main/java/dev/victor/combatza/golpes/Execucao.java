@@ -9,6 +9,8 @@ import com.cobblemon.mod.common.api.pokemon.stats.Stats;
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
 import com.cobblemon.mod.common.pokemon.Pokemon;
 
+import dev.victor.combatza.mega.GolpesZ;
+import dev.victor.combatza.combate.Lutadores;
 import dev.victor.combatza.combate.GerenciarCombates;
 import dev.victor.combatza.campo.CampoEBarreiras;
 import dev.victor.combatza.campo.ClimaNosGolpes;
@@ -58,6 +60,18 @@ public class Execucao {
   private final Set<UUID> desviaram = new HashSet<>();
   // 7.2 e 7.4: o golpe veio da IA (o selvagem, o guarda), e não de uma tecla sua
   private final boolean daIa;
+  // 01/11: de onde veio o golpe (UsarOutroGolpe): a sua tecla ou a IA; chamado por outro (Metrônomo, Imitador...: a
+  // recarga é a do lugar do golpe que chamou); de graça (a Instrução e o Dançarino: sem carga e sem recarga)
+  public enum Origem {
+    NORMAL, CHAMADO, DE_GRACA, DANCARINO
+  }
+
+  private final Origem origem;
+  // O golpe que este chamou (UsarOutroGolpe), e a mira dele: começa quando este acerta (AgendaDeGolpes)
+  private Move chamado;
+  private HitResult miraDoChamado;
+  // 01/11: a vaga da setinha quando você apertou o golpe (-1 = golpe da IA): a Bênção Ressuscitadora revive esse (Saidas)
+  private int setinha = -1;
   private static final int FEIXE_RECOLHENDO = 3;
 
   // semCarga (5.4b): as cargas de um golpe de vários acertos, depois da primeira, pulam a fase de carregar
@@ -77,6 +91,26 @@ public class Execucao {
 
   private Execucao(ServerPlayer jogador, Pokemon pokemon, Move golpe, int slot, long agora, HitResult mirada,
       boolean semCarga, boolean daIa) {
+    this(jogador, pokemon, golpe, slot, agora, mirada, semCarga, daIa, Origem.NORMAL);
+  }
+
+  // 01/11: o golpe que outro chamou (UsarOutroGolpe): sai sem carga, na mira que o outro deixou, no lugar dele
+  public static Execucao chamadoPor(Execucao quemChamou, long agora) {
+    Execucao chamado = new Execucao(quemChamou.jogador, quemChamou.pokemon, quemChamou.chamado, quemChamou.slot, agora,
+        quemChamou.miraDoChamado, true, quemChamou.daIa, Origem.CHAMADO);
+    chamado.setinha = quemChamou.setinha;
+    return chamado;
+  }
+
+  // 01/11: o golpe de graça (a Instrução e o Dançarino): sem carga e sem recarga. "slot" -1 = um golpe que ele não tem
+  public static Execucao deGraca(ServerPlayer quemVe, Pokemon pokemon, Move golpe, int slot, long agora, HitResult mira,
+      Origem origem) {
+    return new Execucao(quemVe, pokemon, golpe, slot, agora, mira, true, true, origem);
+  }
+
+  private Execucao(ServerPlayer jogador, Pokemon pokemon, Move golpe, int slot, long agora, HitResult mirada,
+      boolean semCarga, boolean daIa, Origem origem) {
+    this.origem = origem;
     this.daIa = daIa;
     this.jogador = jogador;
     this.pokemon = pokemon;
@@ -99,6 +133,12 @@ public class Execucao {
       EstadoDosItens.comecouGolpe(pokemon, golpe);
       // 21/10 (habilidades, lote das reações): carregado (Electromorfose, Energia Eólica), o golpe Elétrico gasta a carga
       HabilidadesQueReagem.comecouGolpe(pokemon, golpe);
+      // 01/11: outro golpe no meio: a próxima Proteção volta a ter chance cheia (Protecao)
+      Protecao.comecouGolpe(pokemon, golpe);
+      // 01/11: o Laço do Destino e o Rancor acabam; o Aguçar e a Carga valem para este golpe (GolpesQueMarcam)
+      GolpesQueMarcam.comecouGolpe(pokemon, golpe);
+      // 01/11: o golpe Z que já começou acaba quando outro golpe começa (GolpesZ)
+      GolpesZ.comecouGolpe(pokemon, golpe, agora);
     }
     // 7.2d: no selvagem, só a parte até o impacto fica mais longa; o resto do golpe é igual
     long aMaisDoSelvagem = pokemon.isWild()
@@ -109,8 +149,9 @@ public class Execucao {
     this.tickFim = agora + Math.round((arquetipo.ticksTotais() - pulados) * ritmo) + aMaisDoSelvagem + cargaDoClima;
     this.tickImpactoMarcado = tickImpacto;
     this.entidade = pokemon.getEntity();
-    this.mirada = mirada;
-    this.aproximar = Corrida.longeDemais(golpe, entidade, mirada);
+    // 01/11: o golpe de alvo único pode ir parar num aliado do alvo (Siga-me, Pó de Raiva, Para-Raios, Drenagem)
+    this.mirada = Redirecionamento.mira(pokemon, golpe, mirada);
+    this.aproximar = Corrida.longeDemais(golpe, entidade, this.mirada);
     this.tickInicio = agora;
     this.barra = new ServerBossEvent(golpe.getDisplayName(), Feedback.corDaBarra(golpe),
         BossEvent.BossBarOverlay.PROGRESS);
@@ -180,14 +221,42 @@ public class Execucao {
     return daIa;
   }
 
+  public Origem getOrigem() {
+    return origem;
+  }
+
+  // O golpe gasta a vez (a recarga no fim)? O de graça, não
+  public boolean temRecarga() {
+    return slot >= 0 && origem != Origem.DE_GRACA && origem != Origem.DANCARINO;
+  }
+
+  // UsarOutroGolpe: este golpe chama outro, que começa quando este acertar
+  public void chamar(Move golpe, HitResult mira) {
+    chamado = golpe;
+    miraDoChamado = mira;
+  }
+
+  public Move getChamado() {
+    return chamado;
+  }
+
+  public void definirSetinha(int vaga) {
+    setinha = vaga;
+  }
+
+  public int getSetinha() {
+    return setinha;
+  }
+
   // O bicho em que a mira pegou (null = um ponto no chão): no golpe do guarda, o alvo escolhido pela IA
   public Entity alvoMirado() {
     return mirada instanceof EntityHitResult acerto ? acerto.getEntity() : null;
   }
 
-  // 7.4b: o golpe que a IA escolheu para um Pokémon com dono (o guarda); o do selvagem também é da IA, mas não é de guarda
+  // 7.4b: o golpe que a IA escolheu para um Pokémon com dono (o guarda); o do selvagem também é da IA, mas não é de guarda.
+  // 31/10: nem o do segundo da dupla (combate.Dupla), que luta a batalha como o seu lutador
   public boolean ehDoGuarda() {
-    return daIa && !pokemon.isWild();
+    return daIa && !pokemon.isWild() && !Lutadores.ehOSegundo(pokemon.getOwnerPlayer(), pokemon);
   }
 
   public boolean precisaAproximar() {
@@ -280,6 +349,6 @@ public class Execucao {
     return velocidadeBase * Estagios.multiplicador(pokemon, "spe") * Paralisia.multiplicador(pokemon)
         * ItensDeDano.velocidade(pokemon) * ClimaNosGolpes.velocidade(pokemon) * CampoEBarreiras.velocidade(pokemon)
         * HabilidadesDaConta.velocidade(pokemon) * Paradoxo.atributo(pokemon, "spe")
-        * HabilidadesDeForma.velocidade(pokemon);
+        * HabilidadesDeForma.velocidade(pokemon) * AtributosTrocados.multiplicador(pokemon, "spe");
   }
 }

@@ -46,13 +46,14 @@ public class Arenas {
         foraDaBola(jogador), false);
   }
 
-  // Os Pokémon da batalha: os selvagens e o lutador de cada jogador
+  // Os Pokémon da batalha: os selvagens e o lutador de cada jogador (na dupla, os dois dele)
   private static List<PokemonEntity> naLuta(Combate combate) {
     List<PokemonEntity> todos = new ArrayList<>(combate.getSelvagens());
     for (ServerPlayer jogador : combate.getJogadores()) {
-      Pokemon lutador = Lutadores.de(jogador);
-      if (lutador != null && lutador.getEntity() != null) {
-        todos.add(lutador.getEntity());
+      for (Pokemon pokemon : Lutadores.naLuta(jogador)) {
+        if (pokemon.getEntity() != null) {
+          todos.add(pokemon.getEntity());
+        }
       }
     }
     return todos;

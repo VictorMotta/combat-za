@@ -24,7 +24,8 @@ public class GolpesDesligados {
   }
 
   public static boolean bloqueia(Pokemon pokemon, int slot, Move golpe) {
-    return Provocacao.bloqueia(pokemon, golpe) || Bis.bloqueia(pokemon, slot);
+    // 01/11: Inabilitar, Atormentar, Bloqueio de Cura e Aprisionar (GolpesQueMarcam)
+    return Provocacao.bloqueia(pokemon, golpe) || Bis.bloqueia(pokemon, slot) || GolpesQueMarcam.bloqueia(pokemon, golpe);
   }
 
   // O seu aperto (ControleDeGolpes.usarGolpe): o golpe desligado não sai, e a barra de ação diz por quê. Sem recarga, como
@@ -38,6 +39,8 @@ public class GolpesDesligados {
       Move preso = Bis.golpePreso(pokemon);
       porque = Component.translatable("cobblemon_combat_za.golpe.so_o_bis", pokemon.getDisplayName(false),
           preso == null ? golpe.getDisplayName() : preso.getDisplayName());
+    } else {
+      porque = GolpesQueMarcam.porque(pokemon, golpe);
     }
     if (porque == null) {
       return false;

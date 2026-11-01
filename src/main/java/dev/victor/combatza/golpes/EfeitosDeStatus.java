@@ -12,6 +12,7 @@ import com.cobblemon.mod.common.pokemon.status.PersistentStatusContainer;
 
 import dev.victor.combatza.CobblemonCombatZA;
 import dev.victor.combatza.habilidades.Habilidades;
+import dev.victor.combatza.habilidades.HabilidadesDaDupla;
 import dev.victor.combatza.habilidades.HabilidadesDoTurno;
 import net.minecraft.SharedConstants;
 import net.minecraft.core.particles.ParticleTypes;
@@ -128,6 +129,10 @@ public class EfeitosDeStatus {
     if (Habilidades.tem(pokemon, Habilidades.PELE_VERTENTE)
         && entidade.getRandom().nextFloat() < Balanceamento.CHANCE_DA_PELE_VERTENTE) {
       trocarDePele(pokemon, sigla);
+      return;
+    }
+    // 01/11: a Cura de um aliado (HabilidadesDaDupla)
+    if (HabilidadesDaDupla.cura(entidade, sigla)) {
       return;
     }
     // 21/10 (habilidades, lote das reações): com Veneno Curador, o veneno cura 1/8 no lugar do dano

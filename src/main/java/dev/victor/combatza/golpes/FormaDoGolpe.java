@@ -11,11 +11,15 @@ public enum FormaDoGolpe {
   SEM_ALVO;
 
   public static FormaDoGolpe de(Move golpe) {
+    if (GolpesDeAliado.NO_ALIADO.contains(golpe.getName())) {
+      return SEM_ALVO;
+    }
     return switch (golpe.getTemplate().getTarget()) {
       case allAdjacentFoes -> AREA_INIMIGOS;
       case allAdjacent -> AREA_TODOS;
       case foeSide -> ARMADILHA;
-      case self, all, allies, allySide, allyTeam -> SEM_ALVO;
+      // 01/11: os de aliado (Mãozinha, Acupressão...) também: o aliado é achado pelo golpe (GolpesDeAliado)
+      case self, all, allies, allySide, allyTeam, adjacentAlly, adjacentAllyOrSelf -> SEM_ALVO;
       default -> UNICO;
     };
   }

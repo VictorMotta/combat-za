@@ -135,6 +135,11 @@ public class Combate {
         // 31/10: o chefão de uma raid que some vivo (a raid falhou: o tempo acabou ou todos perderam) não foi derrotado
         boolean vivo = selvagem.isAlive() && (!selvagem.isRemoved() || Raids.ehChefe(selvagem));
         (vivo && !caido ? fugiram : derrotados).add(selvagem.getPokemon());
+        // 01/11 (dele: "a raid parece que não tá dando XP"; escolheu "sim, como um selvagem"): o chefão derrotado dá o XP de
+        // derrotar a quem lutou com ele (a morte dele, pela raid, não passa pelo AFTER_DEATH da Experiencia)
+        if (!vivo && Raids.ehChefe(selvagem) && selvagem.getServer() != null) {
+          Experiencia.derrotado(selvagem.getServer(), selvagem.getPokemon());
+        }
         CobblemonCombatZA.LOGGER.info("Selvagem {} saiu do combate!", selvagem.getName().getString());
         Estagios.zerar(selvagem.getPokemon());
         ItensSegurados.esquecer(selvagem.getPokemon());

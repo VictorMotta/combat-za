@@ -2,9 +2,12 @@ package dev.victor.combatza.mega;
 
 import com.cobblemon.mod.common.battles.ShowdownMoveset;
 import com.cobblemon.mod.common.pokemon.Pokemon;
+import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
 import com.github.yajatkaul.mega_showdown.advancement.AdvancementHelper;
+import com.github.yajatkaul.mega_showdown.api.codec.ZCrystal;
 import com.github.yajatkaul.mega_showdown.gimmick.GimmickTurnCheck;
 import com.github.yajatkaul.mega_showdown.gimmick.MegaGimmick;
+import com.github.yajatkaul.mega_showdown.utils.GlowHandler;
 import com.github.yajatkaul.mega_showdown.utils.RegistryLocator;
 
 import net.minecraft.server.level.ServerPlayer;
@@ -52,5 +55,33 @@ class PonteDoMegaShowdown {
 
   static boolean ehMega(Pokemon pokemon) {
     return MegaGimmick.isMega(pokemon);
+  }
+
+  // 01/11 (o Tera e o golpe Z, decisões dele: "igual à Mega"): o Orbe Tera e o Anel Z (ou o Anel Ômni) equipados nos
+  // acessórios, como o bracelete da Mega
+  static boolean temOOrbeTera(ServerPlayer jogador) {
+    return GimmickTurnCheck.hasGimmick(ShowdownMoveset.Gimmick.TERASTALLIZATION, jogador);
+  }
+
+  static boolean temOAnelZ(ServerPlayer jogador) {
+    return GimmickTurnCheck.hasGimmick(ShowdownMoveset.Gimmick.Z_POWER, jogador);
+  }
+
+  // O Cristal Z que ele segura (o id do Showdown: "electriumz", "pikaniumz"...); null = nenhum
+  static String cristalZ(Pokemon pokemon) {
+    ZCrystal cristal = RegistryLocator.getComponent(ZCrystal.class, pokemon.heldItem());
+    return cristal == null ? null : cristal.showdown_item_id();
+  }
+
+  // O brilho do Mega Showdown: o da cor do tipo Tera, e o do cristal no Poder Z
+  static void brilhoTera(PokemonEntity entidade, String tipo) {
+    GlowHandler.applyTeraGlow(entidade, tipo);
+  }
+
+  static void brilhoZ(PokemonEntity entidade, Pokemon pokemon) {
+    ZCrystal cristal = RegistryLocator.getComponent(ZCrystal.class, pokemon.heldItem());
+    if (cristal != null) {
+      GlowHandler.applyZGlow(entidade, cristal);
+    }
   }
 }

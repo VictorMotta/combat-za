@@ -11,6 +11,7 @@ import com.cobblemon.mod.common.pokemon.Pokemon;
 import com.cobblemon.mod.common.pokemon.status.PersistentStatusContainer;
 
 import dev.victor.combatza.CobblemonCombatZA;
+import dev.victor.combatza.habilidades.Habilidades;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
@@ -22,6 +23,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 public class SonoECongelado {
   public static final ResourceLocation ID_PARADO = ResourceLocation.fromNamespaceAndPath(CobblemonCombatZA.MOD_ID,
       "parado");
+  private static final String MADRUGAR = "earlybird";
 
   private record Parado(Pokemon pokemon, String sigla, long acabaNoTick) {
   }
@@ -46,6 +48,10 @@ public class SonoECongelado {
       return;
     }
     Pokemon pokemon = entidade.getPokemon();
+    // 01/11: com Madrugar, o sono dura a metade (nos jogos, o contador do sono cai de 2 em 2)
+    if ("slp".equals(sigla) && Habilidades.tem(pokemon, MADRUGAR)) {
+      turnos = Math.max(1, (turnos + 1) / 2);
+    }
     CobblemonCombatZA.LOGGER.info("PARADO: {} ({}) por {} turno(s)", pokemon.getSpecies().getName(), sigla, turnos);
     PARADOS.put(pokemon.getUuid(), new Parado(pokemon, sigla, agora + turnos * EfeitosDeStatus.ticksPorTurno()));
     if ("slp".equals(sigla)) {

@@ -15,6 +15,7 @@ import com.cobblemon.mod.common.pokemon.Pokemon;
 import dev.victor.combatza.CobblemonCombatZA;
 import dev.victor.combatza.combate.AvisoDaBatalha;
 import dev.victor.combatza.combate.Combate;
+import dev.victor.combatza.combate.Dupla;
 import dev.victor.combatza.combate.Experiencia;
 import dev.victor.combatza.combate.Lutadores;
 import dev.victor.combatza.combate.SoltarNoSelvagem;
@@ -44,6 +45,8 @@ import net.minecraft.world.phys.Vec3;
 //   vem a partir de 18), sai do jogo, morre ou muda de mundo;
 // - No duelo o desmaio é só desmaio: nada de ficar caído no chão nem de captura (o Pokémon tem dono);
 // - O XP: cada Pokémon do adversário que desmaia dá o XP de derrotar a quem o enfrentou (Experiencia.derrotadoNoDuelo)
+// 31/10 (a dupla, decisões dele): o desafio "Duplas" do Cobblemon vira o duelo em dupla: dois de cada lado ao mesmo tempo,
+// você comanda um e o outro luta sozinho (combate.Dupla), e quem desmaia dá lugar ao próximo do time em 2 s
 public class Duelo extends Combate {
   public static final float DISTANCIA_PARA_DESISTIR = 24.0f;
   private static final float DISTANCIA_DO_AVISO = 18.0f;
@@ -65,6 +68,8 @@ public class Duelo extends Combate {
   private final ServerPlayer desafiante;
   private final ServerPlayer desafiado;
   private final int quantos;
+  // Quantos de cada lado lutam ao mesmo tempo: 1, ou 2 na dupla
+  private final int porLado;
   // O time de cada jogador (UUIDs dos Pokémon), na ordem em que entram: o primeiro é o da frente
   private final Map<UUID, List<UUID>> times = new HashMap<>();
   private final Vec3 meio;
@@ -77,12 +82,13 @@ public class Duelo extends Combate {
   private boolean abriu = false;
   private boolean acabou = false;
 
-  public Duelo(ServerPlayer desafiante, ServerPlayer desafiado, int quantos, List<UUID> timeDoDesafiante,
+  public Duelo(ServerPlayer desafiante, ServerPlayer desafiado, int quantos, int porLado, List<UUID> timeDoDesafiante,
       List<UUID> timeDoDesafiado) {
     super(desafiante.server.getTickCount());
     this.desafiante = desafiante;
     this.desafiado = desafiado;
     this.quantos = quantos;
+    this.porLado = porLado;
     times.put(desafiante.getUUID(), List.copyOf(timeDoDesafiante));
     times.put(desafiado.getUUID(), List.copyOf(timeDoDesafiado));
     meio = desafiante.position().add(desafiado.position()).scale(0.5);
@@ -120,12 +126,21 @@ public class Duelo extends Combate {
     return doTime(pokemon) && outro(jogador).getUUID().equals(pokemon.getOwnerUUID());
   }
 
-  // Do outro lado está o lutador do adversário. Antes dos dois estarem frente a frente, ninguém: a Intimidação de quem sai
-  // da bola no começo espera e pega dos dois lados juntos (abrir)
+  // Do outro lado está o lutador do adversário (na dupla, os dois dele). Antes dos dois lados estarem frente a frente,
+  // ninguém: a Intimidação de quem sai da bola no começo espera e pega dos dois lados juntos (abrir)
   @Override
   public List<PokemonEntity> inimigosDe(ServerPlayer jogador) {
-    Pokemon lutador = abriu ? Lutadores.de(outro(jogador)) : null;
-    return lutador == null || lutador.getEntity() == null ? List.of() : List.of(lutador.getEntity());
+    return abriu ? entidades(outro(jogador)) : List.of();
+  }
+
+  private static List<PokemonEntity> entidades(ServerPlayer jogador) {
+    List<PokemonEntity> entidades = new ArrayList<>();
+    for (Pokemon pokemon : Lutadores.naLuta(jogador)) {
+      if (pokemon.getEntity() != null) {
+        entidades.add(pokemon.getEntity());
+      }
+    }
+    return entidades;
   }
 
   // No duelo não entra selvagem (GerenciarCombates.entrarEmCombate já não deixa; isto é a garantia)
@@ -146,24 +161,27 @@ public class Duelo extends Combate {
   }
 
   // Duelos, logo depois de criar: os de fora do time voltam para a bola, e o da frente sai (ou, se já está fora, vira o
-  // lutador)
+  // lutador). Na dupla, os dois da frente (o segundo entra na vaga dele: combate.Dupla)
   public void comecar() {
     for (ServerPlayer jogador : List.of(desafiante, desafiado)) {
       Parceiro.desligar(jogador);
-      Pokemon primeiro = primeiroComVida(jogador);
+      if (porLado > 1) {
+        Lutadores.ligarADupla(jogador);
+        Dupla.avisarOComeco(jogador);
+      }
+      List<Pokemon> daFrente = primeirosComVida(jogador, porLado);
       for (Pokemon pokemon : Cobblemon.INSTANCE.getStorage().getParty(jogador)) {
         PokemonEntity entidade = pokemon.getEntity();
-        if (entidade != null && pokemon != primeiro) {
+        if (entidade != null && !daFrente.contains(pokemon)) {
           entidade.recallWithAnimation();
         }
       }
-      if (primeiro == null) {
-        continue;
-      }
-      if (primeiro.getEntity() != null) {
-        Lutadores.comecou(jogador, primeiro);
-      } else {
-        SoltarNoSelvagem.jogar(jogador, primeiro, ondeSoltar(jogador));
+      for (Pokemon primeiro : daFrente) {
+        if (primeiro.getEntity() != null) {
+          Lutadores.comecou(jogador, primeiro);
+        } else {
+          SoltarNoSelvagem.jogar(jogador, primeiro, ondeSoltar(jogador));
+        }
       }
     }
     CobblemonCombatZA.LOGGER.info("DUELO: {} x {}, {} Pokémon de cada lado", desafiante.getGameProfile().getName(),
@@ -203,21 +221,20 @@ public class Duelo extends Combate {
     Set<UUID> quem = new HashSet<>(enfrentaram.getOrDefault(outro.getUUID(), Map.of())
         .getOrDefault(pokemon.getUuid(), Set.of()));
     // O golpe que derruba no mesmo tick em que o lutador de lá entrou ainda não foi anotado
-    Pokemon lutadorDeLa = Lutadores.de(outro);
-    if (lutadorDeLa != null) {
-      quem.add(lutadorDeLa.getUuid());
+    for (Pokemon deLa : Lutadores.naLuta(outro)) {
+      quem.add(deLa.getUuid());
     }
     Experiencia.derrotadoNoDuelo(outro, pokemon, quem);
   }
 
+  // Na dupla, cada um dos seus enfrentou cada um dos dele
   private void anotarQuemEnfrentou() {
-    Pokemon doDesafiante = Lutadores.de(desafiante);
-    Pokemon doDesafiado = Lutadores.de(desafiado);
-    if (doDesafiante == null || doDesafiado == null) {
-      return;
+    for (Pokemon doDesafiante : Lutadores.naLuta(desafiante)) {
+      for (Pokemon doDesafiado : Lutadores.naLuta(desafiado)) {
+        anotar(desafiante, doDesafiante, doDesafiado);
+        anotar(desafiado, doDesafiado, doDesafiante);
+      }
     }
-    anotar(desafiante, doDesafiante, doDesafiado);
-    anotar(desafiado, doDesafiado, doDesafiante);
   }
 
   private void anotar(ServerPlayer jogador, Pokemon meu, Pokemon deLa) {
@@ -226,20 +243,38 @@ public class Duelo extends Combate {
   }
 
   // Os dois primeiros lutadores frente a frente: a Intimidação de quem entrou no começo pega agora, dos dois lados
+  // Na dupla, a abertura espera os dois de cada lado (ou os que o time tem)
   private void abrir() {
     if (abriu) {
       return;
     }
-    Pokemon doDesafiante = Lutadores.de(desafiante);
-    Pokemon doDesafiado = Lutadores.de(desafiado);
-    if (doDesafiante == null || doDesafiado == null) {
+    List<PokemonEntity> doDesafiante = entidades(desafiante);
+    List<PokemonEntity> doDesafiado = entidades(desafiado);
+    if (doDesafiante.size() < Math.min(porLado, comVida(desafiante))
+        || doDesafiado.size() < Math.min(porLado, comVida(desafiado)) || doDesafiante.isEmpty() || doDesafiado.isEmpty()) {
       return;
     }
     abriu = true;
-    Intimidacao.aoEntrar(doDesafiante.getEntity(), List.of(doDesafiado.getEntity()));
-    Intimidacao.aoEntrar(doDesafiado.getEntity(), List.of(doDesafiante.getEntity()));
-    CobblemonCombatZA.LOGGER.info("DUELO: {} x {}, frente a frente", doDesafiante.getSpecies().getName(),
-        doDesafiado.getSpecies().getName());
+    for (PokemonEntity entidade : doDesafiante) {
+      Intimidacao.aoEntrar(entidade, doDesafiado);
+    }
+    for (PokemonEntity entidade : doDesafiado) {
+      Intimidacao.aoEntrar(entidade, doDesafiante);
+    }
+    CobblemonCombatZA.LOGGER.info("DUELO: {} x {}, frente a frente", nomes(doDesafiante), nomes(doDesafiado));
+  }
+
+  private static String nomes(List<PokemonEntity> entidades) {
+    List<String> nomes = new ArrayList<>();
+    for (PokemonEntity entidade : entidades) {
+      nomes.add(entidade.getPokemon().getSpecies().getName());
+    }
+    return String.join(" e ", nomes);
+  }
+
+  // Quantos do time de "jogador" ainda podem lutar
+  private int comVida(ServerPlayer jogador) {
+    return primeirosComVida(jogador, Integer.MAX_VALUE).size();
   }
 
   private Derrota derrota(ServerPlayer jogador, long agora) {
@@ -277,20 +312,28 @@ public class Duelo extends Combate {
 
   // O primeiro do time com vida, na ordem do time (o da frente primeiro); null = nenhum
   private Pokemon primeiroComVida(ServerPlayer jogador) {
+    List<Pokemon> primeiros = primeirosComVida(jogador, 1);
+    return primeiros.isEmpty() ? null : primeiros.get(0);
+  }
+
+  // Os primeiros "quantos" do time com vida, na ordem do time
+  private List<Pokemon> primeirosComVida(ServerPlayer jogador, int quantos) {
+    List<Pokemon> primeiros = new ArrayList<>();
     List<UUID> time = times.getOrDefault(jogador.getUUID(), List.of());
     for (UUID uuid : time) {
       for (Pokemon pokemon : Cobblemon.INSTANCE.getStorage().getParty(jogador)) {
-        if (pokemon.getUuid().equals(uuid) && !pokemon.isFainted()) {
-          return pokemon;
+        if (primeiros.size() < quantos && pokemon.getUuid().equals(uuid) && !pokemon.isFainted()) {
+          primeiros.add(pokemon);
         }
       }
     }
-    return null;
+    return primeiros;
   }
 
-  // Sem lutador e ninguém do time fora da bola: avisa uma vez; passados os 15 s, o primeiro com vida entra sozinho
+  // Sem lutador e ninguém do time fora da bola: avisa uma vez; passados os 15 s, o primeiro com vida entra sozinho. Na dupla,
+  // quem manda o próximo é a Dupla (2 s)
   private void trocaForcada(ServerPlayer jogador, long agora) {
-    if (Lutadores.de(jogador) != null || alguemDoTimeFora(jogador)) {
+    if (Lutadores.emDupla(jogador) || Lutadores.de(jogador) != null || alguemDoTimeFora(jogador)) {
       semLutadorDesde.remove(jogador.getUUID());
       return;
     }

@@ -61,6 +61,10 @@ public class Vida {
   }
 
   public static int curar(PokemonEntity entidade, double pv) {
+    // 01/11: no Bloqueio de Cura, nada cura (GolpesQueMarcam)
+    if (GolpesQueMarcam.semCura(entidade.getPokemon())) {
+      return 0;
+    }
     Integer noChefe = Raids.curarOChefe(entidade, pv);
     if (noChefe != null) {
       return noChefe;

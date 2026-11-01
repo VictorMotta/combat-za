@@ -46,7 +46,36 @@ public class ItensDeVida {
       ItensSegurados.PECHA, List.of("psn", "tox"), ItensSegurados.RAWST, List.of("brn"),
       ItensSegurados.ASPEAR, List.of("frz"), ItensSegurados.LUM, List.of("par", "slp", "psn", "tox", "brn", "frz"));
 
+  // 01/11: Boca Cheia e Hora do Chá (golpes.GolpesNaHora): a baga é comida agora, sem esperar a vida baixa ou o status
+  private static boolean comendoAgora = false;
+
   private ItensDeVida() {
+  }
+
+  public static boolean comendoAgora() {
+    return comendoAgora;
+  }
+
+  // Come a baga que ele segura agora: o efeito dela, se tiver um; senão, só come. true = comeu
+  public static boolean comerAgora(PokemonEntity entidade) {
+    Pokemon pokemon = entidade.getPokemon();
+    String baga = ItensSegurados.id(pokemon);
+    Combate combate = GerenciarCombates.combateDe(pokemon);
+    if (!baga.endsWith("berry") || combate == null) {
+      return false;
+    }
+    comendoAgora = true;
+    try {
+      frutas(combate, entidade);
+      Bagas.aCadaTick(entidade);
+    } finally {
+      comendoAgora = false;
+    }
+    if (baga.equals(ItensSegurados.id(pokemon)) && !ItensSegurados.usadoNestaBatalha(pokemon, baga)) {
+      Component nome = ItensSegurados.gastarComNome(pokemon, baga);
+      avisar(combate, pokemon, Component.translatable("cobblemon.battle.enditem.eat", pokemon.getDisplayName(false), nome));
+    }
+    return true;
   }
 
   // A cada tick: as frutas; a cada turno de 3,5 s, as Sobras e o Lodo
@@ -71,13 +100,14 @@ public class ItensDeVida {
     HabilidadesDoTurno.atualizar(agora);
   }
 
-  // Os selvagens e o lutador de cada jogador
+  // Os selvagens e o lutador de cada jogador (na dupla, os dois dele)
   private static List<PokemonEntity> daBatalha(Combate combate) {
     List<PokemonEntity> todos = new ArrayList<>(combate.getSelvagens());
     for (ServerPlayer jogador : combate.getJogadores()) {
-      Pokemon lutador = Lutadores.de(jogador);
-      if (lutador != null && lutador.getEntity() != null) {
-        todos.add(lutador.getEntity());
+      for (Pokemon naLuta : Lutadores.naLuta(jogador)) {
+        if (naLuta.getEntity() != null) {
+          todos.add(naLuta.getEntity());
+        }
       }
     }
     return todos;
@@ -89,7 +119,7 @@ public class ItensDeVida {
     if (item.isEmpty()) {
       return;
     }
-    boolean naMetade = Vida.pvAtual(pokemon) * METADE <= pokemon.getMaxHealth();
+    boolean naMetade = Vida.pvAtual(pokemon) * METADE <= pokemon.getMaxHealth() || comendoAgora;
     // 21/10 (habilidades, lote da conta do dano): com Amadurecer, as bagas curam o dobro (o Suco de Baga não é baga)
     if (ItensSegurados.ORAN.equals(item) && naMetade) {
       comerParaCurar(combate, entidade, item, HabilidadesDaConta.amadurecida(pokemon, ORAN));

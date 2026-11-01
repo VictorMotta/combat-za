@@ -10,9 +10,12 @@ import com.cobblemon.mod.common.api.types.ElementalTypes;
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
 import com.cobblemon.mod.common.pokemon.Pokemon;
 
+import dev.victor.combatza.mega.Tera;
+import dev.victor.combatza.mega.GolpesZ;
 import dev.victor.combatza.CobblemonCombatZA;
 import dev.victor.combatza.golpes.EfeitosDeStatus;
 import dev.victor.combatza.golpes.Execucao;
+import dev.victor.combatza.golpes.GolpesQueMarcam;
 import dev.victor.combatza.golpes.Feedback;
 import dev.victor.combatza.golpes.Vida;
 import dev.victor.combatza.habilidades.Habilidades;
@@ -94,6 +97,20 @@ public class ClimaNosGolpes {
 
   // O tipo do golpe agora (a Esfera Climática muda com o clima; o Julgamento, o Multiataque e a Tecno-Explosão, com o item)
   public static ElementalType tipo(Pokemon atacante, Move golpe) {
+    // 01/11: o golpe Z especial tem o tipo dele (GolpesZ); a Explosão Tera do terastalizado é do tipo Tera (Tera)
+    ElementalType doGolpeZ = GolpesZ.tipo(atacante, golpe);
+    if (doGolpeZ != null) {
+      return doGolpeZ;
+    }
+    // 01/11: o Eletrificar (GolpesQueMarcam)
+    ElementalType eletrificado = GolpesQueMarcam.tipoDoGolpe(atacante);
+    if (eletrificado != null) {
+      return eletrificado;
+    }
+    ElementalType doTera = Tera.tipoDoGolpe(atacante, golpe);
+    if (doTera != null) {
+      return doTera;
+    }
     // 21/10 (lote das formas): a Roda Áurea do Morpeko muda com a forma dele (Mudapetite)
     ElementalType daForma = HabilidadesDeForma.tipoDoGolpe(atacante, golpe);
     if (daForma != null) {
@@ -109,8 +126,9 @@ public class ClimaNosGolpes {
     if (daHabilidade != null) {
       return daHabilidade;
     }
+    // 01/11: na Chuva de Plasma, o Normal vira Elétrico (CampoDosGolpes)
     if (!ESFERA_CLIMATICA.equals(golpe.getName())) {
-      return golpe.getType();
+      return CampoDosGolpes.plasma(atacante, golpe.getType());
     }
     return switch (EfeitosDoCampo.clima(atacante)) {
       case SOL -> ElementalTypes.FIRE;
@@ -238,7 +256,8 @@ public class ClimaNosGolpes {
       avisar(arena, pokemon, Component.translatable("cobblemon_combat_za.campo.curou",
           pokemon.getDisplayName(false), Habilidades.nome(pokemon), curou));
     }
-    if (fere > 0) {
+    // 01/11: fora da batalha, o clima não fere (o Poder Solar e a Pele Seca no Sol também não; a cura continua: EfeitosDoCampo)
+    if (fere > 0 && arena.naBatalha()) {
       int pv = Math.max(1, pokemon.getMaxHealth() / fere);
       CobblemonCombatZA.LOGGER.info("CLIMA: {} −{} PV ({})", pokemon.getSpecies().getName(), pv, habilidade);
       avisar(arena, pokemon, Component.translatable("cobblemon_combat_za.campo.feriu",

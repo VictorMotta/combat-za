@@ -6,7 +6,9 @@ import com.cobblemon.mod.common.api.moves.Move;
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
 import com.cobblemon.mod.common.pokemon.Pokemon;
 
+import dev.victor.combatza.mega.GolpesZ;
 import dev.victor.combatza.CobblemonCombatZA;
+import dev.victor.combatza.campo.CampoDosGolpes;
 import dev.victor.combatza.campo.ClimaNosGolpes;
 import dev.victor.combatza.habilidades.Habilidades;
 import dev.victor.combatza.habilidades.HabilidadesDaConta;
@@ -47,7 +49,9 @@ public class Precisao {
 
   // De 0 a 1: a chance de o golpe acertar este Pokémon (o resto é a chance de ele desviar)
   public static double chanceDeAcertar(Pokemon atacante, Move golpe, Pokemon alvo) {
-    if (nuncaErra(golpe) || Habilidades.tem(atacante, INDEFESO) || Habilidades.tem(alvo, INDEFESO)) {
+    // 01/11: Mirar, Leitura Mental, Telecinese e Pisotear no Minimizado (GolpesQueMarcam)
+    if (nuncaErra(golpe) || Habilidades.tem(atacante, INDEFESO) || Habilidades.tem(alvo, INDEFESO)
+        || GolpesQueMarcam.naoErra(atacante, golpe, alvo)) {
       return 1.0;
     }
     // 5b.2: o Trovão na Chuva nunca erra, no Sol tem 50%...
@@ -58,7 +62,8 @@ public class Precisao {
     double chance = precisao / 100.0 * ClimaNosGolpes.evasao(alvo);
     // 21/10 (habilidades, lote da conta do dano): a Ignorância de um ignora os estágios do outro
     chance *= multiplicador(HabilidadesDaConta.estagioQueVale(atacante, alvo, "accuracy"));
-    if (!IGNORAM_A_EVASAO.contains(Habilidades.atual(atacante))) {
+    // 01/11: a evasão do identificado (Previsão, Farejador, Olho Milagroso) não conta
+    if (!IGNORAM_A_EVASAO.contains(Habilidades.atual(atacante)) && !GolpesQueMarcam.semEvasao(alvo)) {
       chance /= multiplicador(HabilidadesDaConta.estagioQueVale(alvo, atacante, "evasion"));
     }
     // 21/10: Pele Milagrosa, Pés Laçados e Entusiasmo
@@ -68,13 +73,17 @@ public class Precisao {
     }
     // Lote 2 dos itens: Lentes Largas, Lentes de Aumento, Baga Micle e Pó Brilhante
     chance *= ItensDePrecisao.multiplicador(atacante, alvo);
+    // 01/11: a Gravidade (CampoDosGolpes)
+    chance *= CampoDosGolpes.precisao(atacante);
     return Math.min(1.0, chance);
   }
 
   // O sorteio, uma vez por alvo em cada golpe (Execucao.sortearContra): o jato e a bola que já sortearam não sorteiam de
   // novo no acerto. Devolve se ele desviou (e já pulou e avisou)
   public static boolean desviou(Execucao execucao, PokemonEntity atacante, Entity alvo) {
-    if (!(alvo instanceof PokemonEntity entidade) || !entidade.isAlive() || !execucao.sortearContra(alvo)) {
+    // 01/11: o golpe Z nunca erra (GolpesZ)
+    if (!(alvo instanceof PokemonEntity entidade) || !entidade.isAlive() || !execucao.sortearContra(alvo)
+        || GolpesZ.emUso(execucao.getPokemon(), execucao.getGolpe())) {
       return false;
     }
     Pokemon defensor = entidade.getPokemon();

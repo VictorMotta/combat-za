@@ -54,6 +54,11 @@ public class TiposNaBatalha {
   private TiposNaBatalha() {
   }
 
+  // 01/11: o Impostor copia os tipos do alvo (Disfarces)
+  public static void definir(Pokemon pokemon, List<ElementalType> tipos) {
+    TROCADOS.put(pokemon.getUuid(), new Troca(pokemon, List.copyOf(tipos)));
+  }
+
   // Os tipos de agora: a troca da batalha, o item do Arceus e do Silvally, ou os da forma (o primeiro é o principal)
   public static List<ElementalType> de(Pokemon pokemon) {
     Troca troca = TROCADOS.get(pokemon.getUuid());

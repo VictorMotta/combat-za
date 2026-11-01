@@ -18,6 +18,9 @@ import com.cobblemon.mod.common.battles.pokemon.BattlePokemon;
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
 import com.cobblemon.mod.common.pokemon.Pokemon;
 
+import dev.victor.combatza.party.SinalDaParty;
+import dev.victor.combatza.mega.GolpesZ;
+import dev.victor.combatza.mega.Tera;
 import dev.victor.combatza.SemDerrubar;
 import dev.victor.combatza.captura.ChanceDeCaptura;
 import dev.victor.combatza.combate.Experiencia;
@@ -29,6 +32,7 @@ import dev.victor.combatza.combate.Rolamento;
 import dev.victor.combatza.combate.SoltarNoSelvagem;
 import dev.victor.combatza.config.ComandoCombatZA;
 import dev.victor.combatza.config.Configuracao;
+import dev.victor.combatza.golpes.TrocaDeItens;
 import dev.victor.combatza.golpes.AgendaDeGolpes;
 import dev.victor.combatza.golpes.AnimacoesDeAtaque;
 import dev.victor.combatza.golpes.AnimacoesDeBatalha;
@@ -88,6 +92,12 @@ import dev.victor.combatza.mega.Mega;
 import dev.victor.combatza.combate.EterEElixir;
 import dev.victor.combatza.combate.Mochila;
 import dev.victor.combatza.combate.Raids;
+import dev.victor.combatza.combate.Dupla;
+import dev.victor.combatza.combate.ApoiosDaRaid;
+import dev.victor.combatza.habilidades.HabilidadesDaDupla;
+import dev.victor.combatza.habilidades.Disfarces;
+import dev.victor.combatza.golpes.Protecao;
+import dev.victor.combatza.golpes.Redirecionamento;
 import dev.victor.combatza.captura.Desmaio;
 import dev.victor.combatza.party.ComandoParty;
 import dev.victor.combatza.party.Parties;
@@ -141,6 +151,7 @@ public class CobblemonCombatZA implements ModInitializer {
   public void onInitialize() {
     LOGGER.info("Cobblemon Combat ZA carregou!");
     EfeitosDosGolpes.carregar();
+    GolpesZ.carregar();
     Configuracao.carregar();
     ComandoCombatZA.registrar();
     ComandoParty.registrar();
@@ -173,7 +184,14 @@ public class CobblemonCombatZA implements ModInitializer {
         vigiaDoServidor.parar();
         vigiaDoServidor = null;
       }
+      // 01/11: o Ditto transformado (Impostor) volta aos golpes dele antes de o mundo ser salvo
+      SemDerrubar.rodar("Disfarces.limpar", Disfarces::limpar);
+      // 01/11: os itens trocados pela Travessura voltam para os donos antes de salvar (golpes.TrocaDeItens)
+      SemDerrubar.rodar("TrocaDeItens.limpar", TrocaDeItens::limpar);
     });
+    // 01/11: um Ditto que ficou transformado (o servidor caiu no meio da batalha) volta aos golpes dele ao entrar no jogo
+    ServerPlayConnectionEvents.JOIN.register(SemDerrubar.aoEntrar("Disfarces.JOIN",
+        (conexao, remetente, servidor) -> Disfarces.aoEntrarNoJogo(conexao.getPlayer())));
     // 23/10: cada parte roda protegida (SemDerrubar): um erro numa delas não derruba mais o servidor
     ServerTickEvents.END_SERVER_TICK.register(servidor -> {
       if (vigiaDoServidor != null) {
@@ -181,6 +199,13 @@ public class CobblemonCombatZA implements ModInitializer {
       }
       SemDerrubar.rodar("GerenciarCombates", () -> GerenciarCombates.atualizar());
       SemDerrubar.rodar("IaDoSelvagem", () -> IaDoSelvagem.atualizar(servidor));
+      // 31/10: na dupla, o próximo entra sozinho na vaga que sobrou
+      SemDerrubar.rodar("Dupla", () -> Dupla.atualizar(servidor));
+      // 01/11: o Tatsugiri do Comandante aparece quando o Dondozo sai da luta
+      SemDerrubar.rodar("HabilidadesDaDupla", HabilidadesDaDupla::atualizar);
+      SemDerrubar.rodar("Protecao", () -> Protecao.atualizar(servidor.getTickCount()));
+      SemDerrubar.rodar("Redirecionamento", () -> Redirecionamento.atualizar(servidor.getTickCount()));
+      SemDerrubar.rodar("Disfarces", () -> Disfarces.atualizar(servidor));
       SemDerrubar.rodar("Guardas", () -> Guardas.atualizar(servidor));
       SemDerrubar.rodar("Parceiro", () -> Parceiro.atualizar(servidor));
       SemDerrubar.rodar("AgendaDeGolpes", () -> AgendaDeGolpes.atualizar(servidor.getTickCount()));
@@ -227,6 +252,14 @@ public class CobblemonCombatZA implements ModInitializer {
       Passivas.limpar();
       CorridaMontada.limpar();
       Lutadores.limpar();
+      Dupla.limpar();
+      HabilidadesDaDupla.limpar();
+      Protecao.limpar();
+      Redirecionamento.limpar();
+      ApoiosDaRaid.limpar();
+      Tera.limpar();
+      SinalDaParty.limpar();
+      GolpesZ.limpar();
       AgendaDeGolpes.limpar();
       Jatos.limpar();
       Cargas.limpar();
@@ -306,6 +339,9 @@ public class CobblemonCombatZA implements ModInitializer {
         (payload, contexto) -> Lutadores.entrarQuemEstaFora(contexto.player(), payload.vaga()));
     Guardas.registrar();
     Parceiro.registrar();
+    Dupla.registrar();
+    SinalDaParty.registrar();
+    ApoiosDaRaid.registrar();
     Mega.registrar();
     // 21/10 (golpes de status que faltavam): Provocação, Bis, Atração, Troca de Habilidades (o relógio, a volta para a bola
     // e o pacote dos golpes riscados)
@@ -457,6 +493,11 @@ public class CobblemonCombatZA implements ModInitializer {
 
   private void aoRecolher(PokemonRecallEvent.Post evento) {
     Pokemon pokemon = evento.getPokemon();
+    Protecao.esquecer(pokemon);
+    Redirecionamento.esquecer(pokemon);
+    Disfarces.aoRecolher(pokemon);
+    Tera.esquecer(pokemon);
+    GolpesZ.esquecer(pokemon);
     Estagios.zerar(pokemon);
     EfeitosDeStatus.esquecer(pokemon);
     PrimeiroTurno.esquecer(pokemon);

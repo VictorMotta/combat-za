@@ -183,7 +183,7 @@ public class HabilidadesDeEstagio {
     return mudaram;
   }
 
-  private static long ateQuando(Pokemon pokemon) {
+  public static long ateQuando(Pokemon pokemon) {
     PokemonEntity entidade = pokemon.getEntity();
     long agora = entidade != null && entidade.getServer() != null ? entidade.getServer().getTickCount() : 0;
     return agora + SEGUNDOS * SharedConstants.TICKS_PER_SECOND;

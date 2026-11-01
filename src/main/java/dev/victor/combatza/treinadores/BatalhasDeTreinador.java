@@ -103,7 +103,8 @@ public final class BatalhasDeTreinador {
     return POR_JOGADOR.containsKey(jogador.getUUID());
   }
 
-  static void comecar(ServerPlayer jogador, LivingEntity treinador, List<Pokemon> modelos) {
+  // porLado: quantos de cada lado lutam ao mesmo tempo (2 na dupla)
+  static void comecar(ServerPlayer jogador, LivingEntity treinador, List<Pokemon> modelos, int porLado) {
     Component nome = treinador.getDisplayName();
     if (!treinador.isAlive() || treinador.isRemoved() || jogador.level() != treinador.level()
         || jogador.distanceTo(treinador) > LONGE_PARA_COMECAR) {
@@ -141,10 +142,11 @@ public final class BatalhasDeTreinador {
       return;
     }
     long agora = servidor.getTickCount();
-    BatalhaDeTreinador batalha = new BatalhaDeTreinador(jogador, treinador, time, dados, agora);
+    BatalhaDeTreinador batalha = new BatalhaDeTreinador(jogador, treinador, time, dados, porLado, agora);
     POR_JOGADOR.put(jogador.getUUID(), batalha);
-    CobblemonCombatZA.LOGGER.info("TREINADOR: batalha em TEMPO REAL de {} contra {} ({} Pokémon; bolsa {})",
-        jogador.getGameProfile().getName(), PonteDoRct.id(treinador), time.size(), dados == null ? "?" : dados.bolsa());
+    CobblemonCombatZA.LOGGER.info("TREINADOR: batalha em TEMPO REAL de {} contra {} ({} Pokémon{}; bolsa {})",
+        jogador.getGameProfile().getName(), PonteDoRct.id(treinador), time.size(), porLado > 1 ? ", em DUPLA" : "",
+        dados == null ? "?" : dados.bolsa());
     batalha.comecar(jogador, agora);
   }
 
@@ -291,6 +293,24 @@ public final class BatalhasDeTreinador {
   public static void esperar(PokemonEntity doTreinador, ServerPlayer adversario) {
     Andar.parar(doTreinador);
     doTreinador.getLookControl().setLookAt(adversario, 30f, 30f);
+  }
+
+  // 01/11 (golpes.Saidas): o Pokémon do treinador volta para a bola e o próximo sai. false = não deu
+  public static boolean trocarAForca(PokemonEntity entidade, long agora) {
+    Registro registro = POR_ENTIDADE.get(entidade.getUUID());
+    return registro != null && registro.batalha().trocarAForca(entidade, agora);
+  }
+
+  // 01/11 (golpes.Saidas): o treinador deste Pokémon ainda tem outro para mandar?
+  public static boolean temProximo(PokemonEntity entidade) {
+    Registro registro = POR_ENTIDADE.get(entidade.getUUID());
+    return registro != null && registro.batalha().temProximo();
+  }
+
+  // 01/11 (golpes.Saidas): o treinador dono deste Pokémon (null = não é de treinador)
+  public static UUID treinadorDe(PokemonEntity entidade) {
+    Registro registro = POR_ENTIDADE.get(entidade.getUUID());
+    return registro == null ? null : registro.batalha().treinador().getUUID();
   }
 
   public static boolean ehDeTreinador(Combate combate) {

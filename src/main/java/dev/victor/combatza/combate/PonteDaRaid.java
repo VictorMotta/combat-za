@@ -168,6 +168,25 @@ final class PonteDaRaid {
     }
   }
 
+  // Uma das vezes que o jogador pode torcer nesta raid (RaidInstance.playerMap → RaidPlayer.useCheer, o limite do chefão).
+  // false = acabaram. Se o mod de raid não responder, deixa (o item é gasto do mesmo jeito)
+  static boolean gastarUmApoio(Object raid, ServerPlayer jogador) {
+    try {
+      Field campo = raid.getClass().getDeclaredField("playerMap");
+      campo.setAccessible(true);
+      Object doJogador = ((Map<?, ?>) campo.get(raid)).get(jogador.getUUID());
+      if (doJogador == null) {
+        return true;
+      }
+      Method torcer = doJogador.getClass().getDeclaredMethod("useCheer");
+      torcer.setAccessible(true);
+      return (Boolean) torcer.invoke(doJogador);
+    } catch (ReflectiveOperationException | RuntimeException | LinkageError erro) {
+      quebrou("useCheer", erro);
+      return true;
+    }
+  }
+
   static float vida(Object raid) {
     return numero(raid, "getCurrentHealth");
   }

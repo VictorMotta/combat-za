@@ -1,5 +1,6 @@
 package dev.victor.combatza.golpes;
 
+import dev.victor.combatza.habilidades.Disfarces;
 import dev.victor.combatza.campo.CampoEBarreiras;
 import dev.victor.combatza.campo.ClimaNosGolpes;
 import dev.victor.combatza.campo.SalaTrick;
@@ -107,6 +108,14 @@ public class Recargas {
     }
   }
 
+  // 01/11: o Ataque Rancoroso: este golpe espera "ticks" a mais (contando de agora, se ele já estava pronto)
+  public static void atrasar(Pokemon pokemon, int slot, long ticks, long agora) {
+    long[] prontos = PRONTO_NO_TICK.computeIfAbsent(pokemon.getUuid(),
+        uuid -> new long[ControleDeGolpes.MAXIMO_DE_GOLPES]);
+    prontos[slot] = Math.max(prontos[slot], agora) + ticks;
+    avisarODono(pokemon, slot, (int) (prontos[slot] - agora));
+  }
+
   // O Éter Máximo e o Elixir Máximo: o golpe fica pronto agora
   public static void zerar(Pokemon pokemon, int slot, long agora) {
     long[] prontos = PRONTO_NO_TICK.get(pokemon.getUuid());
@@ -145,7 +154,8 @@ public class Recargas {
   // A Velocidade de verdade (o atributo), com os estágios, a paralisia, os itens, o clima e o Vento de Cauda
   // A Velocidade de verdade na batalha (todos os fatores, sem o Truque de Agilidade); também a do Giro Bola (DanoEspecial)
   static double velocidadeDaRecarga(Pokemon pokemon) {
-    return pokemon.getSpeed() * Estagios.multiplicador(pokemon, "spe") * Paralisia.multiplicador(pokemon)
+    return pokemon.getSpeed() * Disfarces.atributo(pokemon, "spe") * AtributosTrocados.multiplicador(pokemon, "spe") * Estagios.multiplicador(pokemon, "spe")
+        * Paralisia.multiplicador(pokemon)
         * ItensDeDano.velocidade(pokemon) * ClimaNosGolpes.velocidade(pokemon) * CampoEBarreiras.velocidade(pokemon)
         * HabilidadesDaConta.velocidade(pokemon) * Paradoxo.atributo(pokemon, "spe")
         * HabilidadesDeForma.velocidade(pokemon);

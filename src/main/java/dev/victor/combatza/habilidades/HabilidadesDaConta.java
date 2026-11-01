@@ -14,6 +14,7 @@ import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
 import com.cobblemon.mod.common.pokemon.Gender;
 import com.cobblemon.mod.common.pokemon.Pokemon;
 
+import dev.victor.combatza.combate.ApoiosDaRaid;
 import dev.victor.combatza.CobblemonCombatZA;
 import dev.victor.combatza.campo.CampoEBarreiras;
 import dev.victor.combatza.campo.Clima;
@@ -154,6 +155,8 @@ public class HabilidadesDaConta {
     if (mudouOTipo(atacante, golpe)) {
       multiplicador *= UM_VIRGULA_DOIS;
     }
+    // 01/11: Bateria, Fonte de Energia e Espírito Férreo (de um aliado: HabilidadesDaDupla)
+    multiplicador *= HabilidadesDaDupla.poder(atacante, golpe, tipo);
     switch (habilidade) {
       case "ironfist" -> multiplicador *= EfeitosDosGolpes.ehSoco(golpe) ? UM_VIRGULA_DOIS : 1.0;
       case "megalauncher" -> multiplicador *= EfeitosDosGolpes.temMarca(golpe, "pulse") ? UM_E_MEIO : 1.0;
@@ -217,6 +220,8 @@ public class HabilidadesDaConta {
     if (HabilidadesDaBatalha.sobRuina(atacante, defensor, fisico ? "tabletsofruin" : "vesselofruin")) {
       multiplicador *= RUINA;
     }
+    // 01/11: Mais e Menos (com um aliado: HabilidadesDaDupla); o Apoio de Ataque da raid (ApoiosDaRaid)
+    multiplicador *= HabilidadesDaDupla.ataque(atacante, fisico) * ApoiosDaRaid.ataque(atacante);
     return anotar("ataque", atacante, defensor, multiplicador);
   }
 
@@ -235,6 +240,8 @@ public class HabilidadesDaConta {
     if (HabilidadesDaBatalha.sobRuina(defensor, atacante, fisico ? "swordofruin" : "beadsofruin")) {
       multiplicador *= RUINA;
     }
+    // 01/11: o Apoio de Defesa da raid (ApoiosDaRaid)
+    multiplicador *= ApoiosDaRaid.defesa(defensor);
     return anotar("defesa", atacante, defensor, multiplicador);
   }
 
@@ -267,6 +274,8 @@ public class HabilidadesDaConta {
         || Habilidades.tem(defensor, "punkrock") && EfeitosDosGolpes.ehDeSom(golpe)) {
       multiplicador *= METADE;
     }
+    // 01/11: a Proteção Amiga de um aliado de quem apanha (HabilidadesDaDupla)
+    multiplicador *= HabilidadesDaDupla.danoFinal(defensor);
     switch (Habilidades.atual(atacante)) {
       case "neuroforce" -> multiplicador *= efetividade > 1.0 ? FORCA_NEURAL : 1.0;
       case "tintedlens" -> multiplicador *= efetividade > 0 && efetividade < 1.0 ? DOBRO : 1.0;
@@ -334,6 +343,8 @@ public class HabilidadesDaConta {
     if (Habilidades.tem(atacante, "hustle") && fisico(golpe)) {
       resultado *= ENTUSIASMO_NA_PRECISAO;
     }
+    // 01/11: a Estrela Vitória dele ou de um aliado (HabilidadesDaDupla)
+    resultado *= HabilidadesDaDupla.precisao(atacante);
     anotar("precisão", atacante, alvo, chance > 0 ? resultado / chance : 1.0);
     return resultado;
   }

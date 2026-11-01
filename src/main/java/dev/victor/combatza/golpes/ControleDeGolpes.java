@@ -10,6 +10,7 @@ import com.cobblemon.mod.common.api.types.ElementalTypes;
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
 import com.cobblemon.mod.common.pokemon.Pokemon;
 
+import dev.victor.combatza.mega.GolpesZ;
 import dev.victor.combatza.CobblemonCombatZA;
 import dev.victor.combatza.campo.CampoEBarreiras;
 import dev.victor.combatza.captura.Irritados;
@@ -21,6 +22,7 @@ import dev.victor.combatza.combate.GerenciarCombates;
 import dev.victor.combatza.combate.Lados;
 import dev.victor.combatza.combate.Lutadores;
 import dev.victor.combatza.habilidades.Absorcao;
+import dev.victor.combatza.habilidades.HabilidadesDaDupla;
 import dev.victor.combatza.ia.Guardas;
 import dev.victor.combatza.ia.Parceiro;
 import dev.victor.combatza.mega.Mega;
@@ -126,7 +128,8 @@ public class ControleDeGolpes {
       return;
     }
 
-    if (SonoECongelado.estaParado(pokemon)) {
+    // 01/11: dormindo, só o Ataque Sonâmbulo e o Ronco (UsarOutroGolpe)
+    if (SonoECongelado.estaParado(pokemon) && !UsarOutroGolpe.usaDormindo(pokemon, golpe)) {
       CobblemonCombatZA.LOGGER.info("{} está parado (dormindo ou congelado): {} ignorado",
           pokemon.getSpecies().getName(), golpe.getName());
       Feedback.historico(jogador, pokemon,
@@ -169,11 +172,15 @@ public class ControleDeGolpes {
       return;
     }
 
+    // 01/11: com o Poder Z armado, o golpe que serve ao cristal sai como golpe Z (GolpesZ)
+    GolpesZ.aoUsar(jogador, pokemon, golpe, agora);
     boolean semCarga = Cargas.aoUsar(pokemon, slotGolpe, golpe);
     Execucao execucao = AgendaDeGolpes.iniciar(jogador, pokemon, golpe, slotGolpe, agora, pedido.alvoTravado(),
         semCarga, marcadorDoPedido(jogador, pokemon, golpe, pedido));
     TravaDaEscolha.usou(pokemon, slotGolpe);
     Bis.usou(pokemon, slotGolpe);
+    // 01/11: a setinha (a Bênção Ressuscitadora revive o Pokémon dela: Saidas)
+    execucao.definirSetinha(pedido.setinha());
     ClimaNosGolpes.aoCarregar(execucao);
     VisualDosGolpes.aoCarregar(execucao);
     if (!Corrida.precisaCorrer(execucao)) {
@@ -286,7 +293,8 @@ public class ControleDeGolpes {
     Feedback.historico(execucao.getJogador(), pokemon,
         Component.translatable("cobblemon.battle.used_move", pokemon.getDisplayName(false), golpe.getDisplayName()));
     // 21/10 (habilidades, lote da entrada e das imunidades): a Umidade e os climas fortes fazem o golpe falhar
-    if (HabilidadesDeProtecao.golpeFalhou(execucao, atacante)) {
+    // 01/11: e a Pólvora Explosiva no golpe de Fogo (GolpesQueMarcam)
+    if (HabilidadesDeProtecao.golpeFalhou(execucao, atacante) || GolpesQueMarcam.explodiu(execucao, atacante)) {
       return;
     }
     EfeitosDeVida.pagarComVida(execucao, atacante);
@@ -355,7 +363,10 @@ public class ControleDeGolpes {
           continue;
         }
         // 5.3: a Hipnose (60%) também pode ser desviada. 21/10: as habilidades que seguram o golpe (Ouro de Qualidade...)
-        if (!Absorcao.absorveu(execucao, atacante, acerto.alvo())
+        // 01/11: e o escudo da Proteção (Protecao)
+        // 01/11: o boneco do Substituto não deixa pegar (Substituto)
+        if (!Protecao.bloqueou(execucao, atacante, acerto.alvo()) && !Absorcao.absorveu(execucao, atacante, acerto.alvo())
+            && !Substituto.seguraStatus(execucao, atacante, acerto.alvo())
             && !HabilidadesDeProtecao.bloqueou(execucao, atacante, acerto.alvo())
             && !Precisao.desviou(execucao, atacante, acerto.alvo())) {
           AplicarEfeitos.depoisDeAcertar(execucao, atacante, acerto.alvo());
@@ -451,6 +462,10 @@ public class ControleDeGolpes {
     if (Lados.foraDaSuaLuta(execucao, alvo) || Lados.ehNpc(alvo)) {
       return false;
     }
+    // 01/11: a Telepatia: o golpe do aliado não pega nele (HabilidadesDaDupla); e o escudo da Proteção (Protecao)
+    if (HabilidadesDaDupla.telepatia(execucao, alvo) || Protecao.bloqueou(execucao, atacante, alvo)) {
+      return false;
+    }
     registrarAgressao(execucao, atacante, alvo);
     // 21/10 (habilidades, lote da entrada e das imunidades): Antirruído, Blindado, Defesa Mágica, Presença Régia...
     if (Absorcao.absorveu(execucao, atacante, alvo) || CampoEBarreiras.bloqueiaPrioridade(execucao, alvo)
@@ -485,8 +500,17 @@ public class ControleDeGolpes {
     boolean robustezAgiu = depoisDaRobustez < danoCheio;
     // 9.1: a Cinta de Foco, se a Robustez não segurou; lote 3: a Faixa de Foco (10%), se nada segurou
     float comCinta = ItensDeDano.cintaDeFoco(alvo, depoisDaRobustez, robustezAgiu);
-    float dano = ItensDoAcerto.faixaDeFoco(alvo, comCinta, robustezAgiu || comCinta < depoisDaRobustez);
+    // 01/11: a Resistência (Protecao) deixa 1 PV
+    float dano = Protecao.resistiu(alvo,
+        ItensDoAcerto.faixaDeFoco(alvo, comCinta, robustezAgiu || comCinta < depoisDaRobustez));
 
+    // 01/11: o boneco do Substituto leva o golpe no lugar dele (Substituto)
+    if (Substituto.segurou(execucao, atacante, alvo, dano)) {
+      if (primeiro) {
+        efetividade(execucao, alvo, resultado);
+      }
+      return true;
+    }
     float vidaAntes = Vida.vidaDe(alvo);
     boolean pegou = alvo.hurt(Dano.fonte(atacante, alvo), dano);
     semRevideEmBatalha(execucao, atacante, alvo);
@@ -530,6 +554,8 @@ public class ControleDeGolpes {
     }
     EfeitosDeVida.depoisDoDano(execucao, atacante, alvo, pvTirados);
     ItensDeVida.orbeDaVida(execucao, atacante, pvTirados);
+    // 01/11: o Laço do Destino e o Rancor de quem caiu (GolpesQueMarcam)
+    GolpesQueMarcam.depoisDoDano(execucao, atacante, alvo);
     if (primeiro) {
       AplicarEfeitos.depoisDeAcertar(execucao, atacante, alvo);
       Armadilhas.depoisDoAcerto(execucao, alvo);
@@ -593,8 +619,13 @@ public class ControleDeGolpes {
     Component porque = Component.translatable(FRASE + "errou." + motivo);
     CobblemonCombatZA.LOGGER.info("ERROU: {} usou {}: {}",
         execucao.getPokemon().getSpecies().getName(), execucao.getGolpe().getName(), porque.getString());
-    Feedback.historico(execucao.getJogador(), execucao.getPokemon(),
-        Component.translatable("cobblemon.battle.missed").append(" (").append(porque).append(")"));
+    Component frase = Component.translatable("cobblemon.battle.missed").append(" (").append(porque).append(")");
+    // 01/11: o histórico só existe na batalha; fora dela, o erro aparece na barra de ação
+    if (GerenciarCombates.estaEmCombate(execucao.getPokemon())) {
+      Feedback.historico(execucao.getJogador(), execucao.getPokemon(), frase);
+    } else {
+      Feedback.barraDeAcao(execucao.getJogador(), frase);
+    }
   }
 
   // Como no Z-A e no log de batalha do Cobblemon: depois do "usou", só aparece o que não é neutro, falando do alvo
@@ -649,13 +680,22 @@ public class ControleDeGolpes {
   private static void usouSemAlvo(Execucao execucao, PokemonEntity atacante) {
     CobblemonCombatZA.LOGGER.info("SEM_ALVO: {} usou {}",
         execucao.getPokemon().getSpecies().getName(), execucao.getGolpe().getName());
-    // 5b.1: os golpes de clima (Dança da Chuva, Dia Ensolarado...)
-    if (EfeitosDoCampo.aoUsarGolpe(execucao, atacante) || CampoEBarreiras.aoUsarGolpe(execucao, atacante)
+    // 01/11: a Recepção Gelada chama a neve aqui embaixo e quem usou sai da luta (Saidas)
+    Saidas.antesDoSemAlvo(execucao, atacante);
+    // 5b.1: os golpes de clima (Dança da Chuva, Dia Ensolarado...). 01/11: a Proteção (Protecao)
+    // 01/11: o Siga-me e o Pó de Raiva (Redirecionamento)
+    if (Protecao.usou(execucao, atacante) || Redirecionamento.usou(execucao, atacante)
+        || EfeitosDoCampo.aoUsarGolpe(execucao, atacante) || CampoEBarreiras.aoUsarGolpe(execucao, atacante)
         || GolpesDeStatus.semAlvo(execucao, atacante)) {
       return;
     }
-    Feedback.particulas(atacante, ParticleTypes.HAPPY_VILLAGER, 15);
-    EfeitosDeVida.curarComGolpe(execucao, atacante);
-    AplicarEfeitos.depoisDeAcertar(execucao, atacante, atacante);
+    // 01/11: o Arrebatador de um inimigo rouba o golpe que melhora quem usa (GolpesQueMarcam)
+    PokemonEntity quemRecebe = GolpesQueMarcam.arrebatador(execucao);
+    if (quemRecebe == null) {
+      quemRecebe = atacante;
+    }
+    Feedback.particulas(quemRecebe, ParticleTypes.HAPPY_VILLAGER, 15);
+    EfeitosDeVida.curarComGolpe(execucao, quemRecebe);
+    AplicarEfeitos.depoisDeAcertar(execucao, quemRecebe, quemRecebe);
   }
 }

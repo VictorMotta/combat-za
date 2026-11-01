@@ -63,9 +63,9 @@ public class PainelDaBatalha {
     List<PainelDaBatalhaPayload.Lado> lados = new ArrayList<>();
     for (ServerPlayer jogador : combate.getJogadores()) {
       List<PainelDaBatalhaPayload.Foto> fotos = new ArrayList<>();
-      Pokemon lutador = Lutadores.de(jogador);
-      if (lutador != null) {
-        fotos.add(foto(lutador, true));
+      // A dupla: os dois que estão na luta
+      for (Pokemon naLuta : Lutadores.naLuta(jogador)) {
+        fotos.add(foto(naLuta, true));
       }
       lados.add(new PainelDaBatalhaPayload.Lado(jogador.getUUID(), jogador.getGameProfile().getName(), fotos));
     }
@@ -83,9 +83,11 @@ public class PainelDaBatalha {
   }
 
   private static PainelDaBatalhaPayload.Lado lado(ServerPlayer jogador) {
-    Pokemon lutador = Lutadores.de(jogador);
-    return new PainelDaBatalhaPayload.Lado(jogador.getUUID(), jogador.getGameProfile().getName(),
-        lutador == null ? List.of() : List.of(foto(lutador, true)));
+    List<PainelDaBatalhaPayload.Foto> fotos = new ArrayList<>();
+    for (Pokemon naLuta : Lutadores.naLuta(jogador)) {
+      fotos.add(foto(naLuta, true));
+    }
+    return new PainelDaBatalhaPayload.Lado(jogador.getUUID(), jogador.getGameProfile().getName(), fotos);
   }
 
   private static PainelDaBatalhaPayload.Foto foto(Pokemon pokemon, boolean grande) {

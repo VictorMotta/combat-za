@@ -19,6 +19,7 @@ import dev.victor.combatza.CobblemonCombatZA;
 import dev.victor.combatza.combate.BatalhaDoCobblemon;
 import dev.victor.combatza.combate.Captura;
 import dev.victor.combatza.combate.Lados;
+import dev.victor.combatza.combate.Lutadores;
 import dev.victor.combatza.golpes.ControleDeGolpes;
 import dev.victor.combatza.golpes.Feedback;
 import dev.victor.combatza.rede.ModoDosGuardasPayload;
@@ -189,7 +190,7 @@ public class Guardas {
         PokemonEntity guarda = pokemon.getEntity();
         if (guarda == null || !guarda.isAlive() || pokemon.isFainted() || guarda.level() != jogador.level()
             || Captura.dentroDaBola(guarda) || ocupadoComOutraCoisa(guarda) || guarda.distanceTo(jogador) > LONGE_DO_DONO
-            || (parceiro != null && parceiro.getUuid().equals(pokemon.getUuid()))
+            || (parceiro != null && parceiro.getUuid().equals(pokemon.getUuid())) || Lutadores.ehOSegundo(jogador, pokemon)
             || comandadoHaPouco(jogador, pokemon, agora)) {
           continue;
         }
